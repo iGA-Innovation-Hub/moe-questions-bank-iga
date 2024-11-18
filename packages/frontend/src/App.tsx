@@ -55,7 +55,7 @@ import ExamForm from "./pages/ExamForm";
 import FeedbackForm from "./pages/FeedbackForm";
 import HistoryPage from "./pages/HistoryPage";
 //import LoginPage from "./pages/LoginPage";
-import { Authenticator } from "@aws-amplify/ui-react"; //It ensures only logged-in users can access the website , it wraps the entire app in AWS Amplify’s login system
+// import { Authenticator } from "@aws-amplify/ui-react"; //It ensures only logged-in users can access the website , it wraps the entire app in AWS Amplify’s login system
 import "@aws-amplify/ui-react/styles.css";
 //import awsExports from "./aws-exports";
 //import { Amplify } from "aws-amplify";

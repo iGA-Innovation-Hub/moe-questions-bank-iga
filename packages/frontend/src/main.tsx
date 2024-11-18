@@ -23,7 +23,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 //import awsExports from './aws-exports';
-import { Amplify } from 'aws-amplify';
+// import { Amplify } from 'aws-amplify';
 //import { CognitoIdentityClient, GetIdCommand } from "@aws-sdk/client-cognito-identity";
 
 //import { UserPool } from 'aws-cdk-lib/aws-cognito';
@@ -36,27 +36,27 @@ import { Amplify } from 'aws-amplify';
 
  //Initialize Amplify with correct configuration
  // This connects the app to AWS Cognito for user authentication.
- Amplify.configure({//The Amplify.configure() method links the React application to AWS Cognito.
-  Auth: {
-    Cognito:{
-      userPoolId: "us-east-1_ZgdHinkjc",
-      userPoolClientId: "d71lh69j33ljq911jr33sbukp",
-      loginWith:{
-        email:true,
-      },
-      //signUpVerificationMethod: "code",
-      userAttributes:{
-        email:{
-          required:true,
-        },
-      },
-      //mandatorySignIn: true,// all users must sign in to use the app.
-      selfSignUpEnabled: true, 
+//  Amplify.configure({//The Amplify.configure() method links the React application to AWS Cognito.
+//   Auth: {
+//     Cognito:{
+//       userPoolId: "us-east-1_ZgdHinkjc",
+//       userPoolClientId: "d71lh69j33ljq911jr33sbukp",
+//       loginWith:{
+//         email:true,
+//       },
+//       //signUpVerificationMethod: "code",
+//       userAttributes:{
+//         email:{
+//           required:true,
+//         },
+//       },
+//       //mandatorySignIn: true,// all users must sign in to use the app.
+//       selfSignUpEnabled: true, 
       
-    },
-  },
+//     },
+//   },
   
-});
+// });
 //
 
  //here=>
