@@ -1,0 +1,82 @@
+/* General styles */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f7f9fc; /* Light background for a modern feel */
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh; /* Full height to center vertically */
+}
+
+/* Center the login container */
+.Login {
+  background: #ffffff; /* White background for contrast */
+  padding: 30px 40px;
+  border-radius: 10px; /* Rounded corners */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  max-width: 400px;
+  width: 100%; /* Ensure responsiveness */
+  text-align: center;
+}
+
+/* Style the heading */
+.Login h1 {
+  margin-bottom: 20px;
+  font-size: 2rem;
+  color: #333;
+}
+
+/* Form labels */
+.Login form label {
+  font-weight: bold;
+  color: #555;
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* Input fields */
+.Login form .form-control {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box; /* Ensure padding doesn't affect width */
+  margin-bottom: 15px;
+  transition: border-color 0.3s;
+}
+
+.Login form .form-control:focus {
+  border-color: #007bff; /* Highlight with primary color on focus */
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Button */
+.Login form .btn {
+  background: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  width: 100%; /* Full-width button */
+}
+
+.Login form .btn:disabled {
+  background: #aaa; /* Gray out when disabled */
+  cursor: not-allowed;
+}
+
+.Login form .btn:hover:not(:disabled) {
+  background: #0056b3; /* Darker blue on hover */
+  transform: translateY(-2px); /* Subtle hover effect */
+}
+
+.Login form .btn:active {
+  transform: translateY(1px); /* Pressed button effect */
+}

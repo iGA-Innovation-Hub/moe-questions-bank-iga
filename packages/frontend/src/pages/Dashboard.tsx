@@ -3,14 +3,29 @@ import DashboardIcon from "../assets/exam.png";
 import ExamForm from "./ExamForm";
 import FeedbackForm from "./FeedbackForm";
 import HistoryPage from "./HistoryPage";
+import { signOut } from "aws-amplify/auth";
+import { useNavigate } from "react-router-dom";
+import { useAppContext } from "../lib/contextLib";
 
 // interface is set of rules that tells the  program what kind of "shape" an object should have.
 interface DashboardProps {
   signOut?: () => void; //Every Dashboard component have a signOut function as a property (signout button) , ?: means that this prop is optional. It’s okay if you don’t pass it.
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ signOut }) => {
+
+
+const Dashboard: React.FC<DashboardProps> = ({}) => {
+  const navigate = useNavigate();
+  const { userHasAuthenticated } = useAppContext();
   const [activePage, setActivePage] = useState("home"); //activePage: This is a variable that stores the current page
+
+
+  //Handles user logout event
+  async function handleSignOut() {
+    await signOut();
+    userHasAuthenticated(false);
+    navigate("/login");
+  }
 
   //change the main content based on the activePage
   const renderContent = () => {
@@ -199,7 +214,7 @@ const Dashboard: React.FC<DashboardProps> = ({ signOut }) => {
           </button>
         </div>
         <button
-          onClick={signOut}
+          onClick={handleSignOut}
           style={{
             backgroundColor: "#4b4b4b",
             color: "beige",
