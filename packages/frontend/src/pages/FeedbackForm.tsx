@@ -1,14 +1,43 @@
 import React, { useState } from "react";
+import invokeApig from "../lib/callAPI.ts";
 
 const FeedbackForm: React.FC = () => {
   //storing the input
-  const [feedbackType, setFeedbackType] = useState("normal");
   const [message, setMessage] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log({ feedbackType, message });
-    alert("Feedback submitted successfully!");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); //prevents the page from refreshing
+
+    //sending those data to lambda to take it to sagemaker...
+    const payload = {
+      message: message,
+    };
+
+    try {
+      const response = await invokeApig({
+        path: "/feedback",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      });
+        
+        
+        
+      //   await fetch(`${apiUrl}/feedback`, {
+      //   //send the form data to a server="lambda" and wait for lambda to respond
+      //   method: "POST",
+      //   headers: {
+      //     //tells the server the format of the data
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify(payload),
+      // });
+      if (response.status === 200) alert("Feedback submitted successfully!");
+      else alert("Failed to send your Feedback. Please try again.");
+    } catch (error) {
+      console.error("Error", error);
+      alert("Failed to send your Feedback. Please try again.");
+    }
   };
 
   return (
@@ -30,7 +59,7 @@ const FeedbackForm: React.FC = () => {
           fontSize: "28px",
         }}
       >
-        Submit Feedback
+        Report Problem
       </h2>
       <form
         onSubmit={handleSubmit}
@@ -44,39 +73,6 @@ const FeedbackForm: React.FC = () => {
           fontFamily: "Arial, sans-serif",
         }}
       >
-        <div
-          style={{
-            marginBottom: "1.5rem",
-          }}
-        >
-          <label
-            style={{
-              fontSize: "16px",
-              fontWeight: "bold",
-              color: "#4b4b4b",
-              marginBottom: "0.5rem",
-              display: "block",
-            }}
-          >
-            Feedback Type:
-          </label>
-          <select
-            value={feedbackType}
-            onChange={(e) => setFeedbackType(e.target.value)}
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "0.75rem",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-            }}
-          >
-            <option value="normal">Normal Feedback</option>
-            <option value="problem">Report a Problem</option>
-          </select>
-        </div>
-
         <div
           style={{
             marginBottom: "1.5rem",

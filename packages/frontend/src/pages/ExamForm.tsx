@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import invokeApig from "../lib/callAPI.ts";
 
 //storing user input
 const ExamForm: React.FC = () => {
@@ -27,27 +28,19 @@ const ExamForm: React.FC = () => {
       question_types: questionTypes,
     };
 
-    console.log("Submitting exam data to SageMaker:", payload);
+    console.log("Submitting exam data to the model:", payload);
 
-    const apiUrl = import.meta.env.VITE_API_URL;
 
     try {
-      const response = await fetch(`${apiUrl}/generate`, {
-        //send the form data to a server="lambda" and wait for lambda to respond
+      const response = await invokeApig({
+        path: "/generate",
         method: "POST",
-        headers: {
-          //tells the server the format of the data
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        body: payload,
       });
-      ////once the lambda process the data it will send it theexan questions back
-      const data = await response.json();
-      console.log("Exam questions received from SageMaker:", data);
-      //   alert("Exam generated successfully!");
 
-      // Update the state with the response
-      setResponseResult(data.question); // Format the response as a JSON string
+      console.log("API Response:", response);
+      alert("Successfully generated exam.");
+      setResponseResult(response.question);
     } catch (error) {
       console.error("Error generating exam:", error);
       alert("Failed to generate exam. Please try again.");
@@ -115,10 +108,10 @@ const ExamForm: React.FC = () => {
               fontSize: "14px",
             }}
           >
-            {/* <option value="">Select Grade</option> */}
-            <option value="Grade 1" selected>Secondary Grade 1</option>
-            <option value="Grade 2">Secondary Grade 2</option>
-            <option value="Grade 3">Secondary Grade 3</option>
+            <option value="">Select Grade</option>
+            <option value="Grade 10">Secondary Grade 1</option>
+            <option value="Grade 11">Secondary Grade 2</option>
+            <option value="Grade 12">Secondary Grade 3</option>
           </select>
         </label>
 
@@ -145,8 +138,8 @@ const ExamForm: React.FC = () => {
               fontSize: "14px",
             }}
           >
-            {/* <option value="">Select Subject</option> */}
-            <option value="Math" selected>ENG 101</option>
+            <option value="">Select Subject</option>
+            <option value="Math">ENG 101</option>
             <option value="Science">ENG 102</option>
             <option value="English">ENG 102</option>
             <option value="English">ENG 201</option>
