@@ -9,11 +9,11 @@ import getAwsCredentials from "./getIAMCred.ts";
 //Invokes the our API Gateway using the retreived IAM credentials
 
 export default async function invokeApig({
-  path:string,
+  path,
   method = "GET",
   headers = {},
   queryParams = {},
-  body:any,
+  body,
 }: {
   path: string; // Correct type definition
   method?: string;
