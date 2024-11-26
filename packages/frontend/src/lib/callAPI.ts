@@ -1,4 +1,4 @@
-import sigV4Client:any from "./sigV4Client.js";
+import sigV4Client from "./sigV4Client.js";
 import getCurrentUser from "./getToken.ts";
 import { getUserToken } from "./getToken.ts";
 import AWS from "aws-sdk"
@@ -7,6 +7,8 @@ import getAwsCredentials from "./getIAMCred.ts";
 
 
 //Invokes the our API Gateway using the retreived IAM credentials
+
+const sigClient: any = sigV4Client;
 
 export default async function invokeApig({
   path,
@@ -38,7 +40,7 @@ export default async function invokeApig({
   }
 
   //sigV4 is needed as our API authorizer is IAM
-  const client = sigV4Client.newClient({
+  const client = sigClient.newClient({
     accessKey: accessKey,
     secretKey: secretKey,
     sessionToken: sessionToken,
