@@ -1,9 +1,12 @@
 import {
   BedrockRuntimeClient,
-  InvokeModelCommand,
+  ConverseCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { APIGatewayProxyEvent } from "aws-lambda";
 
+const client = new BedrockRuntimeClient({ region: "us-east-1" });
+
+const modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0";
 
 export async function generate(event: APIGatewayProxyEvent) {
   let data;
@@ -57,45 +60,29 @@ export async function generate(event: APIGatewayProxyEvent) {
       Make sure to return only the exam and nothing else.
     `;
 
-    const invokeModel = async (
-      full_prompt,
-      modelId = "amazon.titan-text-premier-v1:0"
-    ) => {
-      // Create a new Bedrock Runtime client instance.
-      const client = new BedrockRuntimeClient({ region: "us-east-1" });
+    const conversation = [
+      {
+        role: "user",
+        content: [{ text: prompt }],
+      },
+    ];
 
-      // Prepare the payload for the model.
-      const payload = {
-        inputText: full_prompt,
-        textGenerationConfig: {
-          maxTokenCount: 3072,
-          stopSequences: [],
-          temperature: 0,
-          topP: 1,
-        },
-      };
+    const command = new ConverseCommand({
+      modelId,
+      messages: conversation,
+      inferenceConfig: { maxTokens: 512, temperature: 0.5, topP: 0.9 },
+    });
 
-      // Invoke the model with the payload and wait for the response.
-      const command = new InvokeModelCommand({
-        contentType: "application/json",
-        body: JSON.stringify(payload),
-        modelId,
-      });
-      const apiResponse = await client.send(command);
+    const response = await client.send(command);
 
-      // Decode and return the response.
-      const decodedResponseBody = new TextDecoder().decode(apiResponse.body);
-      const responseBody = JSON.parse(decodedResponseBody);
-      return responseBody.results[0].outputText;
-    };
-
-    const model_response = await invokeModel(prompt)
+    // Extract and print the response text.
+    const responseText = response.output.message.content[0].text;
 
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        question: model_response,
+        question: responseText,
         built_prompt: prompt,
       }),
     };

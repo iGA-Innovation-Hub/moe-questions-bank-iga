@@ -1,10 +1,9 @@
+// @ts-ignore
 import sigV4Client from "./sigV4Client.js";
 import getCurrentUser from "./getToken.ts";
 import { getUserToken } from "./getToken.ts";
-import AWS from "aws-sdk"
+import AWS from "aws-sdk";
 import getAwsCredentials from "./getIAMCred.ts";
-
-
 
 //Invokes the our API Gateway using the retreived IAM credentials
 
