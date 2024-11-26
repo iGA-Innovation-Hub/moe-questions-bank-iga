@@ -1,4 +1,4 @@
-import sigV4Client from "./sigV4Client.js";
+import { sigV4Client } from "./sigV4Client.js";
 import getCurrentUser from "./getToken.ts";
 import { getUserToken } from "./getToken.ts";
 import AWS from "aws-sdk"
@@ -19,7 +19,7 @@ export default async function invokeApig({
   method?: string;
   headers?: Record<string, string>;
   queryParams?: Record<string, string | number>;
-  body?: Record<string, unknown>;
+  body: string;
 }) {
   const currentUser = getCurrentUser();
   if (!currentUser) {
@@ -29,9 +29,9 @@ export default async function invokeApig({
   const userToken = await getUserToken(currentUser); //User token from the cognito user pool
   await getAwsCredentials(userToken); //IAM cred based on the cognito token
 
-  const accessKey = AWS.config.credentials.accessKeyId;
-  const secretKey = AWS.config.credentials.secretAccessKey;
-  const sessionToken = AWS.config.credentials.sessionToken;
+  const accessKey = AWS.config.credentials?.accessKeyId ?? "";
+  const secretKey = AWS.config.credentials?.secretAccessKey ?? "";
+  const sessionToken = AWS.config.credentials?.sessionToken ?? "";
 
   if (!accessKey || !secretKey || !sessionToken) {
     throw new Error("AWS credentials are not available.");
