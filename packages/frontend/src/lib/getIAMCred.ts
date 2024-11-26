@@ -16,5 +16,8 @@ export default function getAwsCredentials(userToken:any) {
     },
   });
 
-  return AWS.config.credentials.getPromise()
+  return (
+    AWS.config.credentials as AWS.CognitoIdentityCredentials
+  ).getPromise();
+
 }
