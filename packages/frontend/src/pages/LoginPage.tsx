@@ -16,7 +16,7 @@ export default function Login() {
   const [username, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { isAuthenticated, userHasAuthenticated } = useAppContext();
+  const { userHasAuthenticated } = useAppContext();
 
   function validateForm() {
     return username.length > 0 && password.length > 0;

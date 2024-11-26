@@ -2,7 +2,7 @@ import AWS from "aws-sdk";
 
 
 //Returns IAM cred for the current user
-export default function getAwsCredentials(userToken) {
+export default function getAwsCredentials(userToken:any) {
   const authenticator = `cognito-idp.${
     import.meta.env.VITE_REGION
   }.amazonaws.com/${import.meta.env.VITE_USER_POOL_ID}`;
@@ -16,5 +16,5 @@ export default function getAwsCredentials(userToken) {
     },
   });
 
-  return AWS.config.credentials.getPromise();
+  return AWS.config.credentials.getPromise()
 }

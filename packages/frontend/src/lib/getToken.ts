@@ -3,9 +3,9 @@ import {
 } from "amazon-cognito-identity-js";
 
 //Returns the current logged in user tokens
-export function getUserToken(currentUser) {
+export function getUserToken(currentUser:any) {
   return new Promise((resolve, reject) => {
-    currentUser.getSession((err, session) => {
+    currentUser.getSession((err:any, session:any) => {
       if (err) {
         reject(err);
         return;

@@ -13,7 +13,6 @@ const FeedbackForm: React.FC = () => {
       message: message,
     };
 
-    const apiUrl = import.meta.env.VITE_API_URL;
     try {
       const response = await invokeApig({
         path: "/feedback",
@@ -33,8 +32,8 @@ const FeedbackForm: React.FC = () => {
       //   },
       //   body: JSON.stringify(payload),
       // });
-      // if (response.status === 200) alert("Feedback submitted successfully!");
-      // else alert("Failed to send your Feedback. Please try again.");
+      if (response.status === 200) alert("Feedback submitted successfully!");
+      else alert("Failed to send your Feedback. Please try again.");
     } catch (error) {
       console.error("Error", error);
       alert("Failed to send your Feedback. Please try again.");

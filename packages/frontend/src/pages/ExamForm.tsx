@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import { fetchAuthSession } from "aws-amplify/auth";
-import { post } from "aws-amplify/api";
 import invokeApig from "../lib/callAPI.ts";
 
 //storing user input
