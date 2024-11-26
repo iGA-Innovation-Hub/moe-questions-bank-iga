@@ -34,9 +34,9 @@ const App: React.FC = () => {
           <Route
             path="/dashboard"
             element={
-        
+              <ProtectedRoute>
                 <Dashboard />
-            
+              </ProtectedRoute>
             }
           />
           {/* <Route

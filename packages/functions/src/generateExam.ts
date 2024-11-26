@@ -1,16 +1,11 @@
 import {
-  SageMakerRuntimeClient,
-  InvokeEndpointCommand,
-} from "@aws-sdk/client-sagemaker-runtime";
+  BedrockRuntimeClient,
+  InvokeModelCommand,
+} from "@aws-sdk/client-bedrock-runtime";
 import { APIGatewayProxyEvent } from "aws-lambda";
 
-const sagemakerClient = new SageMakerRuntimeClient();
-
-const ENDPOINT_NAME =
-  "MODEL ENDPOINT HERE"; // Replace with actual endpoint name
 
 export async function generate(event: APIGatewayProxyEvent) {
-
   let data;
 
   //Handle empty body
@@ -21,7 +16,6 @@ export async function generate(event: APIGatewayProxyEvent) {
     };
   }
 
-  
   data = JSON.parse(event.body);
   console.log(event.body);
 
@@ -43,14 +37,12 @@ export async function generate(event: APIGatewayProxyEvent) {
     }
   }
 
-  
   //relevant_info is to be retrieved from the analyzed data
   const relevant_info = "";
 
   try {
-
     const prompt = `
-      Act as a school exam generator and create an ${subject} exam for grade ${class_level} students. 
+      As a school exam generator and create an ${subject} exam for grade ${class_level} students. 
 
       These are the types of questions to include: ${question_types_str}. Make sure to include all of them.
 
@@ -65,26 +57,45 @@ export async function generate(event: APIGatewayProxyEvent) {
       Make sure to return only the exam and nothing else.
     `;
 
+    const invokeModel = async (
+      full_prompt,
+      modelId = "amazon.titan-text-premier-v1:0"
+    ) => {
+      // Create a new Bedrock Runtime client instance.
+      const client = new BedrockRuntimeClient({ region: "us-east-1" });
 
-    // Generate question using SageMaker endpoint
-    const response = await sagemakerClient.send(
-      new InvokeEndpointCommand({
-        EndpointName: ENDPOINT_NAME,
-        ContentType: "application/json",
-        Body: JSON.stringify({ inputs: prompt }),
-      })
-    );
+      // Prepare the payload for the model.
+      const payload = {
+        inputText: full_prompt,
+        textGenerationConfig: {
+          maxTokenCount: 3072,
+          stopSequences: [],
+          temperature: 0,
+          topP: 1,
+        },
+      };
 
+      // Invoke the model with the payload and wait for the response.
+      const command = new InvokeModelCommand({
+        contentType: "application/json",
+        body: JSON.stringify(payload),
+        modelId,
+      });
+      const apiResponse = await client.send(command);
 
-    const result = JSON.parse(Buffer.from(response.Body).toString());
-    const generatedQuestion = result.generated_text;
+      // Decode and return the response.
+      const decodedResponseBody = new TextDecoder().decode(apiResponse.body);
+      const responseBody = JSON.parse(decodedResponseBody);
+      return responseBody.results[0].outputText;
+    };
 
+    const model_response = await invokeModel(prompt)
 
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        question: generatedQuestion,
+        question: model_response,
         built_prompt: prompt,
       }),
     };
@@ -97,4 +108,4 @@ export async function generate(event: APIGatewayProxyEvent) {
       }),
     };
   }
-};
+}

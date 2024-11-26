@@ -30,9 +30,8 @@ const ExamForm: React.FC = () => {
       question_types: questionTypes,
     };
 
-    console.log("Submitting exam data to SageMaker:", payload);
+    console.log("Submitting exam data to the model:", payload);
 
-    // const apiUrl = import.meta.env.VITE_API_URL;
 
     try {
       const response = await invokeApig({

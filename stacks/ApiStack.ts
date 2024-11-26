@@ -1,8 +1,9 @@
-import { Api, StackContext, use } from "sst/constructs";
+import { Api, StackContext, use, Topic } from "sst/constructs";
 import { CacheHeaderBehavior, CachePolicy } from "aws-cdk-lib/aws-cloudfront";
 import { Duration } from "aws-cdk-lib/core";
 
 export function ApiStack({ stack }: StackContext) {
+  const topic = new Topic(stack, "Report");
 
   // Create the HTTP API
   const api = new Api(stack, "Api", {
@@ -16,12 +17,23 @@ export function ApiStack({ stack }: StackContext) {
           handler: "packages/functions/src/generateExam.generate",
           runtime: "nodejs20.x",
           timeout: "180 seconds",
-          permissions: ["sagemaker"],
+          permissions: ["bedrock"],
+        },
+      },
+
+      "POST /feedback": {
+        function: {
+          handler: "packages/functions/src/feedback.handler",
+          runtime: "nodejs20.x",
+          timeout: "180 seconds",
+          environment: {
+            TOPIC_ARN: topic.topicArn, // Add the ARN to the environment
+          },
+          permissions: ["sns"],
         },
       },
     },
   });
-
 
   // cache policy to use with cloudfront as reverse proxy to avoid cors
   // https://dev.to/larswww/real-world-serverless-part-3-cloudfront-reverse-proxy-no-cors-cgj

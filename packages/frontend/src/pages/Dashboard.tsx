@@ -12,13 +12,10 @@ interface DashboardProps {
   signOut?: () => void; //Every Dashboard component have a signOut function as a property (signout button) , ?: means that this prop is optional. It’s okay if you don’t pass it.
 }
 
-
-
 const Dashboard: React.FC<DashboardProps> = ({}) => {
   const navigate = useNavigate();
   const { userHasAuthenticated } = useAppContext();
   const [activePage, setActivePage] = useState("home"); //activePage: This is a variable that stores the current page
-
 
   //Handles user logout event
   async function handleSignOut() {
@@ -104,7 +101,7 @@ const Dashboard: React.FC<DashboardProps> = ({}) => {
                 cursor: "pointer",
               }}
             >
-              Provide Feedback
+              Report Problem
             </div>
           </div>
         );
@@ -210,7 +207,7 @@ const Dashboard: React.FC<DashboardProps> = ({}) => {
               cursor: "pointer",
             }}
           >
-            Provide Feedback
+            Report Problem
           </button>
         </div>
         <button
