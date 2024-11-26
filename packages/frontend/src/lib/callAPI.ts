@@ -1,4 +1,4 @@
-import sigV4Client from "./sigV4Client.js";
+import sigV4Client:any from "./sigV4Client.js";
 import getCurrentUser from "./getToken.ts";
 import { getUserToken } from "./getToken.ts";
 import AWS from "aws-sdk"
