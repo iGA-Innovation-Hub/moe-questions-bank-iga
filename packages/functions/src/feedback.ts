@@ -2,7 +2,7 @@ import AWS from "aws-sdk";
 
 const sns = new AWS.SNS();
 
-export async function handler(event: any) {
+export async function handler(event: APIGatewayProxyEvent ) {
   const topicArn = process.env.TOPIC_ARN;
   console.log(topicArn);
   const data = JSON.parse(event.body);

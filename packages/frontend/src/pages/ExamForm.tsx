@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import invokeApig from "../lib/callAPI.ts";
+import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 //storing user input
 const ExamForm: React.FC = () => {
@@ -8,28 +10,89 @@ const ExamForm: React.FC = () => {
   const [subject, setSubject] = useState("");
   const [duration, setDuration] = useState("");
   const [totalMark, setMark] = useState("");
-  const [questionTypes, setQuestionTypes] = useState<string[]>([]);
+  const [semester, setSemester] = useState("");
+  const [createdBy, setCreator] = useState("");
+  const [creationDate, setDate] = useState("");
+  const [contributers, setContributers] = useState("");
   const [responseResult, setResponseResult] = useState<string>(""); // State to store the API response
   const [loading, setLoading] = useState(false);
+  const [loadingPage, setLoadingPage] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
-  //async = can use await (dor time consuming tasks)
-  //the fun. takes argument (e) ,React.FormEvent means a form-event(submit the form)
+
+  // Fetch initial data
+  const fetchInitialData = async () => {
+    try {
+      const response = await invokeApig({
+        path: `/examForm/${id}`, // Adjust path as needed
+        method: "GET",
+      });
+
+      if (!response || Object.keys(response).length === 0) {
+        console.log(response)
+        setErrorMsg("Error getting exam data!");
+        return
+      }
+
+      console.log("Initial Data Loaded:", response);
+      setGrade(response.examClass);
+      setSubject(response.examSubject);
+      setSemester(response.examSemester);
+      setCreator(response.createdBy);
+      setDate(response.creationDate);
+      setContributers(String(response.contributers));
+
+    } catch (err: any) {
+      console.error("Error fetching initial data:", err);
+    } finally {
+      setLoadingPage(false); // Mark loading as complete
+    }
+  };
+
+  useEffect(() => {
+    // Add a timeout before fetching data
+    const timer = setTimeout(() => {
+      fetchInitialData();
+    }, 2000); // 3000ms = 3 seconds delay
+
+    // Cleanup the timeout if the component unmounts
+    return () => clearTimeout(timer);
+  }, [id]);
+
+
+  const sendFeedback = async (e: React.MouseEvent) => {
+   const payload = {
+      examID: id,
+      examContent: responseResult,
+    };
+
+    console.log(payload);
+  };
+
+  const sendForApproval = async (e: React.MouseEvent) => {
+    alert("Sent for approval!")
+  }
+
+  const sendForEvaluation = async (e: React.MouseEvent) => {
+    alert("Sent for evaluation!");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); //prevents the page from refreshing when submit the form cuse When you submit a form in React, the browser automatically reloads the page unless you stop it
 
     setLoading(true); // Start loading animation
 
-    //sending those data to lambda to take it to sagemaker...
     const payload = {
       class: grade,
       subject: subject,
       duration: duration,
       total_mark: totalMark,
-      question_types: questionTypes,
     };
 
     console.log("Submitting exam data to the model:", payload);
-
 
     try {
       const response = await invokeApig({
@@ -39,7 +102,6 @@ const ExamForm: React.FC = () => {
       });
 
       console.log("API Response:", response);
-      alert("Successfully generated exam.");
       setResponseResult(response.question);
     } catch (error) {
       console.error("Error generating exam:", error);
@@ -50,6 +112,16 @@ const ExamForm: React.FC = () => {
     }
   };
 
+  // Show loading state
+  if (loadingPage) {
+    return <div>Loading...</div>;
+  }
+
+   if (errorMsg) {
+     return <div>{errorMsg}</div>;
+   }
+
+
   return (
     <div
       style={{
@@ -59,8 +131,8 @@ const ExamForm: React.FC = () => {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        overflowY: "auto", // Enables vertical scrolling if needed
-        height: "100vh", // Ensures the form fits the viewport
+        overflowY: "auto",
+        height: "100vh",
       }}
     >
       <h2
@@ -73,314 +145,326 @@ const ExamForm: React.FC = () => {
       >
         Generate Exam
       </h2>
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          width: "100%",
-          maxWidth: "600px",
-          backgroundColor: "#fff",
-          padding: "2rem",
-          borderRadius: "8px",
-          boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-          fontFamily: "Arial, sans-serif",
-        }}
-      >
-        <label
-          style={{
-            fontSize: "16px",
-            color: "#4b4b4b",
-            marginBottom: "1rem",
-            display: "block",
-            fontWeight: "bold",
-          }}
-        >
-          Grade:
-          <select
-            value={grade}
-            onChange={(e) => setGrade(e.target.value)}
-            style={{
-              display: "block",
-              width: "100%",
-              marginTop: "0.5rem",
-              padding: "0.75rem",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-            }}
-          >
-            <option value="">Select Grade</option>
-            <option value="Grade 10">Secondary Grade 1</option>
-            <option value="Grade 11">Secondary Grade 2</option>
-            <option value="Grade 12">Secondary Grade 3</option>
-          </select>
-        </label>
 
-        <label
-          style={{
-            fontSize: "16px",
-            color: "#4b4b4b",
-            marginBottom: "1rem",
-            display: "block",
-            fontWeight: "bold",
-          }}
-        >
-          Subject:
-          <select
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            style={{
-              display: "block",
-              width: "100%",
-              marginTop: "0.5rem",
-              padding: "0.75rem",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-            }}
-          >
-            <option value="">Select Subject</option>
-            <option value="Math">ENG 101</option>
-            <option value="Science">ENG 102</option>
-            <option value="English">ENG 102</option>
-            <option value="English">ENG 201</option>
-            <option value="English">ENG 301</option>
-            <option value="English">ENG 218</option>
-          </select>
-        </label>
-
-        <label
-          style={{
-            fontSize: "16px",
-            color: "#4b4b4b",
-            marginBottom: "1rem",
-            display: "block",
-            fontWeight: "bold",
-          }}
-        >
-          Duration:
-          <input
-            type="number"
-            min={1}
-            max={3}
-            value={duration}
-            required
-            onChange={(e) => setDuration(e.target.value)}
-            style={{
-              display: "block",
-              width: "100%",
-              marginTop: "0.5rem",
-              padding: "0.75rem",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-            }}
-          ></input>
-        </label>
-
-        <fieldset
-          style={{
-            marginTop: "1.5rem",
-            padding: "1rem",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-          }}
-        >
-          <legend
-            style={{
-              fontSize: "16px",
-              color: "#4b4b4b",
-              fontWeight: "bold",
-              padding: "0 0.5rem",
-            }}
-          >
-            Question Types
-          </legend>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.5rem",
-            }}
-          >
-            <label style={{ fontSize: "14px", color: "#333" }}>
-              <input
-                type="checkbox"
-                value="MCQ"
-                onChange={(e) =>
-                  setQuestionTypes(
-                    (prev) =>
-                      e.target.checked
-                        ? [...prev, e.target.value]
-                        : prev.filter((type) => type !== e.target.value) //??
-                  )
-                }
-              />{" "}
-              MCQ
-            </label>
-            <label style={{ fontSize: "14px", color: "#333" }}>
-              <input
-                type="checkbox"
-                value="Essay"
-                onChange={(e) =>
-                  setQuestionTypes((prev) =>
-                    e.target.checked
-                      ? [...prev, e.target.value]
-                      : prev.filter((type) => type !== e.target.value)
-                  )
-                }
-              />{" "}
-              Essay
-            </label>
-            <label style={{ fontSize: "14px", color: "#333" }}>
-              <input
-                type="checkbox"
-                value="TrueFalse"
-                onChange={(e) =>
-                  setQuestionTypes((prev) =>
-                    e.target.checked
-                      ? [...prev, e.target.value]
-                      : prev.filter((type) => type !== e.target.value)
-                  )
-                }
-              />{" "}
-              True/False
-            </label>
-            <label style={{ fontSize: "14px", color: "#333" }}>
-              <input
-                type="checkbox"
-                value="Fill-In-The-Blank"
-                onChange={(e) =>
-                  setQuestionTypes((prev) =>
-                    e.target.checked
-                      ? [...prev, e.target.value]
-                      : prev.filter((type) => type !== e.target.value)
-                  )
-                }
-              />{" "}
-              Fill-In-The-Blank
-            </label>
-            <label style={{ fontSize: "14px", color: "#333" }}>
-              <input
-                type="checkbox"
-                value="ShortAnswer"
-                onChange={(e) =>
-                  setQuestionTypes((prev) =>
-                    e.target.checked
-                      ? [...prev, e.target.value]
-                      : prev.filter((type) => type !== e.target.value)
-                  )
-                }
-              />{" "}
-              Short Answer
-            </label>
-          </div>
-        </fieldset>
-
-        <label
-          style={{
-            fontSize: "16px",
-            color: "#4b4b4b",
-            marginBottom: "1rem",
-            marginTop: "0.5rem",
-            display: "block",
-            fontWeight: "bold",
-          }}
-        >
-          Total Mark:
-          <input
-            type="number"
-            min={10}
-            max={100}
-            required
-            value={totalMark}
-            onChange={(e) => setMark(e.target.value)}
-            style={{
-              display: "block",
-              width: "100%",
-              marginTop: "0.5rem",
-              padding: "0.75rem",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-            }}
-          ></input>
-        </label>
-
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            color: "#fff",
-            cursor: loading ? "not-allowed" : "pointer",
-            display: "block",
-            width: "100%",
-            backgroundColor: loading ? "#ccc" : "#4b4b4b",
-            padding: "1rem",
-            marginTop: "2rem",
-            border: "none",
-            borderRadius: "4px",
-            fontSize: "16px",
-            fontWeight: "bold",
-          }}
-        >
-          {loading ? (
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <span
-                style={{
-                  width: "1rem",
-                  height: "1rem",
-                  border: "2px solid #fff",
-                  borderRadius: "50%",
-                  borderTop: "2px solid transparent",
-                  animation: "spin 1s linear infinite",
-                }}
-              />
-              Loading...
-            </span>
-          ) : (
-            "Generate Exam"
-          )}
-        </button>
-      </form>
-
-      {/* Non-editable Textarea for Response */}
       <div
         style={{
-          marginTop: "2rem",
+          display: "flex",
+          justifyContent: "space-between", // Align buttons to opposite sides
+          gap: "1rem", // Adds space between buttons
           width: "100%",
-          maxWidth: "600px",
+          maxWidth: "900px",
+          padding: "1rem 0",
         }}
       >
-        <label
+        <button
+          onClick={sendForApproval}
           style={{
-            fontSize: "16px",
-            color: "#4b4b4b",
+            padding: "0.5rem 1rem", // Smaller padding for a smaller button
+            backgroundColor: "#2196F3", // Blue color for 'Send For Approval'
+            color: "#fff",
+            border: "none",
+            borderRadius: "4px",
+            fontSize: "14px", // Smaller font size
             fontWeight: "bold",
-            marginBottom: "0.5rem",
-            display: "block",
+            cursor: "pointer",
+            transition: "background-color 0.3s ease, transform 0.3s ease",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            width: "auto", // Auto width to fit text
+          }}
+          onMouseOver={(e) => (e.target.style.backgroundColor = "#1976D2")}
+          onMouseOut={(e) => (e.target.style.backgroundColor = "#2196F3")}
+          onMouseDown={(e) => (e.target.style.transform = "scale(0.98)")}
+          onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+        >
+          Send For Approval
+        </button>
+        <button
+          onClick={sendForEvaluation}
+          style={{
+            padding: "0.5rem 1rem", // Smaller padding for a smaller button
+            backgroundColor: "#4CAF50", // Green color for 'Evaluate'
+            color: "#fff",
+            border: "none",
+            borderRadius: "4px",
+            fontSize: "14px", // Smaller font size
+            fontWeight: "bold",
+            cursor: "pointer",
+            transition: "background-color 0.3s ease, transform 0.3s ease",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            width: "auto", // Auto width to fit text
+          }}
+          onMouseOver={(e) => (e.target.style.backgroundColor = "#45a049")}
+          onMouseOut={(e) => (e.target.style.backgroundColor = "#4CAF50")}
+          onMouseDown={(e) => (e.target.style.transform = "scale(0.98)")}
+          onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+        >
+          Send For Evaluation
+        </button>
+      </div>
+
+      <div
+        style={{
+          width: "900px",
+          fontSize: "14px",
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: "1rem",
+          padding: "1rem",
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+          color: "#333",
+        }}
+      >
+        <div style={{ flex: 1, textAlign: "left", paddingRight: "1rem" }}>
+          <strong>Creation Date:</strong> {creationDate}
+        </div>
+        <div style={{ flex: 1, textAlign: "center", paddingRight: "1rem" }}>
+          <strong>Created By:</strong> {createdBy}
+        </div>
+        <div
+          style={{
+            flex: 1,
+            textAlign: "right",
+            overflowX: "auto", // Enables horizontal scrolling
+            whiteSpace: "nowrap", // Prevents text wrapping
+            paddingRight: "1rem",
           }}
         >
-          Generated Exam:
-        </label>
+          <strong>Contributors: </strong>
+          <div
+            style={{
+              display: "inline-block",
+              maxWidth: "100%",
+              whiteSpace: "nowrap",
+              textOverflow: "ellipsis", // Adds ellipsis when content overflows
+            }}
+          >
+            {contributers}
+          </div>
+        </div>
+      </div>
+
+      {/* Top Horizontal Form */}
+      <form style={{ width: "100%" }} onSubmit={handleSubmit}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            // width: "100%",
+            maxWidth: "900px",
+            marginBottom: "1rem",
+            padding: "1rem",
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+            margin: "0 auto",
+          }}
+        >
+          {/* Read-only fields */}
+          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+            <input
+              type="text"
+              value={grade}
+              readOnly
+              style={{
+                width: "120px",
+                padding: "0.5rem",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+                backgroundColor: "#f3f3f3",
+              }}
+            />
+            <input
+              type="text"
+              value={subject}
+              readOnly
+              style={{
+                width: "120px",
+                padding: "0.5rem",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+                backgroundColor: "#f3f3f3",
+              }}
+            />
+            <input
+              type="text"
+              value={semester}
+              readOnly
+              style={{
+                width: "160px",
+                padding: "0.5rem",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+                backgroundColor: "#f3f3f3",
+              }}
+            />
+          </div>
+
+          {/* Editable fields */}
+          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+            <input
+              type="number"
+              min={1}
+              max={3}
+              placeholder="Duration (hours)"
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              required
+              style={{
+                width: "120px",
+                padding: "0.5rem",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+              }}
+            />
+            <input
+              type="number"
+              min={10}
+              max={100}
+              placeholder="Total Marks"
+              value={totalMark}
+              onChange={(e) => setMark(e.target.value)}
+              required
+              style={{
+                width: "100px",
+                padding: "0.5rem",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+              }}
+            />
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: "0.5rem 1rem",
+              backgroundColor: "#4b4b4b",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              fontSize: "14px",
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+          >
+            {loading ? (
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <span
+                  style={{
+                    width: "1rem",
+                    height: "1rem",
+                    border: "2px solid #fff",
+                    borderRadius: "50%",
+                    borderTop: "2px solid transparent",
+                    animation: "spin 1s linear infinite",
+                  }}
+                />
+                generating
+              </span>
+            ) : (
+              "Generate"
+            )}
+          </button>
+        </div>
+      </form>
+
+      {/* Text Area for Generated Exam */}
+      <div
+        style={{
+          marginTop: "1rem",
+          width: "100%",
+          maxWidth: "900px",
+        }}
+      >
         <textarea
           value={responseResult}
           readOnly
           style={{
             width: "100%",
-            height: "200px",
+            height: "400px",
             padding: "1rem",
-            borderRadius: "4px",
+            borderRadius: "8px",
             border: "1px solid #ccc",
             fontSize: "14px",
             resize: "none",
+            backgroundColor: "#fff",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
           }}
         />
+      </div>
+
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "900px",
+          marginTop: "1.5rem",
+          padding: "1rem",
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        <label
+          style={{
+            display: "block",
+            fontSize: "14px",
+            fontWeight: "bold",
+            marginBottom: "0.5rem",
+            color: "#333",
+          }}
+        >
+          Feedback:
+        </label>
+        <input
+          type="text"
+          onChange={(e) => setFeedback(e.target.value)}
+          placeholder="Provide feedback..."
+          style={{
+            width: "100%",
+            padding: "0.75rem",
+            borderRadius: "4px",
+            border: "1px solid #ccc",
+            fontSize: "14px",
+            marginBottom: "1rem",
+            boxSizing: "border-box", // ensures padding doesn't affect width
+          }}
+        />
+        <button
+          onClick={sendFeedback}
+          disabled={loading}
+          style={{
+            padding: "0.75rem 1.5rem",
+            backgroundColor: "#4b4b4b",
+            color: "#fff",
+            border: "none",
+            borderRadius: "4px",
+            fontSize: "14px",
+            fontWeight: "bold",
+            cursor: "pointer",
+            width: "100%",
+            boxSizing: "border-box", // ensures button width is consistent
+            transition: "background-color 0.3s",
+          }}
+          onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
+          onMouseOut={(e) => (e.target.style.backgroundColor = "#4b4b4b")}
+        >
+          {loading ? "Regenerating..." : "Regenerate"}
+        </button>
       </div>
       <style>
         {`
@@ -392,6 +476,9 @@ const ExamForm: React.FC = () => {
       </style>
     </div>
   );
-};
+
+
+}
+  
 
 export default ExamForm;
