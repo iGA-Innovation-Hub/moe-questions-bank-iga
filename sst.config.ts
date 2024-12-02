@@ -5,6 +5,7 @@ import { ApiStack } from "./stacks/ApiStack";
 import { ImageBuilderForCodeCatalyst } from "./stacks/devops/ImageBuilderForCodeCatalyst";
 import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
 import { AuthStack } from "./stacks/AuthStack";
+import { KnowledgeBaseStack } from "./stacks/KnowledgeStack";
 
 export default {
   config(_input) {
@@ -26,7 +27,7 @@ export default {
       app.stack(OIDCForGitHubCI)
     }
     else {
-      app.stack(DBStack).stack(ApiStack).stack(AuthStack).stack(FrontendStack);
+      app.stack(DBStack).stack(ApiStack).stack(AuthStack).stack(KnowledgeBaseStack).stack(FrontendStack)
     }
   }
 } satisfies SSTConfig;
