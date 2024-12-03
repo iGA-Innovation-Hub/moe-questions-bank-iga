@@ -11,7 +11,7 @@ const GeneratorRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return null; // or a loading spinner if needed
   }
 
-  if (userRole !== "generator") {
+  if (userRole !== "User") {
     // Redirect to dashboard if not a generator
     return <Navigate to="/dashboard" replace />;
   }

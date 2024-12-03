@@ -26,6 +26,7 @@
     "@aws-cdk/cx-api": "^2.170.0",
     "@aws-sdk/client-bedrock-runtime": "^3.699.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.693.0",
+    "@aws-sdk/client-sns": "^3.699.0",
     "@aws-sdk/lib-dynamodb": "^3.699.0",
     "@langchain/groq": "^0.1.2",
     "aws-sdk": "^2.1692.0",

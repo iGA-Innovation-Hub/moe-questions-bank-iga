@@ -22,11 +22,13 @@ export function DBStack({ stack, app }: StackContext) {
       creationDate: "string",
       contributers: "string",
       examContent: "string",
+      examDuration: "string",
+      examTotalMark: "number",
       numOfRegenerations: "number",
     },
     primaryIndex: { partitionKey: "examID" },
     globalIndexes: {
-      examStateIndex: { partitionKey: "examState" }
+      examStateIndex: { partitionKey: "examState" },
     },
   });
 

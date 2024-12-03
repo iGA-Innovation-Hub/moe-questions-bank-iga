@@ -10,6 +10,7 @@ import { getCurrentUser } from "../lib/getToken";
 import { signOut } from "aws-amplify/auth";
 import { checkUserRoleFormDB } from "../lib/checkUserRole";
 import invokeApig from "../lib/callAPI";
+import { getUserAttributes } from "../lib/getUserAttributes";
 
 export default function Login() {
   const [username, setEmail] = useState("");
@@ -25,7 +26,7 @@ export default function Login() {
   useEffect(() => {
     const handleSignOutIfAuthenticated = async () => {
       const currentUser = getCurrentUser();
-      if (currentUser) {
+      if (currentUser && localStorage.getItem("isAuthenticated")) {
         try {
           await signOut();
           userHasAuthenticated(false);
@@ -47,23 +48,27 @@ export default function Login() {
     try {
       await signIn({ username, password });
 
-      const userRole = await invokeApig({
-        path: "/checkUserRole",
-        method: "POST",
-        body: { email: username },
-      });
+      // const userRole = await invokeApig({
+      //   path: "/checkUserRole",
+      //   method: "POST",
+      //   body: { email: username },
+      // });
 
-      console.log(userRole);
+     const attributes: any = await getUserAttributes();
+     console.log("User attributes: ", attributes);
 
-      const role = userRole.role;
-      console.log(role);
+     const role = attributes["nickname"]; // Fetch the nickname attribute
+     console.log(`User nickname: ${role}`);
+
+      // const role = userRole.role;
+      // console.log(role);
 
       userHasAuthenticated(true);
       updateUserRole(role);
 
       // Persist state in localStorage
       localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userRole", userRole);
+      localStorage.setItem("userRole", role);
 
       navigate("/dashboard");
     } catch (error) {

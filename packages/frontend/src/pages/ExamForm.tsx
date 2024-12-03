@@ -14,14 +14,15 @@ const ExamForm: React.FC = () => {
   const [createdBy, setCreator] = useState("");
   const [creationDate, setDate] = useState("");
   const [contributers, setContributers] = useState("");
+  const [examContent, setExamContent] = useState("");
   const [responseResult, setResponseResult] = useState<string>(""); // State to store the API response
   const [loading, setLoading] = useState(false);
   const [loadingPage, setLoadingPage] = useState(true);
+  const [loadingApproval, setLoadingApproval] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [feedback, setFeedback] = useState("");
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
 
   // Fetch initial data
   const fetchInitialData = async () => {
@@ -32,9 +33,9 @@ const ExamForm: React.FC = () => {
       });
 
       if (!response || Object.keys(response).length === 0) {
-        console.log(response)
+        console.log(response);
         setErrorMsg("Error getting exam data!");
-        return
+        return;
       }
 
       console.log("Initial Data Loaded:", response);
@@ -44,7 +45,9 @@ const ExamForm: React.FC = () => {
       setCreator(response.createdBy);
       setDate(response.creationDate);
       setContributers(String(response.contributers));
-
+      setResponseResult(response.examContent);
+      setDuration(response.examDuration);
+      setMark(response.examMark);
     } catch (err: any) {
       console.error("Error fetching initial data:", err);
     } finally {
@@ -62,22 +65,35 @@ const ExamForm: React.FC = () => {
     return () => clearTimeout(timer);
   }, [id]);
 
-
   const sendFeedback = async (e: React.MouseEvent) => {
-   const payload = {
+    const payload = {
       examID: id,
       examContent: responseResult,
+      description: feedback,
     };
 
     console.log(payload);
   };
 
   const sendForApproval = async (e: React.MouseEvent) => {
-    alert("Sent for approval!")
-  }
+    setLoadingApproval(true);
+    const payload = {
+      examID: id,
+    };
 
-  const sendForEvaluation = async (e: React.MouseEvent) => {
-    alert("Sent for evaluation!");
+    try {
+      const response = await invokeApig({
+        path: "/sendForApproval",
+        method: "POST",
+        body: payload,
+      });
+
+      console.log(response);
+    } catch (error) {
+      console.error("Error sending exam:", error);
+    } finally {
+      setLoadingApproval(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,10 +133,9 @@ const ExamForm: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-   if (errorMsg) {
-     return <div>{errorMsg}</div>;
-   }
-
+  if (errorMsg) {
+    return <div>{errorMsg}</div>;
+  }
 
   return (
     <div
@@ -141,6 +156,7 @@ const ExamForm: React.FC = () => {
           color: "#333",
           marginBottom: "1rem",
           fontSize: "28px",
+          marginTop: "0",
         }}
       >
         Generate Exam
@@ -176,29 +192,29 @@ const ExamForm: React.FC = () => {
           onMouseDown={(e) => (e.target.style.transform = "scale(0.98)")}
           onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
         >
-          Send For Approval
-        </button>
-        <button
-          onClick={sendForEvaluation}
-          style={{
-            padding: "0.5rem 1rem", // Smaller padding for a smaller button
-            backgroundColor: "#4CAF50", // Green color for 'Evaluate'
-            color: "#fff",
-            border: "none",
-            borderRadius: "4px",
-            fontSize: "14px", // Smaller font size
-            fontWeight: "bold",
-            cursor: "pointer",
-            transition: "background-color 0.3s ease, transform 0.3s ease",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-            width: "auto", // Auto width to fit text
-          }}
-          onMouseOver={(e) => (e.target.style.backgroundColor = "#45a049")}
-          onMouseOut={(e) => (e.target.style.backgroundColor = "#4CAF50")}
-          onMouseDown={(e) => (e.target.style.transform = "scale(0.98)")}
-          onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
-        >
-          Send For Evaluation
+          {loadingApproval ? (
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <span
+                style={{
+                  width: "1rem",
+                  height: "1rem",
+                  border: "2px solid #fff",
+                  borderRadius: "50%",
+                  borderTop: "2px solid transparent",
+                  animation: "spin 1s linear infinite",
+                }}
+              />
+              Sending
+            </span>
+          ) : (
+            "Send For Approval"
+          )}
         </button>
       </div>
 
@@ -246,142 +262,178 @@ const ExamForm: React.FC = () => {
       </div>
 
       {/* Top Horizontal Form */}
-      <form style={{ width: "100%" }} onSubmit={handleSubmit}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            // width: "100%",
-            maxWidth: "900px",
-            marginBottom: "1rem",
-            padding: "1rem",
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-            margin: "0 auto",
-          }}
-        >
-          {/* Read-only fields */}
-          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-            <input
-              type="text"
-              value={grade}
-              readOnly
-              style={{
-                width: "120px",
-                padding: "0.5rem",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                fontSize: "14px",
-                backgroundColor: "#f3f3f3",
-              }}
-            />
-            <input
-              type="text"
-              value={subject}
-              readOnly
-              style={{
-                width: "120px",
-                padding: "0.5rem",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                fontSize: "14px",
-                backgroundColor: "#f3f3f3",
-              }}
-            />
-            <input
-              type="text"
-              value={semester}
-              readOnly
-              style={{
-                width: "160px",
-                padding: "0.5rem",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                fontSize: "14px",
-                backgroundColor: "#f3f3f3",
-              }}
-            />
-          </div>
-
-          {/* Editable fields */}
-          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-            <input
-              type="number"
-              min={1}
-              max={3}
-              placeholder="Duration (hours)"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              required
-              style={{
-                width: "120px",
-                padding: "0.5rem",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                fontSize: "14px",
-              }}
-            />
-            <input
-              type="number"
-              min={10}
-              max={100}
-              placeholder="Total Marks"
-              value={totalMark}
-              onChange={(e) => setMark(e.target.value)}
-              required
-              style={{
-                width: "100px",
-                padding: "0.5rem",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                fontSize: "14px",
-              }}
-            />
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "900px",
+          marginBottom: "1rem",
+          padding: "1rem",
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+          margin: "0 auto",
+        }}
+      >
+        {/* Displaying the data horizontally with labels */}
+        <div style={{ display: "flex", justifyContent:"space-between", width: "100%" }}>
+          {/* Grade */}
+          <div
             style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: "#4b4b4b",
-              color: "#fff",
-              border: "none",
-              borderRadius: "4px",
-              fontSize: "14px",
-              fontWeight: "bold",
-              cursor: "pointer",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
             }}
           >
-            {loading ? (
-              <span
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <span
-                  style={{
-                    width: "1rem",
-                    height: "1rem",
-                    border: "2px solid #fff",
-                    borderRadius: "50%",
-                    borderTop: "2px solid transparent",
-                    animation: "spin 1s linear infinite",
-                  }}
-                />
-                generating
-              </span>
-            ) : (
-              "Generate"
-            )}
-          </button>
+            <label
+              style={{
+                fontWeight: "bold",
+                fontSize: "14px",
+                marginBottom: "0.3rem",
+              }}
+            >
+              Grade:
+            </label>
+            <div
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+                backgroundColor: "#f3f3f3",
+                textAlign: "center",
+              }}
+            >
+              {grade}
+            </div>
+          </div>
+
+          {/* Subject */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <label
+              style={{
+                fontWeight: "bold",
+                fontSize: "14px",
+                marginBottom: "0.3rem",
+              }}
+            >
+              Subject:
+            </label>
+            <div
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+                backgroundColor: "#f3f3f3",
+                textAlign: "center",
+              }}
+            >
+              {subject}
+            </div>
+          </div>
+
+          {/* Semester */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <label
+              style={{
+                fontWeight: "bold",
+                fontSize: "14px",
+                marginBottom: "0.3rem",
+              }}
+            >
+              Semester:
+            </label>
+            <div
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+                backgroundColor: "#f3f3f3",
+                textAlign: "center",
+              }}
+            >
+              {semester}
+            </div>
+          </div>
+
+          {/* Duration */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <label
+              style={{
+                fontWeight: "bold",
+                fontSize: "14px",
+                marginBottom: "0.3rem",
+              }}
+            >
+              Duration (hours):
+            </label>
+            <div
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+                backgroundColor: "#f3f3f3",
+                textAlign: "center",
+              }}
+            >
+              {duration}
+            </div>
+          </div>
+
+          {/* Total Marks */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <label
+              style={{
+                fontWeight: "bold",
+                fontSize: "14px",
+                marginBottom: "0.3rem",
+              }}
+            >
+              Total Marks:
+            </label>
+            <div
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+                backgroundColor: "#f3f3f3",
+                textAlign: "center",
+              }}
+            >
+              {totalMark}
+            </div>
+          </div>
         </div>
-      </form>
+      </div>
 
       {/* Text Area for Generated Exam */}
       <div
@@ -476,9 +528,6 @@ const ExamForm: React.FC = () => {
       </style>
     </div>
   );
-
-
-}
-  
+};
 
 export default ExamForm;

@@ -16,6 +16,10 @@ import AuthRoute from "./pages/AuthRoute";
 import { InitialForm } from "./pages/InitialForm";
 import { getCurrentUser } from "./lib/getToken"
 import AlreadyAuthRoute from "./pages/AlreadyAuthRoute";
+import GeneratorRoute from "./pages/generatorRoutes";
+import ApproverRoute from "./pages/ApproverRoute";
+import ExamApproval from "./pages/ExamApproval";
+import NotFound from "./pages/NotFound";
 
 const App: React.FC = () => {
   // Authentication state
@@ -75,16 +79,32 @@ const App: React.FC = () => {
             }
           >
             {/* Nested Routes for Dashboard */}
-            <Route index element={<div>WELCOME TO MOE QUEST-AI</div>} />{" "}
-            {/* Default Content */}
-            <Route path="examForm" element={<InitialForm />} />
+            <Route index element={<div></div>} /> {/* Default Content */}
+            <Route
+              path="examForm"
+              element={
+                <GeneratorRoute>
+                  <InitialForm />
+                </GeneratorRoute>
+              }
+            />
             <Route path="examForm/:id" element={<ExamForm />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="feedback-form" element={<FeedbackForm />} />
+            <Route
+              path="approveExam"
+              element={
+                <ApproverRoute>
+                  <ExamApproval />
+                </ApproverRoute>
+              }
+            />
           </Route>
 
           {/* Redirect '/' to '/dashboard' */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
     </AppContext.Provider>

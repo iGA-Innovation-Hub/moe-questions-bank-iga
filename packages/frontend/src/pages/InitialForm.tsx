@@ -5,9 +5,20 @@ import { getFormattedDateTime } from "../lib/getDateTime.js";
 import { useNavigate } from "react-router-dom";
 
 export function InitialForm() {
-  const [grade, setGrade] = useState("");
-  const [subject, setSubject] = useState("");
-  const [semester, setSemester] = useState("");
+  const [grade, setGrade] = useState("Grade 10");
+  const [subject, setSubject] = useState("ENG102");
+  const [semester, setSemester] = useState("Second 2024/2025");
+  const [duration, setDuration] = useState("2");
+  const [totalMark, setMark] = useState("50");
+  const [questionTypes, setQuestionTypes] = useState<string[]>([]);
+  const [questionCounts, setQuestionCounts] = useState({
+    MCQ: 0,
+    Essay: 0,
+    TrueFalse: 0,
+    FillInTheBlank: 0,
+    ShortAnswer: 0,
+  });
+  const [likePreviousExams, setLikePreviousExams] = useState(false);
   const [newExam, setNewExam] = useState(true); // Track which option is selected
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -65,7 +76,8 @@ export function InitialForm() {
 
       const createDate = getFormattedDateTime();
 
-      if (!grade || !subject || !semester) {
+        if (!grade || !subject || !semester || !duration || !totalMark) {
+          console.log(grade, subject,semester,duration,totalMark)
         setErrorMsg("Please fill the form!");
         setLoading(false);
         return;
@@ -76,6 +88,10 @@ export function InitialForm() {
         class: grade,
         subject: subject,
         semester: semester,
+        duration: duration,
+        total_mark: totalMark,
+        question_types: questionCounts,
+        like_previous_exams: likePreviousExams,
         created_by: currentUserEmail,
         creation_date: createDate,
         contributers: [currentUserEmail],
@@ -179,30 +195,52 @@ export function InitialForm() {
             width: "100%",
             maxWidth: "800px",
             backgroundColor: "#fff",
-            padding: "1rem",
-            borderRadius: "8px",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+            padding: "2rem",
+            borderRadius: "12px",
+            boxShadow: "0 4px 16px rgba(0, 0, 0, 0.1)",
             fontFamily: "Arial, sans-serif",
-            gap: "1rem", // Space between inputs
-            alignItems: "center",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.5rem", // Consistent spacing between elements
           }}
         >
           <div
             style={{
               width: "100%",
               display: "flex",
-              gap: "1rem", // Space between inputs
-              alignItems: "center",
+              flexWrap: "wrap", // Responsive behavior
+              gap: "1.5rem",
             }}
           >
+            <div style={{ width: "100%" }}>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  fontSize: "16px",
+                  color: "#4b4b4b",
+                  fontWeight: "bold",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={likePreviousExams}
+                  onChange={(e) => setLikePreviousExams(e.target.checked)}
+                  style={{
+                    marginRight: "0.5rem",
+                  }}
+                />
+                Express Mode
+              </label>
+            </div>
+
             <label
               style={{
+                flex: "1",
+                minWidth: "200px",
                 fontSize: "16px",
                 color: "#4b4b4b",
                 fontWeight: "bold",
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
               }}
             >
               Grade:
@@ -210,59 +248,25 @@ export function InitialForm() {
                 value={grade}
                 onChange={(e) => setGrade(e.target.value)}
                 style={{
+                  display: "block",
                   width: "100%",
-                  padding: "0.5rem",
-                  borderRadius: "4px",
+                  marginTop: "0.5rem",
+                  padding: "0.75rem",
+                  borderRadius: "8px",
                   border: "1px solid #ccc",
                   fontSize: "14px",
-                  marginTop: "0.5rem",
                 }}
               >
-                <option value="">Select Grade</option>
-                <option value="Grade 10">Secondary Grade 1</option>
-                <option value="Grade 11">Secondary Grade 2</option>
-                <option value="Grade 12">Secondary Grade 3</option>
+                <option value="Grade 10">Grade 10</option>
               </select>
             </label>
-
             <label
               style={{
+                flex: "1",
+                minWidth: "200px",
                 fontSize: "16px",
                 color: "#4b4b4b",
                 fontWeight: "bold",
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
-              }}
-            >
-              Subject:
-              <select
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  borderRadius: "4px",
-                  border: "1px solid #ccc",
-                  fontSize: "14px",
-                  marginTop: "0.5rem",
-                }}
-              >
-                <option value="">Select Subject</option>
-                <option value="English">ENG</option>
-                <option value="Science">SCI</option>
-                <option value="Math">MATH</option>
-              </select>
-            </label>
-
-            <label
-              style={{
-                fontSize: "16px",
-                color: "#4b4b4b",
-                fontWeight: "bold",
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
               }}
             >
               Semester:
@@ -270,35 +274,199 @@ export function InitialForm() {
                 value={semester}
                 onChange={(e) => setSemester(e.target.value)}
                 style={{
+                  display: "block",
                   width: "100%",
-                  padding: "0.5rem",
-                  borderRadius: "4px",
+                  marginTop: "0.5rem",
+                  padding: "0.75rem",
+                  borderRadius: "8px",
                   border: "1px solid #ccc",
                   fontSize: "14px",
-                  marginTop: "0.5rem",
                 }}
               >
-                <option value="">Select Semester</option>
-                <option value="First 2024/2025">First 2024/2025</option>
                 <option value="Second 2024/2025">Second 2024/2025</option>
               </select>
             </label>
+
+            <label
+              style={{
+                flex: "1",
+                minWidth: "200px",
+                fontSize: "16px",
+                color: "#4b4b4b",
+                fontWeight: "bold",
+              }}
+            >
+              Subject:
+              <select
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  marginTop: "0.5rem",
+                  padding: "0.75rem",
+                  borderRadius: "8px",
+                  border: "1px solid #ccc",
+                  fontSize: "14px",
+                }}
+              >
+                <option value="ENG102">ENG102</option>
+              </select>
+            </label>
           </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "1.5rem",
+            }}
+          >
+            <label
+              style={{
+                flex: "1",
+                minWidth: "200px",
+                fontSize: "16px",
+                color: "#4b4b4b",
+                fontWeight: "bold",
+              }}
+            >
+              Duration:
+              <input
+                min={1}
+                max={3}
+                type="number"
+                value={!likePreviousExams ? 2 : 1} // Use fixed value or user input
+                onChange={(e) =>
+                  likePreviousExams && setDuration(e.target.value)
+                } // Allow edits only when unchecked
+                disabled={!likePreviousExams} // Disable input when checkbox is selected
+                style={{
+                  display: "block",
+                  width: "100%",
+                  marginTop: "0.5rem",
+                  padding: "0.75rem",
+                  borderRadius: "8px",
+                  border: "1px solid #ccc",
+                  fontSize: "14px",
+                }}
+              />
+            </label>
+
+            <label
+              style={{
+                flex: "1",
+                minWidth: "200px",
+                fontSize: "16px",
+                color: "#4b4b4b",
+                fontWeight: "bold",
+              }}
+            >
+              Total Mark:
+              <input
+                min={10}
+                max={100}
+                type="number"
+                value={!likePreviousExams ? 50 : 10} // Use fixed value or user input
+                onChange={(e) => likePreviousExams && setMark(e.target.value)} // Allow edits only when unchecked
+                disabled={!likePreviousExams} // Disable input when checkbox is selected
+                style={{
+                  display: "block",
+                  width: "100%",
+                  marginTop: "0.5rem",
+                  padding: "0.75rem",
+                  borderRadius: "8px",
+                  border: "1px solid #ccc",
+                  fontSize: "14px",
+                }}
+              />
+            </label>
+          </div>
+
+          {/* Conditional Rendering */}
+          {likePreviousExams && (
+            <fieldset
+              style={{
+                padding: "1rem",
+                border: "1px solid #ccc",
+                borderRadius: "8px",
+              }}
+            >
+              <legend
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                  color: "#4b4b4b",
+                }}
+              >
+                Question Types
+              </legend>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                }}
+              >
+                {/* Question Type Inputs */}
+                {[
+                  "MCQ",
+                  "Essay",
+                  "TrueFalse",
+                  "FillInTheBlank",
+                  "ShortAnswer",
+                ].map((type) => (
+                  <label
+                    key={type}
+                    style={{
+                      fontSize: "14px",
+                      color: "#333",
+                      fontWeight: "normal",
+                    }}
+                  >
+                    {type}:
+                    <input
+                      type="number"
+                      min={0}
+                      value={questionCounts[type] || 0}
+                      onChange={(e) =>
+                        setQuestionCounts((prev) => ({
+                          ...prev,
+                          [type]: Number(e.target.value),
+                        }))
+                      }
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        marginTop: "0.5rem",
+                        padding: "0.5rem",
+                        borderRadius: "8px",
+                        border: "1px solid #ccc",
+                      }}
+                    />
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
+
           <button
             type="submit"
             disabled={loading}
             style={{
+              alignSelf: "flex-end",
               backgroundColor: "#007BFF",
               color: "#fff",
-              padding: "0.5rem 1rem",
-              borderRadius: "4px",
+              padding: "0.75rem 1.5rem",
+              borderRadius: "8px",
               border: "none",
-              fontSize: "14px",
-              cursor: "pointer",
+              fontSize: "16px",
+              cursor: loading ? "not-allowed" : "pointer",
               fontWeight: "bold",
-              float: "right",
-              marginTop: "1rem",
+              transition: "background-color 0.3s ease",
             }}
+            onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
+            onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")}
           >
             {loading ? (
               <span
@@ -306,6 +474,7 @@ export function InitialForm() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  gap: "0.5rem",
                 }}
               >
                 <span
@@ -317,7 +486,7 @@ export function InitialForm() {
                     borderTop: "2px solid transparent",
                     animation: "spin 1s linear infinite",
                   }}
-                />
+                ></span>
                 Loading...
               </span>
             ) : (
@@ -403,3 +572,5 @@ export function InitialForm() {
     </div>
   );
 }
+
+export default InitialForm;

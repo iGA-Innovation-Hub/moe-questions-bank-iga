@@ -52,6 +52,18 @@ export function ApiStack({ stack }: StackContext) {
           handler: "packages/functions/src/createNewExam.createExam",
           runtime: "nodejs20.x",
           timeout: "180 seconds",
+          permissions: ["dynamodb", exams_table, "bedrock"],
+          environment: {
+            TABLE_NAME: exams_table.tableName,
+          },
+        },
+      },
+
+      "POST /sendForApproval": {
+        function: {
+          handler: "packages/functions/src/sendExamForApproval.sendForApproval",
+          runtime: "nodejs20.x",
+          timeout: "180 seconds",
           permissions: ["dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,

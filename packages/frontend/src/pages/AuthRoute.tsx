@@ -14,7 +14,7 @@ const AuthRoute: React.FC<{ children: React.ReactNode }> = ({
     return null; // or a loading spinner if needed
   }
 
-  if (!isAuthenticated || userRole !== "generator") {
+  if (!isAuthenticated) {
 
     // Redirect to login if not authenticated
     return <Navigate to="/login" replace />;

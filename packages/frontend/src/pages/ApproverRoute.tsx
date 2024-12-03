@@ -13,7 +13,7 @@ const ApproverRoute: React.FC<{ children: React.ReactNode }> = ({
     return null; // or a loading spinner if needed
   }
 
-  if (userRole !== "approver") {
+  if (userRole !== "Admin") {
     // Redirect to dashboard if not a Approver
     return <Navigate to="/dashboard" replace />;
   }
