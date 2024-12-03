@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import invokeApig from "../lib/callAPI.ts";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { getCurrentUserEmail } from "../lib/getToken.ts";
 
 //storing user input
 const ExamForm: React.FC = () => {
@@ -14,7 +15,7 @@ const ExamForm: React.FC = () => {
   const [createdBy, setCreator] = useState("");
   const [creationDate, setDate] = useState("");
   const [contributers, setContributers] = useState("");
-  const [examContent, setExamContent] = useState("");
+  const [examState, setExamState] = useState("");
   const [responseResult, setResponseResult] = useState<string>(""); // State to store the API response
   const [loading, setLoading] = useState(false);
   const [loadingPage, setLoadingPage] = useState(true);
@@ -39,6 +40,13 @@ const ExamForm: React.FC = () => {
       }
 
       console.log("Initial Data Loaded:", response);
+
+
+      if (response.examState !== "building") {
+        navigate("/dashboard/viewExam/" + id)
+      }
+
+
       setGrade(response.examClass);
       setSubject(response.examSubject);
       setSemester(response.examSemester);
@@ -48,6 +56,7 @@ const ExamForm: React.FC = () => {
       setResponseResult(response.examContent);
       setDuration(response.examDuration);
       setMark(response.examMark);
+      setExamState(response.examState);
     } catch (err: any) {
       console.error("Error fetching initial data:", err);
     } finally {
@@ -65,15 +74,6 @@ const ExamForm: React.FC = () => {
     return () => clearTimeout(timer);
   }, [id]);
 
-  const sendFeedback = async (e: React.MouseEvent) => {
-    const payload = {
-      examID: id,
-      examContent: responseResult,
-      description: feedback,
-    };
-
-    console.log(payload);
-  };
 
   const sendForApproval = async (e: React.MouseEvent) => {
     setLoadingApproval(true);
@@ -89,6 +89,7 @@ const ExamForm: React.FC = () => {
       });
 
       console.log(response);
+      navigate("/dashboard/viewExam/" + id);
     } catch (error) {
       console.error("Error sending exam:", error);
     } finally {
@@ -96,21 +97,29 @@ const ExamForm: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const sendFeedback = async (e: React.FormEvent) => {
     e.preventDefault(); //prevents the page from refreshing when submit the form cuse When you submit a form in React, the browser automatically reloads the page unless you stop it
 
     setLoading(true); // Start loading animation
 
-    const payload = {
-      class: grade,
-      subject: subject,
-      duration: duration,
-      total_mark: totalMark,
-    };
-
-    console.log("Submitting exam data to the model:", payload);
-
     try {
+      const currentUserEmail :string = await getCurrentUserEmail();
+      console.log("Current User Email:", currentUserEmail);
+
+      if (!contributers.includes(currentUserEmail)) {
+        setContributers(contributers + ", " + currentUserEmail)
+      }
+
+      const payload = {
+        examID: id,
+        examContent: responseResult,
+        description: feedback,
+        contributers: contributers,
+      };
+
+      console.log("Sending changes:", payload);
+
+
       const response = await invokeApig({
         path: "/generate",
         method: "POST",
@@ -118,7 +127,8 @@ const ExamForm: React.FC = () => {
       });
 
       console.log("API Response:", response);
-      setResponseResult(response.question);
+      setResponseResult(response.newExamContent);
+      setFeedback("");
     } catch (error) {
       console.error("Error generating exam:", error);
       alert("Failed to generate exam. Please try again.");
@@ -172,50 +182,54 @@ const ExamForm: React.FC = () => {
           padding: "1rem 0",
         }}
       >
-        <button
-          onClick={sendForApproval}
-          style={{
-            padding: "0.5rem 1rem", // Smaller padding for a smaller button
-            backgroundColor: "#2196F3", // Blue color for 'Send For Approval'
-            color: "#fff",
-            border: "none",
-            borderRadius: "4px",
-            fontSize: "14px", // Smaller font size
-            fontWeight: "bold",
-            cursor: "pointer",
-            transition: "background-color 0.3s ease, transform 0.3s ease",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-            width: "auto", // Auto width to fit text
-          }}
-          onMouseOver={(e) => (e.target.style.backgroundColor = "#1976D2")}
-          onMouseOut={(e) => (e.target.style.backgroundColor = "#2196F3")}
-          onMouseDown={(e) => (e.target.style.transform = "scale(0.98)")}
-          onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
-        >
-          {loadingApproval ? (
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+        {examState === "building" && (
+          <button
+            onClick={sendForApproval}
+            style={{
+              padding: "0.5rem 1rem", // Smaller padding for a smaller button
+              backgroundColor: "#2196F3", // Blue color for 'Send For Approval'
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              fontSize: "14px", // Smaller font size
+              fontWeight: "bold",
+              cursor: "pointer",
+              transition: "background-color 0.3s ease, transform 0.3s ease",
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+              width: "auto", // Auto width to fit text
+            }}
+            onMouseOver={(e) => (e.target.style.backgroundColor = "#1976D2")}
+            onMouseOut={(e) => (e.target.style.backgroundColor = "#2196F3")}
+            onMouseDown={(e) => (e.target.style.transform = "scale(0.98)")}
+            onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+          >
+            {loadingApproval ? (
               <span
                 style={{
-                  width: "1rem",
-                  height: "1rem",
-                  border: "2px solid #fff",
-                  borderRadius: "50%",
-                  borderTop: "2px solid transparent",
-                  animation: "spin 1s linear infinite",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
-              />
-              Sending
-            </span>
-          ) : (
-            "Send For Approval"
-          )}
-        </button>
+              >
+                <span
+                  style={{
+                    width: "1rem",
+                    height: "1rem",
+                    border: "2px solid #fff",
+                    borderRadius: "50%",
+                    borderTop: "2px solid transparent",
+                    animation: "spin 1s linear infinite",
+                  }}
+                />
+                Sending
+              </span>
+            ) : (
+              "Send For Approval"
+            )}
+          </button>
+        )}
+
+        
       </div>
 
       <div
@@ -277,7 +291,13 @@ const ExamForm: React.FC = () => {
         }}
       >
         {/* Displaying the data horizontally with labels */}
-        <div style={{ display: "flex", justifyContent:"space-between", width: "100%" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
           {/* Grade */}
           <div
             style={{
@@ -515,7 +535,29 @@ const ExamForm: React.FC = () => {
           onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
           onMouseOut={(e) => (e.target.style.backgroundColor = "#4b4b4b")}
         >
-          {loading ? "Regenerating..." : "Regenerate"}
+          {loading ? (
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <span
+                style={{
+                  width: "1rem",
+                  height: "1rem",
+                  border: "2px solid #fff",
+                  borderRadius: "50%",
+                  borderTop: "2px solid transparent",
+                  animation: "spin 1s linear infinite",
+                }}
+              />
+              Regenerating...
+            </span>
+          ) : (
+            "Regenerate"
+          )}
         </button>
       </div>
       <style>

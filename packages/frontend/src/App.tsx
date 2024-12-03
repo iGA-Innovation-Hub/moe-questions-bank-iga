@@ -20,6 +20,7 @@ import GeneratorRoute from "./pages/generatorRoutes";
 import ApproverRoute from "./pages/ApproverRoute";
 import ExamApproval from "./pages/ExamApproval";
 import NotFound from "./pages/NotFound";
+import ViewExam from "./pages/ViewExam";
 
 const App: React.FC = () => {
   // Authentication state
@@ -89,6 +90,7 @@ const App: React.FC = () => {
               }
             />
             <Route path="examForm/:id" element={<ExamForm />} />
+            <Route path="viewExam/:id" element={<ViewExam />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="feedback-form" element={<FeedbackForm />} />
             <Route

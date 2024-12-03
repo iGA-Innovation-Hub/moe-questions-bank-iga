@@ -226,7 +226,7 @@ export function InitialForm() {
                   type="checkbox"
                   checked={likePreviousExams}
                   onChange={(e) => {
-                      setLikePreviousExams(e.target.checked);
+                    setLikePreviousExams(e.target.checked);
                   }}
                   style={{
                     marginRight: "0.5rem",
@@ -506,60 +506,163 @@ export function InitialForm() {
             marginTop: "2rem",
             width: "100%",
             padding: "1rem",
-            backgroundColor: "#fff",
+            backgroundColor: "#fafafa",
             borderRadius: "8px",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
           }}
         >
-          <h3>Available Exams:</h3>
+          <h3 style={{ marginBottom: "1.5rem", color: "#333" }}>
+            Available Exams To Edit:
+          </h3>
           {exams.map((exam) => (
             <div
               key={exam.examID}
-              onClick={() => navigate(`/dashboard/examForm/${exam.examID}`)} // Redirect to the exam form page
+              onClick={() => navigate(`/dashboard/viewExam/${exam.examID}`)} // Redirect to the exam form page
               style={{
                 marginBottom: "1rem",
-                padding: "0.5rem",
-                backgroundColor: "#f2f2f2",
+                padding: "1rem",
+                backgroundColor: "#fff",
                 borderRadius: "8px",
                 display: "flex",
                 justifyContent: "space-between",
-                alignItems: "center",
+                alignItems: "flex-start",
                 cursor: "pointer",
                 transition: "background-color 0.3s ease",
+                border: "1px solid rgba(0, 0, 0, 0.05)",
+                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
               }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = "#f9f9f9")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor = "#fff")
+              }
             >
-              <p style={{ flex: 1, textAlign: "left" }}>
-                Creator: {exam.createdBy}
-              </p>
-              <p style={{ flex: 1, textAlign: "left" }}>
-                Date: {exam.creationDate}
-              </p>
-              <p style={{ flex: 1, textAlign: "left" }}>
-                Subject: {exam.examSubject}
-              </p>
-              <p style={{ flex: 1, textAlign: "left" }}>
-                Class: {exam.examClass}
-              </p>
-              <p style={{ flex: 1, textAlign: "left" }}>
-                Semester: {exam.examSemester}
-              </p>
+              {/* Creator */}
+              <div style={{ flex: 1, marginRight: "1rem" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "12px",
+                    color: "#777",
+                  }}
+                >
+                  Creator
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "14px",
+                    color: "#333",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {exam.createdBy}
+                </p>
+              </div>
+
+              {/* Date */}
+              <div style={{ flex: 1, marginRight: "1rem" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "12px",
+                    color: "#777",
+                  }}
+                >
+                  Date
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "14px",
+                    color: "#333",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {exam.creationDate}
+                </p>
+              </div>
+
+              {/* Subject */}
+              <div style={{ flex: 1, marginRight: "1rem" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "12px",
+                    color: "#777",
+                  }}
+                >
+                  Subject
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "14px",
+                    color: "#333",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {exam.examSubject}
+                </p>
+              </div>
+
+              {/* Class */}
+              <div style={{ flex: 1, marginRight: "1rem" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "12px",
+                    color: "#777",
+                  }}
+                >
+                  Class
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "14px",
+                    color: "#333",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {exam.examClass}
+                </p>
+              </div>
+
+              {/* Semester */}
+              <div style={{ flex: 1 }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "12px",
+                    color: "#777",
+                  }}
+                >
+                  Semester
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "14px",
+                    color: "#333",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {exam.examSemester}
+                </p>
+              </div>
+
+              {/* State */}
+              <div
+                style={{
+                  flex: 1,
+                  textAlign: "right",
+                }}
+              >
+              </div>
             </div>
           ))}
-        </div>
-      )}
-
-      {!gettingExams && gettingExamsError && (
-        <div
-          style={{
-            marginTop: "2rem",
-            padding: "1rem",
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-            color: "red",
-          }}
-        >
-          {gettingExamsError}
         </div>
       )}
 

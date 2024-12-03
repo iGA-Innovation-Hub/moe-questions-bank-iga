@@ -102,7 +102,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                 border: "none",
               })}
             >
-              Approve Exams
+              Pending Exams
             </NavLink>
           )}
 

@@ -38,12 +38,27 @@ export function ApiStack({ stack }: StackContext) {
         },
       },
 
+      "GET /getPendingExams": {
+        function: {
+          handler: "packages/functions/src/getPendingExams.getExams",
+          runtime: "nodejs20.x",
+          timeout: "180 seconds",
+          permissions: ["dynamodb", exams_table],
+          environment: {
+            TABLE_NAME: exams_table.tableName,
+          },
+        },
+      },
+
       "POST /generate": {
         function: {
           handler: "packages/functions/src/generateExam.generate",
           runtime: "nodejs20.x",
           timeout: "180 seconds",
-          permissions: ["bedrock"],
+          permissions: ["bedrock", "dynamodb", exams_table],
+          environment: {
+            TABLE_NAME: exams_table.tableName,
+          },
         },
       },
 
@@ -62,6 +77,43 @@ export function ApiStack({ stack }: StackContext) {
       "POST /sendForApproval": {
         function: {
           handler: "packages/functions/src/sendExamForApproval.sendForApproval",
+          runtime: "nodejs20.x",
+          timeout: "180 seconds",
+          permissions: ["dynamodb", exams_table],
+          environment: {
+            TABLE_NAME: exams_table.tableName,
+          },
+        },
+      },
+
+      "POST /changeExamToBuild": {
+        function: {
+          handler:
+            "packages/functions/src/changeExamStateToBuild.changeToBuild",
+          runtime: "nodejs20.x",
+          timeout: "180 seconds",
+          permissions: ["dynamodb", exams_table],
+          environment: {
+            TABLE_NAME: exams_table.tableName,
+          },
+        },
+      },
+
+      "POST /approveExam": {
+        function: {
+          handler: "packages/functions/src/approveExam.approve",
+          runtime: "nodejs20.x",
+          timeout: "180 seconds",
+          permissions: ["dynamodb", exams_table],
+          environment: {
+            TABLE_NAME: exams_table.tableName,
+          },
+        },
+      },
+
+      "POST /disapproveExam": {
+        function: {
+          handler: "packages/functions/src/disapproveExam.disapprove",
           runtime: "nodejs20.x",
           timeout: "180 seconds",
           permissions: ["dynamodb", exams_table],

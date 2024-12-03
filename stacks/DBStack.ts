@@ -25,6 +25,7 @@ export function DBStack({ stack, app }: StackContext) {
       examDuration: "string",
       examTotalMark: "number",
       numOfRegenerations: "number",
+      approverMsg: "string",
     },
     primaryIndex: { partitionKey: "examID" },
     globalIndexes: {
