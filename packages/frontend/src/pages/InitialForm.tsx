@@ -76,8 +76,8 @@ export function InitialForm() {
 
       const createDate = getFormattedDateTime();
 
-        if (!grade || !subject || !semester || !duration || !totalMark) {
-          console.log(grade, subject,semester,duration,totalMark)
+      if (!grade || !subject || !semester || !duration || !totalMark) {
+        console.log(grade, subject, semester, duration, totalMark);
         setErrorMsg("Please fill the form!");
         setLoading(false);
         return;
@@ -225,7 +225,9 @@ export function InitialForm() {
                 <input
                   type="checkbox"
                   checked={likePreviousExams}
-                  onChange={(e) => setLikePreviousExams(e.target.checked)}
+                  onChange={(e) => {
+                      setLikePreviousExams(e.target.checked);
+                  }}
                   style={{
                     marginRight: "0.5rem",
                   }}
@@ -336,7 +338,7 @@ export function InitialForm() {
                 min={1}
                 max={3}
                 type="number"
-                value={!likePreviousExams ? 2 : 1} // Use fixed value or user input
+                value={!likePreviousExams ? 2 : duration} // Use fixed value or user input
                 onChange={(e) =>
                   likePreviousExams && setDuration(e.target.value)
                 } // Allow edits only when unchecked
@@ -367,7 +369,7 @@ export function InitialForm() {
                 min={10}
                 max={100}
                 type="number"
-                value={!likePreviousExams ? 50 : 10} // Use fixed value or user input
+                value={!likePreviousExams ? 50 : totalMark} // Use fixed value or user input
                 onChange={(e) => likePreviousExams && setMark(e.target.value)} // Allow edits only when unchecked
                 disabled={!likePreviousExams} // Disable input when checkbox is selected
                 style={{
