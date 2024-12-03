@@ -26,6 +26,18 @@ export function ApiStack({ stack }: StackContext) {
         },
       },
 
+      "GET /getExamHistory": {
+        function: {
+          handler: "packages/functions/src/getExamHistory.getExams",
+          runtime: "nodejs20.x",
+          timeout: "180 seconds",
+          permissions: ["dynamodb", exams_table],
+          environment: {
+            TABLE_NAME: exams_table.tableName,
+          },
+        },
+      },
+
       "GET /getBuildingExams": {
         function: {
           handler: "packages/functions/src/getBuildingExams.getExams",

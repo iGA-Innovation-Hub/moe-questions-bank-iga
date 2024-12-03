@@ -500,6 +500,8 @@ export function InitialForm() {
 
       {!newExam && gettingExams && <div>Loading exams...</div>}
 
+      {!newExam && gettingExamsError && <div>Error Fetching Exams!</div>}
+
       {!newExam && !gettingExams && !gettingExamsError && exams.length > 0 && (
         <div
           style={{
@@ -659,8 +661,7 @@ export function InitialForm() {
                   flex: 1,
                   textAlign: "right",
                 }}
-              >
-              </div>
+              ></div>
             </div>
           ))}
         </div>
