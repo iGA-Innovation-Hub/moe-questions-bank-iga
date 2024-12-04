@@ -3,12 +3,19 @@ import {
   ConverseCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { APIGatewayProxyEvent } from "aws-lambda";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
 const client = new BedrockRuntimeClient({ region: "us-east-1" });
 
 const modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0";
 
+const dbClient = new DynamoDBClient({});
+
+const dynamo = DynamoDBDocumentClient.from(dbClient);
+
 export async function generate(event: APIGatewayProxyEvent) {
+  const tableName = process.env.TABLE_NAME;
   let data;
 
   //Handle empty body
@@ -22,42 +29,23 @@ export async function generate(event: APIGatewayProxyEvent) {
   data = JSON.parse(event.body);
   console.log(event.body);
 
-  //Retrieve the data
-  const class_level = data.class;
-  const subject = data.subject;
-  const question_types = data.question_types;
-  const duration = data.duration;
-  const total_mark = data.total_mark;
+  const exam = data.examContent;
+  const examID = data.examID;
+  const contributers = data.contributers;
+  const discription = data.description;
 
-  //Format the question types list
-  let question_types_str = "";
-  if (question_types) {
-    for (let i = 0; i < question_types.length; i++) {
-      question_types_str += question_types[i];
-      if (i !== question_types.length - 1) {
-        question_types_str += ", ";
-      }
-    }
-  }
 
-  //relevant_info is to be retrieved from the analyzed data
-  const relevant_info = "";
 
   try {
     const prompt = `
-      As a school exam generator and create an ${subject} exam for grade ${class_level} students. 
+      As a school exam generator, you will be given an exam that you will have to change based on the
+      user's discription. Change only what the user asked for. Return only the newly modified exam.
 
-      These are the types of questions to include: ${question_types_str}. Make sure to include all of them.
+      This is the user's discription and changes to do: ${discription}.
 
-      The exam duration should not exceed ${duration} hour.
 
-      The exam should have a total mark of ${total_mark} that should be distributed over the entire exam according to each question's weight.
-
-      Structure the exam appropriately where each question is correctly labeled and has its mark beside it.
-
-      Take to consideration this relevant information: ${relevant_info}
-
-      Make sure to return only the exam and nothing else.
+      This is the exam to modify: 
+      ${exam}
     `;
 
     const conversation = [
@@ -70,7 +58,7 @@ export async function generate(event: APIGatewayProxyEvent) {
     const command = new ConverseCommand({
       modelId,
       messages: conversation,
-      inferenceConfig: { maxTokens: 512, temperature: 0.5, topP: 0.9 },
+      inferenceConfig: { maxTokens: 1200, temperature: 0.5, topP: 0.9 },
     });
 
     const response = await client.send(command);
@@ -78,12 +66,26 @@ export async function generate(event: APIGatewayProxyEvent) {
     // Extract and print the response text.
     const responseText = response.output.message.content[0].text;
 
+
+    await dynamo.send(
+      new UpdateCommand({
+        TableName: tableName,
+        Key: {
+          examID: examID, // Primary key to find the item
+        },
+        UpdateExpression: "SET examContent = :examContent, contributers = :contributers", // Update only examState
+        ExpressionAttributeValues: {
+          ":examContent": responseText,
+          ":contributers": contributers,    // New value for examState
+        },
+      })
+    );
+
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        question: responseText,
-        built_prompt: prompt,
+        newExamContent: responseText,
       }),
     };
   } catch (error) {
