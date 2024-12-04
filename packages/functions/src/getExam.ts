@@ -21,6 +21,7 @@ export async function getExamData(event: APIGatewayProxyEvent) {
       new GetCommand({
         TableName: tableName,
         Key: {
+          //@ts-ignore
           examID: event.pathParameters.id,
         },
       })
@@ -28,6 +29,7 @@ export async function getExamData(event: APIGatewayProxyEvent) {
     body = body.Item;
   } catch (err) {
     statusCode = 400;
+    //@ts-ignore
     body = err.message;
   } finally {
     body = JSON.stringify(body);

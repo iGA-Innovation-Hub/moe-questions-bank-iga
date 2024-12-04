@@ -10,7 +10,6 @@ export function InitialForm() {
   const [semester, setSemester] = useState("Second 2024/2025");
   const [duration, setDuration] = useState("2");
   const [totalMark, setMark] = useState("50");
-  const [questionTypes, setQuestionTypes] = useState<string[]>([]);
   const [questionCounts, setQuestionCounts] = useState({
     MCQ: 0,
     Essay: 0,
@@ -18,7 +17,7 @@ export function InitialForm() {
     FillInTheBlank: 0,
     ShortAnswer: 0,
   });
-  const [likePreviousExams, setLikePreviousExams] = useState(false);
+  const [customize, setCustomize] = useState(false);
   const [newExam, setNewExam] = useState(true); // Track which option is selected
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -30,10 +29,11 @@ export function InitialForm() {
   // Fetch initial data
   const fetchInitialData = async () => {
     try {
-      const response = await invokeApig({
-        path: `/getBuildingExams`, // Adjust path as needed
-        method: "GET",
-      });
+        //@ts-ignore
+        const response = await invokeApig({
+          path: `/getBuildingExams`, // Adjust path as needed
+          method: "GET",
+        });
 
       if (!response || Object.keys(response).length === 0) {
         console.log(response);
@@ -76,13 +76,21 @@ export function InitialForm() {
 
       const createDate = getFormattedDateTime();
 
-      if (!grade || !subject || !semester || !duration || !totalMark) {
+      if (
+        !grade ||
+        !subject ||
+        !semester ||
+        (customize && (!duration || !totalMark))
+      ) {
         console.log(grade, subject, semester, duration, totalMark);
         setErrorMsg("Please fill the form!");
         setLoading(false);
         return;
       }
-
+      if (customize) {
+        setDuration(duration);
+        setMark(totalMark);
+      }
       setErrorMsg("");
       const payload = {
         class: grade,
@@ -91,7 +99,7 @@ export function InitialForm() {
         duration: duration,
         total_mark: totalMark,
         question_types: questionCounts,
-        like_previous_exams: likePreviousExams,
+        customize: customize,
         created_by: currentUserEmail,
         creation_date: createDate,
         contributers: [currentUserEmail],
@@ -224,15 +232,15 @@ export function InitialForm() {
               >
                 <input
                   type="checkbox"
-                  checked={likePreviousExams}
+                  checked={customize}
                   onChange={(e) => {
-                    setLikePreviousExams(e.target.checked);
+                    setCustomize(e.target.checked);
                   }}
                   style={{
                     marginRight: "0.5rem",
                   }}
                 />
-                Express Mode
+                Customize
               </label>
             </div>
 
@@ -317,139 +325,137 @@ export function InitialForm() {
             </label>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "1.5rem",
-            }}
-          >
-            <label
-              style={{
-                flex: "1",
-                minWidth: "200px",
-                fontSize: "16px",
-                color: "#4b4b4b",
-                fontWeight: "bold",
-              }}
-            >
-              Duration:
-              <input
-                min={1}
-                max={3}
-                type="number"
-                value={!likePreviousExams ? 2 : duration} // Use fixed value or user input
-                onChange={(e) =>
-                  likePreviousExams && setDuration(e.target.value)
-                } // Allow edits only when unchecked
-                disabled={!likePreviousExams} // Disable input when checkbox is selected
-                style={{
-                  display: "block",
-                  width: "100%",
-                  marginTop: "0.5rem",
-                  padding: "0.75rem",
-                  borderRadius: "8px",
-                  border: "1px solid #ccc",
-                  fontSize: "14px",
-                }}
-              />
-            </label>
-
-            <label
-              style={{
-                flex: "1",
-                minWidth: "200px",
-                fontSize: "16px",
-                color: "#4b4b4b",
-                fontWeight: "bold",
-              }}
-            >
-              Total Mark:
-              <input
-                min={10}
-                max={100}
-                type="number"
-                value={!likePreviousExams ? 50 : totalMark} // Use fixed value or user input
-                onChange={(e) => likePreviousExams && setMark(e.target.value)} // Allow edits only when unchecked
-                disabled={!likePreviousExams} // Disable input when checkbox is selected
-                style={{
-                  display: "block",
-                  width: "100%",
-                  marginTop: "0.5rem",
-                  padding: "0.75rem",
-                  borderRadius: "8px",
-                  border: "1px solid #ccc",
-                  fontSize: "14px",
-                }}
-              />
-            </label>
-          </div>
-
           {/* Conditional Rendering */}
-          {likePreviousExams && (
-            <fieldset
-              style={{
-                padding: "1rem",
-                border: "1px solid #ccc",
-                borderRadius: "8px",
-              }}
-            >
-              <legend
-                style={{
-                  fontSize: "16px",
-                  fontWeight: "bold",
-                  color: "#4b4b4b",
-                }}
-              >
-                Question Types
-              </legend>
+          {customize && (
+            <>
               <div
                 style={{
                   display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
+                  flexWrap: "wrap",
+                  gap: "1.5rem",
                 }}
               >
-                {/* Question Type Inputs */}
-                {[
-                  "MCQ",
-                  "Essay",
-                  "TrueFalse",
-                  "FillInTheBlank",
-                  "ShortAnswer",
-                ].map((type) => (
-                  <label
-                    key={type}
+                <label
+                  style={{
+                    flex: "1",
+                    minWidth: "200px",
+                    fontSize: "16px",
+                    color: "#4b4b4b",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Duration:
+                  <input
+                    min={1}
+                    max={3}
+                    type="number"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
                     style={{
+                      display: "block",
+                      width: "100%",
+                      marginTop: "0.5rem",
+                      padding: "0.75rem",
+                      borderRadius: "8px",
+                      border: "1px solid #ccc",
                       fontSize: "14px",
-                      color: "#333",
-                      fontWeight: "normal",
                     }}
-                  >
-                    {type}:
-                    <input
-                      type="number"
-                      min={0}
-                      value={questionCounts[type] || 0}
-                      onChange={(e) =>
-                        setQuestionCounts((prev) => ({
-                          ...prev,
-                          [type]: Number(e.target.value),
-                        }))
-                      }
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        marginTop: "0.5rem",
-                        padding: "0.5rem",
-                        borderRadius: "8px",
-                        border: "1px solid #ccc",
-                      }}
-                    />
-                  </label>
-                ))}
+                  />
+                </label>
+
+                <label
+                  style={{
+                    flex: "1",
+                    minWidth: "200px",
+                    fontSize: "16px",
+                    color: "#4b4b4b",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Total Mark:
+                  <input
+                    min={10}
+                    max={100}
+                    type="number"
+                    value={totalMark}
+                    onChange={(e) => setMark(e.target.value)}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      marginTop: "0.5rem",
+                      padding: "0.75rem",
+                      borderRadius: "8px",
+                      border: "1px solid #ccc",
+                      fontSize: "14px",
+                    }}
+                  />
+                </label>
               </div>
-            </fieldset>
+              <fieldset
+                style={{
+                  padding: "1rem",
+                  border: "1px solid #ccc",
+                  borderRadius: "8px",
+                }}
+              >
+                <legend
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: "bold",
+                    color: "#4b4b4b",
+                  }}
+                >
+                  Question Types
+                </legend>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
+                  }}
+                >
+                  {/* Question Type Inputs */}
+                  {[
+                    "MCQ",
+                    "Essay",
+                    "TrueFalse",
+                    "FillInTheBlank",
+                    "ShortAnswer",
+                  ].map((type) => (
+                    <label
+                      key={type}
+                      style={{
+                        fontSize: "14px",
+                        color: "#333",
+                        fontWeight: "normal",
+                      }}
+                    >
+                      {type}:
+                      <input
+                        type="number"
+                        min={0}
+                        //@ts-ignore
+                        value={questionCounts[type] || 0}
+                        onChange={(e) =>
+                          setQuestionCounts((prev) => ({
+                            ...prev,
+                            [type]: Number(e.target.value),
+                          }))
+                        }
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          marginTop: "0.5rem",
+                          padding: "0.5rem",
+                          borderRadius: "8px",
+                          border: "1px solid #ccc",
+                        }}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            </>
           )}
 
           <button
@@ -467,7 +473,9 @@ export function InitialForm() {
               fontWeight: "bold",
               transition: "background-color 0.3s ease",
             }}
+            //@ts-ignore
             onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
+            //@ts-ignore
             onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")}
           >
             {loading ? (
@@ -518,7 +526,9 @@ export function InitialForm() {
           </h3>
           {exams.map((exam) => (
             <div
+              //@ts-ignore
               key={exam.examID}
+              //@ts-ignore
               onClick={() => navigate(`/dashboard/viewExam/${exam.examID}`)} // Redirect to the exam form page
               style={{
                 marginBottom: "1rem",
@@ -559,6 +569,7 @@ export function InitialForm() {
                     fontWeight: "bold",
                   }}
                 >
+                  {/*@ts-ignore*/}
                   {exam.createdBy}
                 </p>
               </div>
@@ -582,6 +593,7 @@ export function InitialForm() {
                     fontWeight: "bold",
                   }}
                 >
+                  {/*@ts-ignore*/}
                   {exam.creationDate}
                 </p>
               </div>
@@ -605,6 +617,7 @@ export function InitialForm() {
                     fontWeight: "bold",
                   }}
                 >
+                  {/*@ts-ignore*/}
                   {exam.examSubject}
                 </p>
               </div>
@@ -628,6 +641,7 @@ export function InitialForm() {
                     fontWeight: "bold",
                   }}
                 >
+                  {/*@ts-ignore*/}
                   {exam.examClass}
                 </p>
               </div>
@@ -651,6 +665,7 @@ export function InitialForm() {
                     fontWeight: "bold",
                   }}
                 >
+                  {/*@ts-ignore*/}
                   {exam.examSemester}
                 </p>
               </div>
