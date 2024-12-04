@@ -8,8 +8,6 @@ import { signIn } from "aws-amplify/auth";
 import { useAppContext } from "../lib/contextLib";
 import { getCurrentUser } from "../lib/getToken";
 import { signOut } from "aws-amplify/auth";
-import { checkUserRoleFormDB } from "../lib/checkUserRole";
-import invokeApig from "../lib/callAPI";
 import { getUserAttributes } from "../lib/getUserAttributes";
 
 export default function Login() {
@@ -48,11 +46,6 @@ export default function Login() {
     try {
       await signIn({ username, password });
 
-      // const userRole = await invokeApig({
-      //   path: "/checkUserRole",
-      //   method: "POST",
-      //   body: { email: username },
-      // });
 
      const attributes: any = await getUserAttributes();
      console.log("User attributes: ", attributes);

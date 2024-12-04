@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import invokeApig from "../lib/callAPI.ts";
-import { getCurrentUserEmail } from "../lib/getToken.js";
-import { getFormattedDateTime } from "../lib/getDateTime.js";
 import { useNavigate } from "react-router-dom";
 
 function ExamApproval() {
@@ -13,6 +11,7 @@ function ExamApproval() {
   // Fetch initial data
   const fetchInitialData = async () => {
     try {
+      //@ts-ignore
       const response = await invokeApig({
         path: `/getPendingExams`, // Adjust path as needed
         method: "GET",
@@ -65,7 +64,9 @@ function ExamApproval() {
           </h3>
           {exams.map((exam) => (
             <div
+              //@ts-ignore
               key={exam.examID}
+              //@ts-ignore
               onClick={() => navigate(`/dashboard/viewExam/${exam.examID}`)} // Redirect to the exam form page
               style={{
                 marginBottom: "1rem",
@@ -106,6 +107,7 @@ function ExamApproval() {
                     fontWeight: "bold",
                   }}
                 >
+                  {/*@ts-ignore*/}
                   {exam.createdBy}
                 </p>
               </div>
@@ -129,6 +131,7 @@ function ExamApproval() {
                     fontWeight: "bold",
                   }}
                 >
+                  {/*@ts-ignore*/}
                   {exam.creationDate}
                 </p>
               </div>
@@ -152,6 +155,7 @@ function ExamApproval() {
                     fontWeight: "bold",
                   }}
                 >
+                  {/*@ts-ignore*/}
                   {exam.examSubject}
                 </p>
               </div>
@@ -175,6 +179,7 @@ function ExamApproval() {
                     fontWeight: "bold",
                   }}
                 >
+                  {/*@ts-ignore*/}
                   {exam.examClass}
                 </p>
               </div>
@@ -198,6 +203,7 @@ function ExamApproval() {
                     fontWeight: "bold",
                   }}
                 >
+                  {/*@ts-ignore*/}
                   {exam.examSemester}
                 </p>
               </div>
@@ -219,6 +225,7 @@ function ExamApproval() {
                     color: "rgba(255, 140, 0, 0.9)", // Orange for pending
                   }}
                 >
+                  {/*@ts-ignore*/}
                   {exam.examState.toUpperCase()}
                 </p>
               </div>

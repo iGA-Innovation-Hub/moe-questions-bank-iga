@@ -4,7 +4,7 @@ import { useAppContext } from "../lib/contextLib";
 
 //Component to protect the routes (Allow only authenticated users)
 const AlreadyAuthRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, userRole } = useAppContext();
+  const { isAuthenticated } = useAppContext();
 
   // Wait for `isAuthenticated` and `userRole` to initialize
   if (isAuthenticated === undefined) {

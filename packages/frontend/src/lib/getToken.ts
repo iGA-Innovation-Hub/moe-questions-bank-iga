@@ -2,18 +2,6 @@ import {
   CognitoUserPool,
 } from "amazon-cognito-identity-js";
 
-//Returns the current logged in user tokens
-// export function getUserToken(currentUser:any) {
-//   return new Promise((resolve, reject) => {
-//     currentUser.getSession((err:any, session:any) => {
-//       if (err) {
-//         reject(err);
-//         return;
-//       }
-//       resolve(session.getIdToken().getJwtToken());
-//     });
-//   });
-// }
 
 export function getUserToken(currentUser: any) {
   return new Promise((resolve, reject) => {
@@ -64,6 +52,7 @@ export function getCurrentUserEmail() {
       return reject("No user is currently logged in.");
     }
 
+    //@ts-ignore
     currentUser.getSession((err, session) => {
       if (err || !session.isValid()) {
         return reject("Unable to retrieve user session.");
@@ -74,6 +63,7 @@ export function getCurrentUserEmail() {
           return reject("Unable to retrieve user attributes.");
         }
 
+        //@ts-ignore
         const emailAttr = attributes.find((attr) => attr.Name === "email");
         if (emailAttr) {
           resolve(emailAttr.Value);

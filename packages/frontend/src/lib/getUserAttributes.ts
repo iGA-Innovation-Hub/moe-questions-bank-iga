@@ -21,6 +21,7 @@ export async function getUserAttributes(): Promise<Record<string, string>> {
 
   return new Promise((resolve, reject) => {
     currentUser.getSession(
+      //@ts-ignore
       (err: Error | null, session: CognitoUserSession | null) => {
         if (err) {
           reject(err);

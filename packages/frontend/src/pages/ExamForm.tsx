@@ -28,6 +28,7 @@ const ExamForm: React.FC = () => {
   // Fetch initial data
   const fetchInitialData = async () => {
     try {
+      //@ts-ignore
       const response = await invokeApig({
         path: `/examForm/${id}`, // Adjust path as needed
         method: "GET",
@@ -41,11 +42,9 @@ const ExamForm: React.FC = () => {
 
       console.log("Initial Data Loaded:", response);
 
-
       if (response.examState !== "building") {
-        navigate("/dashboard/viewExam/" + id)
+        navigate("/dashboard/viewExam/" + id);
       }
-
 
       setGrade(response.examClass);
       setSubject(response.examSubject);
@@ -75,7 +74,7 @@ const ExamForm: React.FC = () => {
   }, [id]);
 
 
-  const sendForApproval = async (e: React.MouseEvent) => {
+  const sendForApproval = async () => {
     setLoadingApproval(true);
     const payload = {
       examID: id,
@@ -103,11 +102,12 @@ const ExamForm: React.FC = () => {
     setLoading(true); // Start loading animation
 
     try {
-      const currentUserEmail :string = await getCurrentUserEmail();
+      //@ts-ignore
+      const currentUserEmail: string = await getCurrentUserEmail();
       console.log("Current User Email:", currentUserEmail);
 
       if (!contributers.includes(currentUserEmail)) {
-        setContributers(contributers + ", " + currentUserEmail)
+        setContributers(contributers + ", " + currentUserEmail);
       }
 
       const payload = {
@@ -118,7 +118,6 @@ const ExamForm: React.FC = () => {
       };
 
       console.log("Sending changes:", payload);
-
 
       const response = await invokeApig({
         path: "/generate",
@@ -198,9 +197,13 @@ const ExamForm: React.FC = () => {
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               width: "auto", // Auto width to fit text
             }}
+            //@ts-ignore
             onMouseOver={(e) => (e.target.style.backgroundColor = "#1976D2")}
+            //@ts-ignore
             onMouseOut={(e) => (e.target.style.backgroundColor = "#2196F3")}
+            //@ts-ignore
             onMouseDown={(e) => (e.target.style.transform = "scale(0.98)")}
+            //@ts-ignore
             onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
           >
             {loadingApproval ? (
@@ -228,8 +231,6 @@ const ExamForm: React.FC = () => {
             )}
           </button>
         )}
-
-        
       </div>
 
       <div
@@ -532,7 +533,9 @@ const ExamForm: React.FC = () => {
             boxSizing: "border-box", // ensures button width is consistent
             transition: "background-color 0.3s",
           }}
+          //@ts-ignore
           onMouseOver={(e) => (e.target.style.backgroundColor = "#333")}
+          //@ts-ignore
           onMouseOut={(e) => (e.target.style.backgroundColor = "#4b4b4b")}
         >
           {loading ? (

@@ -7,7 +7,7 @@ import { useAppContext } from "../lib/contextLib";
 const AuthRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { isAuthenticated, userRole } = useAppContext();
+  const { isAuthenticated } = useAppContext();
 
   // Wait for `isAuthenticated` and `userRole` to initialize
   if (isAuthenticated === undefined) {

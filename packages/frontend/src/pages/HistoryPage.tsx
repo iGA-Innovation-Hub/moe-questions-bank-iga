@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import invokeApig from "../lib/callAPI.ts";
 import { useNavigate } from "react-router-dom";
 
 const HistoryPage: React.FC = () => {
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
   const [gettingExams, setGettingExams] = useState(false);
   const [gettingExamsError, setGetExamsError] = useState("");
   const [exams, setExams] = useState([]);
@@ -16,6 +14,7 @@ const HistoryPage: React.FC = () => {
     setGettingExams(true);
     console.log(filterValue);
     try {
+      //@ts-ignore
       const response = await invokeApig({
         path: `/getExamHistory`, // Adjust path as needed
         method: "GET",
@@ -44,7 +43,7 @@ const HistoryPage: React.FC = () => {
   }
 
   // Function to determine the color based on the examState
-  function getColorForState(state) {
+  function getColorForState(state:any) {
     const stateColors = {
       pending: "rgba(255, 140, 0, 0.9)", // Orange
       approved: "rgba(34, 139, 34, 0.9)", // Green
@@ -52,6 +51,7 @@ const HistoryPage: React.FC = () => {
       default: "rgba(105, 105, 105, 0.9)", // Gray for unknown states
     };
 
+    //@ts-ignore
     return stateColors[state.toLowerCase()] || stateColors.default;
   }
 
@@ -194,7 +194,9 @@ const HistoryPage: React.FC = () => {
           <div>
             {exams.map((exam) => (
               <div
+                //@ts-ignore
                 key={exam.examID}
+                //@ts-ignore
                 onClick={() => navigate(`/dashboard/viewExam/${exam.examID}`)} // Redirect to the exam form page
                 style={{
                   marginBottom: "1rem",
@@ -235,6 +237,7 @@ const HistoryPage: React.FC = () => {
                       fontWeight: "bold",
                     }}
                   >
+                    {/*@ts-ignore*/}
                     {exam.createdBy}
                   </p>
                 </div>
@@ -258,6 +261,7 @@ const HistoryPage: React.FC = () => {
                       fontWeight: "bold",
                     }}
                   >
+                    {/*@ts-ignore*/}
                     {exam.creationDate}
                   </p>
                 </div>
@@ -281,6 +285,7 @@ const HistoryPage: React.FC = () => {
                       fontWeight: "bold",
                     }}
                   >
+                    {/*@ts-ignore*/}
                     {exam.examSubject}
                   </p>
                 </div>
@@ -304,6 +309,7 @@ const HistoryPage: React.FC = () => {
                       fontWeight: "bold",
                     }}
                   >
+                    {/*@ts-ignore*/}
                     {exam.examClass}
                   </p>
                 </div>
@@ -327,6 +333,7 @@ const HistoryPage: React.FC = () => {
                       fontWeight: "bold",
                     }}
                   >
+                    {/*@ts-ignore*/}
                     {exam.examSemester}
                   </p>
                 </div>
@@ -345,9 +352,11 @@ const HistoryPage: React.FC = () => {
                       margin: 0,
                       fontSize: "14px",
                       fontWeight: "bold",
+                      //@ts-ignore
                       color: getColorForState(exam.examState), // Dynamic color based on exam state
                     }}
                   >
+                    {/*@ts-ignore*/}
                     {exam.examState.toUpperCase()}
                   </p>
                 </div>

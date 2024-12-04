@@ -74,6 +74,7 @@ export default async function invokeApig({
    try {
      return textResponse ? JSON.parse(textResponse) : null;
    } catch (error) {
+     //@ts-ignore
      throw new Error(`Failed to parse response as JSON: ${error.message}`);
    }
 }
