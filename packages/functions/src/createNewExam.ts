@@ -6,6 +6,10 @@ import {
   BedrockRuntimeClient,
   ConverseCommand,
 } from "@aws-sdk/client-bedrock-runtime";
+import {
+  BedrockAgentRuntimeClient,
+  RetrieveCommand,
+} from "@aws-sdk/client-bedrock-agent-runtime";
 
 const client = new DynamoDBClient({});
 
@@ -36,9 +40,22 @@ export async function createExam(event: APIGatewayProxyEvent) {
   };
 
   let prompt = "";
-  const relevant_info = "";
+  
+  const bedrockAgentClient = new BedrockAgentRuntimeClient({ region: "us-east-1" });
+  let retrieveCommand = new RetrieveCommand({
+    knowledgeBaseId: "EU3Z7J6SG6",
+    retrievalConfiguration: {
+      vectorSearchConfiguration: {
+        numberOfResults: 10,
+      },
+    },
+    retrievalQuery: {
+      text: "ENG102 questions",
+    },
+  });
 
   if (!data.customize) {
+    const relevant_info = (await bedrockAgentClient.send(retrieveCommand)).retrievalResults?.join("\n").toString();
     prompt = `
         Act as a school exam generator and create an exam for ENG102 students. The total duration of the exam should not exceed 2 hours.
         Make sure the exam examines the students in different aspects sufficiently.
@@ -74,7 +91,7 @@ export async function createExam(event: APIGatewayProxyEvent) {
 
           Return only the exam and nothing else.
         
-        Take to consideration this relevant information: ${relevant_info}`;
+        Take to consideration this relevant information from past exams: ${relevant_info}`;
   } else {
     prompt = `
         Act as a school exam generator and create an exam for grade ${data.class} ${data.subject} students.
@@ -88,9 +105,14 @@ export async function createExam(event: APIGatewayProxyEvent) {
         prompt += `include ${count} ${type} question${count > 1 ? "s" : ""}, `;
       }
     });
+    retrieveCommand.input.retrievalQuery = {
+      text: `grade ${data.class} ${data.subject} questions ${Object.entries(data.question_types).map(([type, count]) => `${count} ${type}`).join(", ")}`,
+    };
+    console.log(retrieveCommand);
+    const relevant_info = (await bedrockAgentClient.send(retrieveCommand)).retrievalResults?.map(e => e.content?.text).join("\n").toString();
     prompt += `
         The total duration of the exam should not exceed ${data.duration} hours with total ${data.total_mark} marks.
-        Take to consideration this relevant information: ${relevant_info}
+        Take to consideration this relevant information from past exams: ${relevant_info}
       `;
   }
 
@@ -108,6 +130,8 @@ export async function createExam(event: APIGatewayProxyEvent) {
       messages: conversation,
       inferenceConfig: { maxTokens: 1200, temperature: 0.5, topP: 0.9 },
     });
+
+    console.log(prompt);
 
     const response = await bedrockClient.send(command);
 
