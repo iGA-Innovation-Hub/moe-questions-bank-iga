@@ -55,7 +55,7 @@ export async function createExam(event: APIGatewayProxyEvent) {
   });
 
   if (!data.customize) {
-    const relevant_info = (await bedrockAgentClient.send(retrieveCommand)).retrievalResults?.join("\n").toString();
+    const relevant_info = (await bedrockAgentClient.send(retrieveCommand)).retrievalResults?.map(e => e.content?.text).join("\n").toString();
     prompt = `
         Act as a school exam generator and create an exam for ENG102 students. The total duration of the exam should not exceed 2 hours.
         Make sure the exam examines the students in different aspects sufficiently.
