@@ -19,6 +19,8 @@ const ViewExam: React.FC = () => {
   const [loadingPage, setLoadingPage] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [loadingChangeState, setLoadingChangeState] = useState(false);
+  const [loadingApprove, setLoadingApprove] = useState(false);
+  const [LoadingDisapprove, setLoadingDisapprove] = useState(false);
   const { id } = useParams<{ id: string }>();
   const { userRole } = useAppContext();
   const navigate = useNavigate();
@@ -96,10 +98,12 @@ const ViewExam: React.FC = () => {
 
   const approveExam = async () => {
     setLoadingChangeState(true);
+    setLoadingApprove(true); 
 
     if (!approverMsg) {
       alert("Please add feedback!");
       setLoadingChangeState(false);
+      setLoadingApprove(false); 
       return;
     }
     const payload = {
@@ -121,14 +125,17 @@ const ViewExam: React.FC = () => {
       console.error("Error sending exam:", error);
     } finally {
       setLoadingChangeState(false);
+      setLoadingApprove(false);
     }
   };
 
   const disapproveExam = async () => {
     setLoadingChangeState(true);
+    setLoadingDisapprove(true); 
     if (!approverMsg) {
       alert("Please add feedback!");
       setLoadingChangeState(false);
+      setLoadingDisapprove(false);
       return;
     }
     const payload = {
@@ -150,6 +157,7 @@ const ViewExam: React.FC = () => {
       console.error("Error sending exam:", error);
     } finally {
       setLoadingChangeState(false);
+      setLoadingDisapprove(false);
     }
   };
 
@@ -638,6 +646,7 @@ const ViewExam: React.FC = () => {
               >
                 <button
                   onClick={approveExam}
+                  disabled={loadingChangeState}
                   style={{
                     padding: "0.6rem 1rem",
                     backgroundColor: "#28a745",
@@ -666,7 +675,7 @@ const ViewExam: React.FC = () => {
                   //@ts-ignore
                   onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
                 >
-                  {loadingChangeState ? (
+                  {loadingApprove ? (
                     <span
                       style={{
                         display: "flex",
@@ -693,6 +702,7 @@ const ViewExam: React.FC = () => {
                 </button>
                 <button
                   onClick={disapproveExam}
+                  disabled={loadingChangeState}
                   style={{
                     padding: "0.6rem 1rem",
                     backgroundColor: "#dc3545",
@@ -721,7 +731,7 @@ const ViewExam: React.FC = () => {
                   //@ts-ignore
                   onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
                 >
-                  {loadingChangeState ? (
+                  {LoadingDisapprove ? (
                     <span
                       style={{
                         display: "flex",
