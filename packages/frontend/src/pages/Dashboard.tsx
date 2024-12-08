@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MOELogo from "../assets/moe_LOGO.png"; // Ministry of Education logo
 import HomeIcon from "../assets/home icon (1).png"; // Home icon
 import BackgroundImage from "../assets/BG.jpg"; // Background image
@@ -6,6 +6,7 @@ import { signOut } from "aws-amplify/auth";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../lib/contextLib";
 import { NavLink, Outlet } from "react-router-dom";
+import invokeApig from "../lib/callAPI.ts";
 
 interface UserDashboardProps {}
 
@@ -13,11 +14,37 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
   const navigate = useNavigate();
   const { userHasAuthenticated } = useAppContext();
   const { userRole } = useAppContext();
-  const [activePage, setActivePage] = useState<string>(window.location.pathname);
+  const [activePage, setActivePage] = useState<string>(
+    window.location.pathname
+  );
+  const [examCount, setExamCount] = useState(0); // State pending count name
+  const [filterValue] = useState("pending");
 
   setTimeout(() => {
-    setActivePage(window.location.pathname)
-  },500)
+    setActivePage(window.location.pathname);
+  }, 500);
+
+  // Fetch exam count only once when the component mounts
+  useEffect(() => {
+    async function fetchExamCount() {
+      try {
+        // @ts-ignore
+        const response = await invokeApig({
+          path: `/getExamCount`, // Adjust path as needed
+          method: "GET",
+          queryParams: {
+            state: filterValue,
+          },
+        });
+        setExamCount(response ? response.count : 0); // Set the exam count
+      } catch (err) {
+        console.error("Error fetching exam count:", err);
+        setExamCount(0); // Set count to 0 if there's an error
+      }
+    }
+
+    fetchExamCount();
+  }, [filterValue]); // Dependency array ensures fetchExamCount is only called when `filterValue` changes
 
   async function handleSignOut() {
     await signOut();
@@ -316,7 +343,9 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                       justifyContent: "center",
                       alignItems: "center",
                     }}
-                  >{ }</span>
+                  >
+                    {examCount}
+                  </span>
                 </div>
               </NavLink>
             )}
