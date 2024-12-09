@@ -10,11 +10,13 @@ import { HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { StaticSite, StackContext, use } from "sst/constructs";
 import { ApiStack } from "./ApiStack";
 import { AuthStack } from "./AuthStack";
+import { StorageStack } from "./StorageStack";
 
 export function FrontendStack({ stack, app }: StackContext) {
 
   const { api, apiCachePolicy } = use(ApiStack);
   const auth = use(AuthStack);
+  const { materialsBucket } = use(StorageStack);
   
   // Deploy our React app
   const site = new StaticSite(stack, "ReactSite", {
@@ -27,6 +29,7 @@ export function FrontendStack({ stack, app }: StackContext) {
       VITE_USER_POOL_ID: auth.auth.userPoolId,
       VITE_USER_POOL_CLIENT_ID: auth.auth.userPoolClientId,
       VITE_IDENTITY_POOL_ID: auth.auth.cognitoIdentityPoolId || "",
+      VITE_MATERIALS_BUCKET_NAME: materialsBucket.bucketName,
     },
     cdk: {
       distribution: {

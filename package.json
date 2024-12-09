@@ -22,10 +22,12 @@
     "packages/*"
   ],
   "dependencies": {
+    "@aws-amplify/storage": "^6.7.3",
     "@aws-amplify/ui-react": "^6.5.5",
     "@aws-cdk/cx-api": "^2.170.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.706.0",
     "@aws-sdk/client-bedrock-runtime": "^3.699.0",
+    "@aws-sdk/client-s3": "^3.705.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.693.0",
     "@aws-sdk/client-sns": "^3.699.0",
     "@aws-sdk/lib-dynamodb": "^3.699.0",

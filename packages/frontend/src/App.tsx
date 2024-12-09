@@ -14,22 +14,22 @@ import { AppContext, AppContextType } from "./lib/contextLib";
 import "@aws-amplify/ui-react/styles.css";
 import AuthRoute from "./pages/AuthRoute";
 import { InitialForm } from "./pages/InitialForm";
-import { getCurrentUser } from "./lib/getToken"
+import { getCurrentUser } from "./lib/getToken";
 import AlreadyAuthRoute from "./pages/AlreadyAuthRoute";
 import GeneratorRoute from "./pages/generatorRoutes";
 import ApproverRoute from "./pages/ApproverRoute";
 import ExamApproval from "./pages/ExamApproval";
 import NotFound from "./pages/NotFound";
 import ViewExam from "./pages/ViewExam";
-
+import UploadPage from "./pages/UploadPage";
 const App: React.FC = () => {
   // Authentication state
-   const [isAuthenticated, setAuthenticated] = useState<boolean>(
-     localStorage.getItem("isAuthenticated") === "true"
-   );
-   const [userRole, setUserRole] = useState<string>(
-     localStorage.getItem("userRole") || ""
-   );
+  const [isAuthenticated, setAuthenticated] = useState<boolean>(
+    localStorage.getItem("isAuthenticated") === "true"
+  );
+  const [userRole, setUserRole] = useState<string>(
+    localStorage.getItem("userRole") || ""
+  );
 
   // Restore authentication state on app load
   useEffect(() => {
@@ -60,6 +60,7 @@ const App: React.FC = () => {
     <AppContext.Provider value={appContextValue}>
       <Router>
         <Routes>
+          <Route path="/uploadMaterial" element={<UploadPage />} />
           {/* Public Routes */}
           <Route
             path="/login"

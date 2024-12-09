@@ -32,7 +32,15 @@ Amplify.configure({
       },
     ],
   },
+  Storage: {
+    S3: {
+      bucket: config.s3.BUCKET, // Your bucket name
+      region: config.s3.REGION, // Bucket region
+    },
+  },
 });
+
+console.log(Amplify.getConfig())
 
 
 // Render the App component inside the HTML element with ID "root".

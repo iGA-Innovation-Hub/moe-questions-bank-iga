@@ -2,11 +2,13 @@ import { Api, StackContext, Topic, use } from "sst/constructs";
 import { CacheHeaderBehavior, CachePolicy } from "aws-cdk-lib/aws-cloudfront";
 import { Duration } from "aws-cdk-lib/core";
 import { DBStack } from "./DBStack"
+import { StorageStack } from "./StorageStack";
 
 export function ApiStack({ stack }: StackContext) {
   const topic = new Topic(stack, "Report");
 
   const { users_table, exams_table } = use(DBStack);
+  const { materialsBucket } = use(StorageStack);
 
   // Create the HTTP API
   const api = new Api(stack, "Api", {
@@ -18,7 +20,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/getExam.getExamData",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -30,10 +32,22 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/getExamHistory.getExams",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
-          permissions: ["dynamodb", exams_table],
+          timeout: 180,
+          permissions: ["dynamodb", exams_table], // Ensure necessary permissions
           environment: {
-            TABLE_NAME: exams_table.tableName,
+            TABLE_NAME: exams_table.tableName, // Pass the table name to the Lambda
+          },
+        },
+      },
+
+      "GET /upload": {
+        function: {
+          handler: "packages/functions/src/getSignedUrl.getSignedUrl",
+          runtime: "nodejs20.x",
+          timeout: 180,
+          permissions: ["s3", materialsBucket],
+          environment: {
+            BUCKET_NAME: materialsBucket.bucketName,
           },
         },
       },
@@ -42,7 +56,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/getExamsCount.getExamsCount",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table], // Ensure necessary permissions
           environment: {
             TABLE_NAME: exams_table.tableName, // Pass the table name to the Lambda
@@ -54,7 +68,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/getBuildingExams.getExams",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -66,7 +80,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/getPendingExams.getExams",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -78,7 +92,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/generateExam.generate",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["bedrock", "dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -90,7 +104,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/createNewExam.createExam",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table, "bedrock"],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -102,7 +116,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/sendExamForApproval.sendForApproval",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -115,7 +129,7 @@ export function ApiStack({ stack }: StackContext) {
           handler:
             "packages/functions/src/changeExamStateToBuild.changeToBuild",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -127,7 +141,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/approveExam.approve",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -139,7 +153,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/disapproveExam.disapprove",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -151,7 +165,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/feedback.handler",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           environment: {
             TOPIC_ARN: topic.topicArn, // Add the ARN to the environment
           },
@@ -163,7 +177,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/checkUser.handler",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", users_table],
           environment: {
             TABLE_NAME: users_table.tableName,

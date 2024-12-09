@@ -5,6 +5,7 @@ import { ApiStack } from "./stacks/ApiStack";
 import { ImageBuilderForCodeCatalyst } from "./stacks/devops/ImageBuilderForCodeCatalyst";
 import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
 import { AuthStack } from "./stacks/AuthStack";
+import { StorageStack } from "./stacks/StorageStack";
 
 export default {
   config(_input) {
@@ -28,6 +29,7 @@ export default {
     else {
       app
         .stack(DBStack)
+        .stack(StorageStack)
         .stack(ApiStack)
         .stack(AuthStack)
         .stack(FrontendStack);
