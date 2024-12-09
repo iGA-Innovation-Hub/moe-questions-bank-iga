@@ -1,8 +1,11 @@
 import { Api, StackContext, use, Topic } from "sst/constructs";
 import { CacheHeaderBehavior, CachePolicy } from "aws-cdk-lib/aws-cloudfront";
 import { Duration } from "aws-cdk-lib/core";
+import { MyStack } from "./OpenSearchStack"; // Import the OpenSearch stack
 
 export function ApiStack({ stack }: StackContext) {
+  const { collectionEndpoint } = use(MyStack); // Retrieve the OpenSearch endpoint
+
   const topic = new Topic(stack, "Report");
 
   // Create the HTTP API
@@ -11,7 +14,7 @@ export function ApiStack({ stack }: StackContext) {
       authorizer: "iam",
     },
     routes: {
-      // Sample TypeScript lambda function
+      // Existing routes
       "POST /generate": {
         function: {
           handler: "packages/functions/src/generateExam.generate",
@@ -27,18 +30,34 @@ export function ApiStack({ stack }: StackContext) {
           runtime: "nodejs20.x",
           timeout: "180 seconds",
           environment: {
-            TOPIC_ARN: topic.topicArn, // Add the ARN to the environment
+            TOPIC_ARN: topic.topicArn,
           },
           permissions: ["sns"],
+        },
+      },
+
+      // New route for creating an OpenSearch index
+      "POST /create-index": {
+        function: {
+          handler: "packages/functions/src/create-index.handler",
+          runtime: "nodejs20.x",
+          timeout: "60 seconds",
+          environment: {
+            OPENSEARCH_ENDPOINT: collectionEndpoint, // Use the dynamic endpoint
+          },
+          permissions: [
+            "aoss:CreateIndex", 
+            "aoss:DescribeIndex", 
+            "aoss:ListIndices",  // Optional: If you want to list indices
+          ],
         },
       },
     },
   });
 
-  // cache policy to use with cloudfront as reverse proxy to avoid cors
-  // https://dev.to/larswww/real-world-serverless-part-3-cloudfront-reverse-proxy-no-cors-cgj
+  // Cache policy for CloudFront as reverse proxy
   const apiCachePolicy = new CachePolicy(stack, "CachePolicy", {
-    minTtl: Duration.seconds(0), // no cache by default unless backend decides otherwise
+    minTtl: Duration.seconds(0),
     defaultTtl: Duration.seconds(0),
     headerBehavior: CacheHeaderBehavior.allowList(
       "Accept",
