@@ -3,6 +3,9 @@ import invokeApig from "../lib/callAPI.ts";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../lib/contextLib.ts";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { saveAs } from "file-saver";
+import { generatePDF } from "./generatePDF";  // Make sure to import the function
 
 const ViewExam: React.FC = () => {
   const [grade, setGrade] = useState("");
@@ -169,6 +172,13 @@ const ViewExam: React.FC = () => {
   if (errorMsg) {
     return <div>{errorMsg}</div>;
   }
+
+// For handling download (when clicking button)
+  const handleDownloadPDF = () => {
+    generatePDF(responseResult).then((pdfDoc)=>{
+      saveAs(pdfDoc, "exam.pdf"); // Trigger the download
+    }); // Pass the exam content here
+  };
 
   return (
     <div
@@ -759,6 +769,43 @@ const ViewExam: React.FC = () => {
               </div>
             </div>
           )}
+
+{/* download PDF start here */}
+<div>
+      {/* Conditionally render the "Download PDF" button if the exam is approved */}
+      {examState === "approved" && (
+        <button
+          onClick={handleDownloadPDF} // This triggers the PDF download function
+          style={{
+            padding: "0.6rem 1rem",
+            backgroundColor: "#007bff", // Blue color for the download button
+            color: "#fff",
+            border: "none",
+            borderRadius: "4px",
+            fontSize: "14px",
+            fontWeight: "bold",
+            cursor: "pointer",
+            transition: "background-color 0.3s ease, transform 0.3s ease",
+            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+          }}
+          onMouseOver={(e) => //@ts-ignore (color change on hover)
+            (e.target.style.backgroundColor = "#0056b3")
+          }
+          onMouseOut={(e) => //@ts-ignore (reset to original color on mouse out)
+            (e.target.style.backgroundColor = "#007bff")
+          }
+          onMouseDown={(e) => //@ts-ignore (scale button on mouse down)
+            (e.target.style.transform = "scale(0.98)")
+          }
+          //@ts-ignore
+          onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+        >
+          Download as PDF
+        </button>
+      )}
+    </div>
+{/* END OF DOWNLOAD PDF */}
+
         </div>
       </div>
       <style>

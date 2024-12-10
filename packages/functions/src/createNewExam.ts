@@ -12,6 +12,8 @@ import {
   BedrockAgentRuntimeClient,
   RetrieveCommand,
 } from "@aws-sdk/client-bedrock-agent-runtime";
+import { ENG102PROMPT } from "./prompts/Eng102";
+
 
 const client = new DynamoDBClient({
   region: "us-east-1",
@@ -64,44 +66,7 @@ export async function createExam(event: APIGatewayProxyEvent) {
 
   if (!data.customize) {
     const relevant_info = (await bedrockAgentClient.send(retrieveCommand)).retrievalResults?.map(e => e.content?.text).join("\n").toString();
-    prompt = `
-        Act as a school exam generator and create an exam for ENG102 students. The total duration of the exam should not exceed 2 hours.
-        Make sure the exam examines the students in different aspects sufficiently.
-        
-        For the reading part generate a short 100 words article and create questions on it.
-
-        For the listening part create a short listening script and keep it in the appendix of the exam and make the questions on it.
-
-        The exam should be structured approriately.
-
-        This is the exam structure to follow:
-      Listening Section (Total: 10 marks)
-        Question 1: Create true/false questions on the listening script worth 5 marks.
-        Question 2: Create a match the Statements question on the listening script worth 5 marks.
-
-      Reading Section (Total: 20 marks)
-        Part 1 (Reasoning):
-          Include two sub-questions:
-            a. Match the paragraphs with headings (5 marks).
-            b. Short questions and answers (5 marks).
-        Part 2 (Vocabulary):
-          Generate another article (50 Word).
-          Include two sub-questions:
-            a. True or False (5 marks) on the article.
-            b. Match words from the article with their definitions (5 marks).
-
-        Writing Section (Total: 20 marks)
-          Question 1: A writing task worth 10 marks.
-          Question 2: Another writing task worth 10 marks.
-
-
-          Make sure that all the questions has their marks assigned to them.
-        
-        Take to consideration this relevant information from past exams: ${relevant_info}
-        
-        Return only the exam and nothing else.
-        
-        `;
+    prompt = ENG102PROMPT;
   } else {
     prompt = `
         Act as a school exam generator and create an exam for grade ${data.class} ${data.subject} students.
