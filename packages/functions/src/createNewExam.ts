@@ -66,7 +66,7 @@ export async function createExam(event: APIGatewayProxyEvent) {
 
   if (!data.customize) {
     const relevant_info = (await bedrockAgentClient.send(retrieveCommand)).retrievalResults?.map(e => e.content?.text).join("\n").toString();
-    prompt = ENG102PROMPT;
+    prompt = ENG102PROMPT + ' Refer to the following relevant information from past exams:' + relevant_info;
   } else {
     prompt = `
         Act as a school exam generator and create an exam for grade ${data.class} ${data.subject} students.
