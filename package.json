@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.1",
+    "@types/semver": "^7.5.8",
     "aws-cdk-lib": "^2.171.1",
     "constructs": "^10.3.0",
     "sst": "2.40.3",
@@ -24,6 +25,7 @@
   "dependencies": {
     "@aws-amplify/ui-react": "^6.5.5",
     "@aws-cdk/cx-api": "^2.170.0",
+    "@aws-crypto/sha256-browser": "^5.2.0",
     "@aws-sdk/client-bedrock-runtime": "^3.699.0",
     "@aws-sdk/client-opensearch": "^3.703.0",
     "@aws-sdk/client-opensearchserverless": "^3.699.0",

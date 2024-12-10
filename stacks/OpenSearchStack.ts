@@ -1,42 +1,68 @@
 import { StackContext, Function } from "sst/constructs"; // Import necessary constructs from SST
 import { CfnAccessPolicy, CfnCollection, CfnSecurityPolicy } from "aws-cdk-lib/aws-opensearchserverless";
-import * as iam from "aws-cdk-lib/aws-iam"; // Import IAM module for managing access
+import { ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Aws } from "aws-cdk-lib"; // Import AWS class to access account and region info
 import { Construct } from "constructs"; // Import Construct to define resources
-import * as path from "path"; // Import path module for managing file paths
+
+function getResourceName(name: string, stage: string) {
+  return `${name}-${stage}`;
+}
+
+const BASE_COLLECTION_NAME = "collection";
+function getCollectionName(stage: string) {
+  return getResourceName(BASE_COLLECTION_NAME, stage);
+}
 
 // OpenSearch Construct for creating a collection and necessary policies
-export function OpenSearchConstruct(scope: Construct, executorRole: iam.Role) {
+export function OpenSearchConstruct(scope: Construct, executorRole: Role, stage: string) {
   const accountId = Aws.ACCOUNT_ID; // Dynamically retrieve AWS account ID
+
+  const collectionName = getCollectionName(stage);
+  
+  const securityPolicyName = getResourceName("my-collection-policy", stage);
+  const networkPolicyName = getResourceName("my-network-policy", stage);
+  const dataAccessPolicyName = getResourceName("my-data-access-policy", stage);
+  const collectionResourceName = `collection/${collectionName}`;
+  const indexResourceName = `index/${collectionName}/*`;
+
+  
 
   // Create the OpenSearch Serverless Collection
   const collection = new CfnCollection(scope, "MySearchCollection", {
-    name: "m-collection",
+    name: collectionName,
     type: "VECTORSEARCH",
   });
 
   // Create a security policy for encryption
-  const encPolicy = new CfnSecurityPolicy(scope, "MySecurityPolicy", {
-    name: "my-collection-policy",
-    policy:
-      '{"Rules":[{"ResourceType":"collection","Resource":["collection/m-collection"]}],"AWSOwnedKey":true}',
+  const encPolicy = new CfnSecurityPolicy(scope, "SecurityPolicy", {
+    name: securityPolicyName,
+    
+    policy: JSON.stringify({
+      Rules: [
+        {
+          ResourceType: "collection",
+          Resource: [collectionResourceName],
+        },
+      ],
+      AWSOwnedKey: true,
+    }),
     type: "encryption",
   });
   collection.addDependency(encPolicy);
 
   // Public access policy for the collection
   const netPolicy = new CfnSecurityPolicy(scope, "ProductNetworkPolicy", {
-    name: "my-network-policy",
+    name: networkPolicyName,
     policy: JSON.stringify([
       {
         Rules: [
           {
             ResourceType: "collection",
-            Resource: ["collection/m-collection"],
+            Resource: [collectionResourceName],
           },
           {
             ResourceType: "dashboard",
-            Resource: ["collection/m-collection"],
+            Resource: [collectionResourceName],
           },
         ],
         AllowFromPublic: true,
@@ -48,13 +74,13 @@ export function OpenSearchConstruct(scope: Construct, executorRole: iam.Role) {
 
   // Data access policy for collection management
   const dataAccessPolicy = new CfnAccessPolicy(scope, "MyCfnAccessPolicy", {
-    name: "my-data-access-policy",
+    name: dataAccessPolicyName,
     type: "data",
     policy: JSON.stringify([
       {
         Rules: [
           {
-            Resource: ["collection/m-collection"],
+            Resource: [collectionResourceName],
             Permission: [
               "aoss:CreateCollectionItems",
               "aoss:DeleteCollectionItems",
@@ -64,7 +90,7 @@ export function OpenSearchConstruct(scope: Construct, executorRole: iam.Role) {
             ResourceType: "collection",
           },
           {
-            Resource: ["index/m-collection/*"],
+            Resource: [indexResourceName],
             Permission: [
               "aoss:CreateIndex",
               "aoss:DeleteIndex",
@@ -79,6 +105,9 @@ export function OpenSearchConstruct(scope: Construct, executorRole: iam.Role) {
         Principal: [
           `arn:aws:iam::${accountId}:role/aoss-lambda-api-executor-role`, // Correct ARN with accountId
           executorRole.roleArn, // Use executorRole ARN
+          `arn:aws:iam::${accountId}:root`,
+          "arn:aws:iam::248189920021:user/202100332@stu.uob.edu.bh",
+          // Add yours if needed
         ],
       },
     ]),
@@ -91,40 +120,45 @@ export function OpenSearchConstruct(scope: Construct, executorRole: iam.Role) {
 
 // MyStack function to set up the IAM role, OpenSearch collection, and Lambda function
 export function MyStack({ stack }: StackContext) {
+  const stage = stack.stage; // Get the stage from the stack
+
   // Create the IAM role for Lambda execution
-  const executorRole = new iam.Role(stack, "ExecutorRole", {
-    assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
+  const executorRole = new Role(stack, "ExecutorRole", {
+    assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
     managedPolicies: [
-      iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
+      ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
     ],
   });
 
+  const collectionName = getCollectionName(stage);
+  const collectionResourceName = `collection/${collectionName}`;
+  const indexResourceName = `index/${collectionName}/*`;
   // Add permissions to the executorRole for interacting with OpenSearch Serverless
   executorRole.addToPolicy(
-    new iam.PolicyStatement({
+    new PolicyStatement({
       actions: [
-        "aoss:CreateIndex",
-        "aoss:DescribeCollection", // Optional, for describing the collection
+        "aoss:APIAccessAll",
+        "es:ESHttpPut"
       ],
       resources: [
-        `arn:aws:aoss:${stack.region}:${stack.account}:collection/m-collection`, // Reference the collection
-        `arn:aws:aoss:${stack.region}:${stack.account}:index/m-collection/*`, // Reference any index inside the collection
+        `arn:aws:aoss:${stack.region}:${stack.account}:${collectionResourceName}`, // Reference the collection
+        `arn:aws:aoss:${stack.region}:${stack.account}:${indexResourceName}`, // Reference any index inside the collection
       ],
     })
   );
 
   // Create the OpenSearch resources and get the collection endpoint
-  const collectionEndpoint = OpenSearchConstruct(stack, executorRole);
+  const collectionEndpoint = OpenSearchConstruct(stack, executorRole, stack.stage);
 
   // Define the Lambda function to create the vector index
   const createIndexLambda = new Function(stack, "CreateIndexLambda", {
     handler: "packages/functions/src/create-index.handler", // Path to the handler inside your Lambda code
     environment: {
-      COLLECTION_NAME: "m-collection", // Pass the collection name as an environment variable
+      COLLECTION_NAME: collectionName, // Pass the collection name as an environment variable
       OPENSEARCH_ENDPOINT: collectionEndpoint, // Dynamically pass the OpenSearch endpoint
       REGION: stack.region, // Pass the AWS region as an environment variable
     },
-    permissions: ["aoss:CreateIndex", "aoss:DescribeCollection"], // Grant necessary permissions for index creation
+    role: executorRole as any, // Use the executorRole for the Lambda function
   });
 
   // Export the Lambda function ARN and collection endpoint for reference
