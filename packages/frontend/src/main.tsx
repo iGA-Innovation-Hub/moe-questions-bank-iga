@@ -40,7 +40,7 @@ Amplify.configure({
   },
 });
 
-console.log(Amplify.getConfig())
+// console.log(Amplify.getConfig())
 
 
 // Render the App component inside the HTML element with ID "root".

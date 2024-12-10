@@ -40,7 +40,7 @@ export function ApiStack({ stack }: StackContext) {
         },
       },
 
-      "GET /upload": {
+      "GET /uploadFiles": {
         function: {
           handler: "packages/functions/src/getSignedUrl.getSignedUrl",
           runtime: "nodejs20.x",

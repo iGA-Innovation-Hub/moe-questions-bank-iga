@@ -22,6 +22,9 @@ import ExamApproval from "./pages/ExamApproval";
 import NotFound from "./pages/NotFound";
 import ViewExam from "./pages/ViewExam";
 import UploadPage from "./pages/UploadPage";
+import DefaultRouting from "./pages/UserDefaultComponent";
+import UploaderRoute from "./pages/UploaderRoute";
+import GenAppRoute from "./pages/GenAppRoutes";
 const App: React.FC = () => {
   // Authentication state
   const [isAuthenticated, setAuthenticated] = useState<boolean>(
@@ -60,7 +63,14 @@ const App: React.FC = () => {
     <AppContext.Provider value={appContextValue}>
       <Router>
         <Routes>
-          <Route path="/uploadMaterial" element={<UploadPage />} />
+          <Route
+            path="/upload"
+            element={
+              
+                <UploadPage />
+             
+            }
+          />
           {/* Public Routes */}
           <Route
             path="/login"
@@ -76,6 +86,7 @@ const App: React.FC = () => {
             path="/dashboard"
             element={
               <AuthRoute>
+               
                 <Dashboard />
               </AuthRoute>
             }
@@ -105,7 +116,7 @@ const App: React.FC = () => {
           </Route>
 
           {/* Redirect '/' to '/dashboard' */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<DefaultRouting />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

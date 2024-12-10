@@ -42,8 +42,8 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
         setExamCount(0); // Set count to 0 if there's an error
       }
     }
-
-    fetchExamCount();
+   
+      fetchExamCount();
   }, [filterValue]); // Dependency array ensures fetchExamCount is only called when `filterValue` changes
 
   async function handleSignOut() {
