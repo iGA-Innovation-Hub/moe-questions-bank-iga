@@ -1,14 +1,17 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, UpdateCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { APIGatewayProxyEvent } from "aws-lambda";
+import { randomUUID } from "crypto";
 
 const client = new DynamoDBClient({});
 
 const dynamo = DynamoDBDocumentClient.from(client);
 
 export async function disapprove(event: APIGatewayProxyEvent) {
-  const tableName = process.env.TABLE_NAME;
-  console.log("Table Name: " + process.env.TABLE_NAME);
+  const examsTableName = process.env.EXAMS_TABLE_NAME;
+  const datasetTableName = process.env.DATASET_TABLE_NAME;
+  console.log("Table Name: " + process.env.EXAMS_TABLE_NAME);
+  console.log("Dataset Table Name: " + datasetTableName);
 
   let body;
   let statusCode = 200;
@@ -21,7 +24,7 @@ export async function disapprove(event: APIGatewayProxyEvent) {
 
     await dynamo.send(
       new UpdateCommand({
-        TableName: tableName,
+        TableName: examsTableName,
         Key: {
           examID: requestJSON.examID, // Primary key to find the item
         },
@@ -30,6 +33,19 @@ export async function disapprove(event: APIGatewayProxyEvent) {
         ExpressionAttributeValues: {
           ":examState": "disapproved",
           ":approverMsg": requestJSON.approverMsg,
+        },
+      })
+    );
+
+
+    await dynamo.send(
+      new PutCommand({
+        TableName: datasetTableName,
+        Item: {
+          examID: randomUUID(),
+          examContent: requestJSON.examContent,
+          examState: "approved",
+          approverMsg: requestJSON.approverMsg,
         },
       })
     );

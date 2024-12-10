@@ -120,7 +120,7 @@ const ExamForm: React.FC = () => {
       console.log("Sending changes:", payload);
 
       const response = await invokeApig({
-        path: "/generate",
+        path: "/regenerate",
         method: "POST",
         body: payload,
       });

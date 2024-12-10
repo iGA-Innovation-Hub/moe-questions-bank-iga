@@ -7,7 +7,7 @@ import { StorageStack } from "./StorageStack";
 export function ApiStack({ stack }: StackContext) {
   const topic = new Topic(stack, "Report");
 
-  const { users_table, exams_table } = use(DBStack);
+  const { users_table, exams_table, exams_dataset } = use(DBStack);
   const { materialsBucket } = use(StorageStack);
 
   // Create the HTTP API
@@ -88,9 +88,9 @@ export function ApiStack({ stack }: StackContext) {
         },
       },
 
-      "POST /generate": {
+      "POST /regenerate": {
         function: {
-          handler: "packages/functions/src/generateExam.generate",
+          handler: "packages/functions/src/regenerateExam.regenerate",
           runtime: "nodejs20.x",
           timeout: 180,
           permissions: ["bedrock", "dynamodb", exams_table],
@@ -142,9 +142,10 @@ export function ApiStack({ stack }: StackContext) {
           handler: "packages/functions/src/approveExam.approve",
           runtime: "nodejs20.x",
           timeout: 180,
-          permissions: ["dynamodb", exams_table],
+          permissions: ["dynamodb", exams_table, exams_dataset],
           environment: {
-            TABLE_NAME: exams_table.tableName,
+            EXAMS_TABLE_NAME: exams_table.tableName,
+            DATASET_TABLE_NAME: exams_dataset.tableName,
           },
         },
       },
@@ -154,9 +155,10 @@ export function ApiStack({ stack }: StackContext) {
           handler: "packages/functions/src/disapproveExam.disapprove",
           runtime: "nodejs20.x",
           timeout: 180,
-          permissions: ["dynamodb", exams_table],
+          permissions: ["dynamodb", exams_table, exams_dataset],
           environment: {
-            TABLE_NAME: exams_table.tableName,
+            EXAMS_TABLE_NAME: exams_table.tableName,
+            DATASET_TABLE_NAME: exams_dataset.tableName,
           },
         },
       },

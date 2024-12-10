@@ -57,7 +57,6 @@ export default async function invokeApig({
   });
 
   body = body ? JSON.stringify(body) : body;
-console.log("headers:"+JSON.stringify(signedRequest.headers));
   //Sends the signed request
   const results = await fetch(signedRequest.url, {
     method,

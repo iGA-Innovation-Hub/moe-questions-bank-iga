@@ -108,6 +108,7 @@ const ViewExam: React.FC = () => {
     }
     const payload = {
       examID: id,
+      examContent: responseResult,
       approverMsg: approverMsg,
     };
 
@@ -140,6 +141,7 @@ const ViewExam: React.FC = () => {
     }
     const payload = {
       examID: id,
+      examContent: responseResult,
       approverMsg: approverMsg,
     };
 

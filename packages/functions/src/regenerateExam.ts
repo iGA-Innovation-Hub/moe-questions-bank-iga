@@ -14,7 +14,7 @@ const dbClient = new DynamoDBClient({});
 
 const dynamo = DynamoDBDocumentClient.from(dbClient);
 
-export async function generate(event: APIGatewayProxyEvent) {
+export async function regenerate(event: APIGatewayProxyEvent) {
   const tableName = process.env.TABLE_NAME;
   let data;
 
