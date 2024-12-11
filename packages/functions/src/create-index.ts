@@ -41,37 +41,38 @@ const client = new Client({
 async function createIndex(name: string) {
   var index_name = name;
 
-  // Define the request body for creating the vector index
-  const indexBody = {
-    settings: {
-      index: {
-        knn: true,
-        "knn.algo_param.ef_search": 512,
-      },
+ // Define the request body for creating the vector index
+const indexBody = {
+  settings: {
+    index: {
+      knn: true,
+      "knn.algo_param.ef_search": 512,
     },
-    mappings: {
-      properties: {
-        embeddings: {
-          type: "knn_vector",
-          dimension: 1024,
-          method: {
-            name: "hnsw",
-            engine: "faiss",
-            parameters: {},
-            space_type: "l2",
-          },
-        },
-        text: {
-          type: "text",
-          index: "true",
-        },
-        "bedrock-metadata": {
-          type: "text",
-          index: "true",
+  },
+  mappings: {
+    properties: {
+      vectorField: {
+        type: "knn_vector",  // Matches "vectorField"
+        dimension: 1536,      // Change this to match the dimension of your vectors
+        method: {
+          name: "hnsw",
+          engine: "faiss",
+          parameters: {},
+          space_type: "l2",  // Using L2 (Euclidean distance)
         },
       },
+      textField: {
+        type: "text",        // Matches "textField"
+        index: true,         // Enables indexing for full-text search
+      },
+      metadataField: {
+        type: "object",      // Matches "metadataField"
+        enabled: true,       // Ensures the metadata is queryable
+      },
     },
-  };
+  },
+};
+
 
   var response = await client.indices.create({
     index: index_name,
