@@ -103,7 +103,7 @@ export async function createExam(event: APIGatewayProxyEvent) {
       modelId,
       //@ts-ignore
       messages: conversation,
-      inferenceConfig: { maxTokens: 1200, temperature: 0.5, topP: 0.9 },
+      inferenceConfig: { maxTokens: 4096, temperature: 0.5, topP: 0.9 },
     });
 
     console.log("Prompt built");

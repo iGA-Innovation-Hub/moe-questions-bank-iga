@@ -3,9 +3,8 @@ import invokeApig from "../lib/callAPI.ts";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../lib/contextLib.ts";
-import { PDFDownloadLink } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
-import { generatePDF } from "./generatePDF";  // Make sure to import the function
+import { generateExamPDF } from "./generatePDF";  // Make sure to import the function
 
 const ViewExam: React.FC = () => {
   const [grade, setGrade] = useState("");
@@ -175,9 +174,7 @@ const ViewExam: React.FC = () => {
 
 // For handling download (when clicking button)
   const handleDownloadPDF = () => {
-    generatePDF(responseResult).then((pdfDoc)=>{
-      saveAs(pdfDoc, "exam.pdf"); // Trigger the download
-    }); // Pass the exam content here
+    generateExamPDF(responseResult);
   };
 
   return (
