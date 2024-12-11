@@ -1,85 +1,152 @@
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
-// Function to parse JSON and generate PDF
-export const generateExamPDF = (jsonString: string): void => {
-    try {
-        // Parse the JSON string
-        let response = jsonString.substring(jsonString.indexOf("{"), jsonString.lastIndexOf("}") + 1);
-        console.log(response);
-        const examData = JSON.parse(response);
-        const doc = new jsPDF();
-        const marginX = 15;
-        const marginY = 20;
-        const lineSpacing = 10;
-        let currentY = marginY;
+interface ExamData {
+    title: string;
+    total_marks: number;
+    time: string;
+    sections: Section[];
+}
 
-        // Set font to Times New Roman
-        doc.setFont("times", "normal");
+interface Section {
+    part: number;
+    title: string;
+    total_marks: number;
+    subsections?: SubSection[];
+    content?: {
+        passage?: string;
+        dialogue?: string;
+        questions?: Question[];
+    };
+}
 
-        /**
-         * Helper function to handle adding text and line breaks.
-         */
-        const addText = (text: string, fontSize: number, x: number, y: number) => {
-            doc.setFontSize(fontSize);
-            const lines = doc.splitTextToSize(text, 180);
-            lines.forEach((line: string) => {
-                if (y > 280) {
-                    doc.addPage();
-                    y = marginY;
+interface SubSection {
+    subsection: number;
+    title: string;
+    marks: number;
+    content: {
+        passage?: string;
+        dialogue?: string;
+        questions?: Question[];
+    };
+}
+
+interface Question {
+    type: string;
+    question?: string;
+    sentence?: string;
+    options?: string[];
+    prompt?: string;
+    word_limit?: number;
+}
+
+export const generateExamPDF = (jsonString: string) => {
+    // Extract JSON portion from the string
+    const jsonContent = jsonString.substring(
+        jsonString.indexOf("{"),
+        jsonString.lastIndexOf("}") + 1
+    );
+
+    // Parse the extracted JSON
+    const examData: ExamData = JSON.parse(jsonContent);
+
+    const doc = new jsPDF();
+
+    // Initial Y position
+    let yPosition = 20;
+
+    // Add Title and Exam Info
+    doc.setFont("Helvetica", "bold", 16);
+    doc.text(examData.title, 105, yPosition, { align: "center" });
+    yPosition += 10;
+
+    doc.setFont("Helvetica", "normal", 12);
+    doc.text(`Total Marks: ${examData.total_marks}`, 10, yPosition);
+    yPosition += 5;
+    doc.text(`Time: ${examData.time}`, 10, yPosition);
+    yPosition += 10;
+
+    // Loop through sections
+    examData.sections?.forEach((section: Section) => {
+        if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+        }
+
+        doc.setFont("Helvetica", "bold", 14);
+        doc.text(`Part ${section.part}: ${section.title} (${section.total_marks} marks)`, 10, yPosition);
+        yPosition += 10;
+
+        section.subsections?.forEach((subsection: SubSection) => {
+            if (yPosition > 270) {
+                doc.addPage();
+                yPosition = 20;
+            }
+
+            doc.setFont("Helvetica", "bold", 12);
+            doc.text(
+                `  Subsection ${subsection.subsection}: ${subsection.title} (${subsection.marks} marks)`,
+                10,
+                yPosition
+            );
+            yPosition += 10;
+
+            if (subsection.content) {
+                if (subsection.content.passage) {
+                    const passage = doc.splitTextToSize(subsection.content.passage, 180);
+                    doc.text(passage, 10, yPosition);
+                    yPosition += passage.length * 5;
                 }
-                doc.text(line, x, y);
-                y += lineSpacing;
-            });
-            return y;
-        };
 
-        // Add Title, Total Marks, and Time
-        currentY = addText(`Exam Title: ${examData.title}`, 16, marginX, currentY);
-        currentY = addText(`Total Marks: ${examData.total_marks}`, 12, marginX, currentY);
-        currentY = addText(`Time Allowed: ${examData.time}`, 12, marginX, currentY);
+                if (subsection.content.dialogue) {
+                    const dialogue = doc.splitTextToSize(subsection.content.dialogue, 180);
+                    doc.text(dialogue, 10, yPosition);
+                    yPosition += dialogue.length * 5;
+                }
 
-        // Add Sections
-        examData.sections.forEach((section: any) => {
-            currentY = addText(`\nPart ${section.part}: ${section.title} (Total: ${section.total_marks} marks)`, 14, marginX, currentY);
+                if (subsection.content.questions && Array.isArray(subsection.content.questions)) {
+                    subsection.content.questions.forEach((q: Question, index: number) => {
+                        if (yPosition > 270) {
+                            doc.addPage();
+                            yPosition = 20;
+                        }
 
-            section.subsections?.forEach((subsection: any) => {
-                currentY = addText(`\nSubsection ${subsection.subsection}: ${subsection.title} (${subsection.marks} marks)`, 12, marginX, currentY);
-
-                // Add Content (Passages, Dialogues, or Questions)
-                if (subsection.content) {
-                    if (subsection.content.passage) {
-                        currentY = addText(`\nPassage: ${subsection.content.passage}`, 11, marginX, currentY);
-                    }
-
-                    if (subsection.content.dialogue) {
-                        currentY = addText(`\nDialogue:\n${subsection.content.dialogue}`, 11, marginX, currentY);
-                    }
-
-                    subsection.content.questions?.forEach((question: any, index: number) => {
-                        const questionText = question.question || question.sentence;
-                        currentY = addText(`${index + 1}. ${questionText}`, 11, marginX, currentY);
-
-                        if (question.options) {
-                            question.options.forEach((option: string, optionIndex: number) => {
-                                currentY = addText(`   ${String.fromCharCode(97 + optionIndex)}. ${option}`, 10, marginX, currentY);
+                        doc.setFont("Helvetica", "normal", 12);
+                        if (q.type === "multiple-choice") {
+                            doc.text(`${index + 1}. ${q.question}`, 10, yPosition);
+                            yPosition += 5;
+                            q.options?.forEach((option: string, i: number) => {
+                                doc.text(`  ${String.fromCharCode(65 + i)}. ${option}`, 10, yPosition);
+                                yPosition += 5;
                             });
+                        } else if (q.type === "fill-in-the-blank" && q.sentence) {
+                            doc.text(`${index + 1}. ${q.sentence}`, 10, yPosition);
+                            yPosition += 5;
+                        } else if (q.type === "essay" && q.prompt) {
+                            doc.text(`${index + 1}. ${q.prompt} (${q.word_limit} words)`, 10, yPosition);
+                            yPosition += 10;
                         }
                     });
                 }
-            });
-
-            // Add Writing Section Questions
-            if (section.content?.questions) {
-                section.content.questions.forEach((writingQuestion: any, index: number) => {
-                    currentY = addText(`${index + 1}. ${writingQuestion.prompt}`, 11, marginX, currentY);
-                    currentY = addText(`Word Limit: ${writingQuestion.word_limit}`, 10, marginX, currentY);
-                });
             }
         });
 
-        // Save the PDF
-        doc.save(`${examData.title}.pdf`);
-    } catch (error) {
-        console.error("Error generating PDF:", error);
-    }
+        if (section.content?.questions && Array.isArray(section.content.questions)) {
+            section.content.questions.forEach((q: Question, index: number) => {
+                if (yPosition > 270) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+
+                doc.setFont("Helvetica", "normal", 12);
+                if (q.type === "essay" && q.prompt) {
+                    doc.text(`${index + 1}. ${q.prompt} (${q.word_limit} words)`, 10, yPosition);
+                    yPosition += 10;
+                }
+            });
+        }
+    });
+
+    // Save the PDF
+    doc.save("exam.pdf");
 };

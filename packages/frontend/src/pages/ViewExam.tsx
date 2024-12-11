@@ -3,7 +3,6 @@ import invokeApig from "../lib/callAPI.ts";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../lib/contextLib.ts";
-import { saveAs } from "file-saver";
 import { generateExamPDF } from "./generatePDF";  // Make sure to import the function
 
 const ViewExam: React.FC = () => {
