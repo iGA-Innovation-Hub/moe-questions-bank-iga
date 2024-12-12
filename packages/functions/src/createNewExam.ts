@@ -70,9 +70,16 @@ export async function createExam(event: APIGatewayProxyEvent) {
         
         For the reading part generate a short 100 words article and create questions on it.
 
-        For the listening part create a short listening script and keep it in the appendix of the exam and make the questions on it.
+        For the listening part create a short listening script and make the questions on it put the script in the appendix (50 word).
 
         The exam should be structured approriately.
+        {
+          "question1": ""
+          "question2": ""
+          ....
+          "appendix":""
+        }
+          put the response in this structure only, 
 
         This is the exam structure to follow:
       Listening Section (Total: 10 marks)
@@ -99,7 +106,9 @@ export async function createExam(event: APIGatewayProxyEvent) {
         
         Take to consideration this relevant information from past exams: ${relevant_info}
         
-        Return only the exam and nothing else.
+        Return only the exam and nothing else. using the structure provided
+
+        Return only the JSON no other text
         
         `;
   } else {

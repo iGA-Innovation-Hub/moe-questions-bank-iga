@@ -21,6 +21,7 @@ import ApproverRoute from "./pages/ApproverRoute";
 import ExamApproval from "./pages/ExamApproval";
 import NotFound from "./pages/NotFound";
 import ViewExam from "./pages/ViewExam";
+import AudioScriptForm from "./pages/AudioPage";
 
 const App: React.FC = () => {
   // Authentication state
@@ -93,6 +94,12 @@ const App: React.FC = () => {
             <Route path="viewExam/:id" element={<ViewExam />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="feedback-form" element={<FeedbackForm />} />
+            <Route 
+              path="audiopPage" 
+              element={
+                <GeneratorRoute>
+                <AudioScriptForm />
+                </GeneratorRoute>} />
             <Route
               path="approveExam"
               element={

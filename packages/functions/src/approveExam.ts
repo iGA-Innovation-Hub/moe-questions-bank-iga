@@ -1,14 +1,30 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { APIGatewayProxyEvent } from "aws-lambda";
+import { OutputFormat, PollyClient, SynthesizeSpeechCommand, VoiceId } from "@aws-sdk/client-polly";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  BedrockRuntimeClient,
+  ConverseCommand,
+} from "@aws-sdk/client-bedrock-runtime";
+import { Readable } from "stream";
 
 const client = new DynamoDBClient({});
 
 const dynamo = DynamoDBDocumentClient.from(client);
 
+const bedrockClient = new BedrockRuntimeClient({ region: "us-east-1" });
+
+const modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0";
+
+const pollyClient = new PollyClient({});
+const s3Client = new S3Client({});
+
 export async function approve(event: APIGatewayProxyEvent) {
   const tableName = process.env.TABLE_NAME;
   console.log("Table Name: " + process.env.TABLE_NAME);
+  const bucketName = process.env.BUCKET_NAME;
+  console.log("Bucket Name: " + process.env.BUCKET_NAME);
 
   let body;
   let statusCode = 200;
@@ -17,7 +33,74 @@ export async function approve(event: APIGatewayProxyEvent) {
   };
 
   try {
+    //@ts-ignore
     let requestJSON = JSON.parse(event.body);
+
+    let dynamoresponse = await dynamo.send(
+      new GetCommand({
+        TableName: tableName,
+        Key: {
+          examID: requestJSON.examID,
+        },
+      })
+    );
+    //@ts-ignore
+    const prompt = "Extract only the listening script if there is no script rturn no script only frome this " + dynamoresponse.Item.examContent +"only return the script or just no script";
+    const conversation = [
+      {
+        role: "user",
+        content: [{ text: prompt }],
+      },
+    ];
+    
+
+    const command = new ConverseCommand({
+      modelId,
+      //@ts-ignore
+      messages: conversation,
+      inferenceConfig: { maxTokens: 1200, temperature: 0.5, topP: 0.9 },
+    });
+
+    console.log("Prompt built");
+    const bedrockresponse = await bedrockClient.send(command);
+    
+    // Extract and print the response text.
+    const listeningScript = bedrockresponse?.output?.message?.content?.[0]?.text;
+    console.log("Model done");
+
+    if(listeningScript && listeningScript != "no script"){
+      const pollyParams = {
+        Text: listeningScript,
+        OutputFormat: OutputFormat.MP3,
+        VoiceId: VoiceId.Joanna,
+      };
+      
+      console.log(`pollyParams: ${pollyParams}`);
+      const synthesizeSpeechCommand = new SynthesizeSpeechCommand(pollyParams);
+      const pollyResponse = await pollyClient.send(synthesizeSpeechCommand);
+  
+      if (!pollyResponse.AudioStream) {
+        throw new Error("Failed to generate audio from Polly");
+      }
+  
+      // Convert the AudioStream to a buffer
+      const audioBuffer = await streamToBuffer(pollyResponse.AudioStream as Readable);
+
+      // Save audio to S3
+      const s3Key = `${requestJSON.examID}.mp3`;
+      const s3Params = {
+        Bucket: bucketName,
+        Key: s3Key,
+        Body: audioBuffer,
+        ContentType: "audio/mpeg",
+      };
+
+      const putObjectCommand = new PutObjectCommand(s3Params);
+      await s3Client.send(putObjectCommand);
+
+      console.log(`Audio uploaded to S3 at: ${s3Key}`);
+    }
+
 
     await dynamo.send(
       new UpdateCommand({
@@ -47,3 +130,12 @@ export async function approve(event: APIGatewayProxyEvent) {
     headers,
   };
 }
+
+const streamToBuffer = async (stream: Readable): Promise<Buffer> => {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    stream.on("data", (chunk) => chunks.push(chunk));
+    stream.on("end", () => resolve(Buffer.concat(chunks)));
+    stream.on("error", (err) => reject(err));
+  });
+};
