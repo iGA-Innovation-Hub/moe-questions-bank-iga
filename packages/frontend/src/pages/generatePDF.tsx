@@ -229,9 +229,9 @@ function addVocabularyMatching(doc: jsPDF, vocabList: Question[], yPosition: num
     doc.text("C. Vocabulary Matching:", marginLeft, yPosition);
     yPosition += 12;
 
-    shuffleArray(vocabList);
-
+    
     const vocabWords = vocabList.map((vocab, index) => `${index + 1}. ${(vocab as any).word}`).join("    ");
+    shuffleArray(vocabList);
     const vocabLines = doc.splitTextToSize(vocabWords, marginRight - marginLeft);
     doc.setFont("Times", "bold", 11);
     doc.text(vocabLines, marginLeft, yPosition);
