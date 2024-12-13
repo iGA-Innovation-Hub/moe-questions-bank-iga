@@ -31,10 +31,11 @@
     "@aws-sdk/client-bedrock": "^3.706.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.706.0",
     "@aws-sdk/client-bedrock-runtime": "^3.699.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.710.0",
     "@aws-sdk/client-polly": "^3.699.0",
 >>>>>>> origin/main
     "@aws-sdk/client-sagemaker-runtime": "^3.693.0",
-    "@aws-sdk/client-sns": "^3.699.0",
+    "@aws-sdk/client-sns": "^3.709.0",
     "@aws-sdk/lib-dynamodb": "^3.699.0",
     "@aws-sdk/lib-storage": "^3.709.0",
     "@langchain/groq": "^0.1.2",
