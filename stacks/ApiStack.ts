@@ -1,4 +1,4 @@
-import { Api, StackContext, Topic, use } from "sst/constructs";
+import { Api, Bucket, StackContext, Topic, use } from "sst/constructs";
 import { CacheHeaderBehavior, CachePolicy } from "aws-cdk-lib/aws-cloudfront";
 import { Duration } from "aws-cdk-lib/core";
 import { DBStack } from "./DBStack"
@@ -9,6 +9,8 @@ export function ApiStack({ stack }: StackContext) {
   const topic = new Topic(stack, "Report");
 
   const { users_table, exams_table } = use(DBStack);
+
+  const bucket = new Bucket(stack, "Audio");
 
   // Create the HTTP API
   const api = new Api(stack, "Api", {
@@ -130,9 +132,10 @@ export function ApiStack({ stack }: StackContext) {
           handler: "packages/functions/src/approveExam.approve",
           runtime: "nodejs20.x",
           timeout: "180 seconds",
-          permissions: ["dynamodb", exams_table],
+          permissions: ["dynamodb", exams_table,"polly","s3","bedrock"],
           environment: {
             TABLE_NAME: exams_table.tableName,
+            BUCKET_NAME: bucket.bucketName,
           },
         },
       },
@@ -170,6 +173,14 @@ export function ApiStack({ stack }: StackContext) {
           environment: {
             TABLE_NAME: users_table.tableName,
           },
+        },
+      },
+      "POST /convertToAudio": {
+        function: {
+          handler: "packages/functions/src/generateAudio.handler",
+          runtime: "nodejs20.x",
+          timeout: "180 seconds",
+          permissions: ["polly"],
         },
       },
     },

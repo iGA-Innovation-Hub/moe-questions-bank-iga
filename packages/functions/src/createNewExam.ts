@@ -1,7 +1,11 @@
 import {
   DynamoDBClient
 } from "@aws-sdk/client-dynamodb";
+<<<<<<< HEAD
 import { DynamoDBDocumentClient, PutCommand, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+=======
+import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+>>>>>>> origin/main
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -12,7 +16,10 @@ import {
   BedrockAgentRuntimeClient,
   RetrieveCommand,
 } from "@aws-sdk/client-bedrock-agent-runtime";
+<<<<<<< HEAD
 import { ENG102PROMPT } from "./prompts/Eng102";
+=======
+>>>>>>> origin/main
 
 const client = new DynamoDBClient({
   region: "us-east-1",
@@ -27,7 +34,11 @@ const modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0";
 
 export async function createExam(event: APIGatewayProxyEvent) {
   if (!client || !dynamo) { 
+<<<<<<< HEAD
     console.log("Error with DynamoDB client");
+=======
+    console.log("Error with dynamo")
+>>>>>>> origin/main
   }
   const tableName = process.env.TABLE_NAME;
   console.log("Table Name:", process.env.TABLE_NAME);
@@ -48,6 +59,7 @@ export async function createExam(event: APIGatewayProxyEvent) {
   };
 
   let prompt = "";
+<<<<<<< HEAD
 
   // Handle regeneration or creation
   if (data.examID) {
@@ -66,6 +78,94 @@ export async function createExam(event: APIGatewayProxyEvent) {
           body: JSON.stringify({ error: "Exam not found" }),
         };
       }
+=======
+  
+  const bedrockAgentClient = new BedrockAgentRuntimeClient({ region: "us-east-1" });
+  let retrieveCommand = new RetrieveCommand({
+    knowledgeBaseId: "EU3Z7J6SG6",
+    retrievalConfiguration: {
+      vectorSearchConfiguration: {
+        numberOfResults: 10,
+      },
+    },
+    retrievalQuery: {
+      text: "ENG102 questions",
+    },
+  });
+
+  if (!data.customize) {
+    const relevant_info = (await bedrockAgentClient.send(retrieveCommand)).retrievalResults?.map(e => e.content?.text).join("\n").toString();
+    prompt = `
+        Act as a school exam generator and create an exam for ENG102 students. The total duration of the exam should not exceed 2 hours.
+        Make sure the exam examines the students in different aspects sufficiently.
+        
+        For the reading part generate a short 100 words article and create questions on it.
+
+        For the listening part create a short listening script and make the questions on it put the script in the appendix (50 word).
+
+        The exam should be structured approriately.
+        {
+          "question1": ""
+          "question2": ""
+          ....
+          "appendix":""
+        }
+          put the response in this structure only, 
+
+        This is the exam structure to follow:
+      Listening Section (Total: 10 marks)
+        Question 1: Create true/false questions on the listening script worth 5 marks.
+        Question 2: Create a match the Statements question on the listening script worth 5 marks.
+
+      Reading Section (Total: 20 marks)
+        Part 1 (Reasoning):
+          Include two sub-questions:
+            a. Match the paragraphs with headings (5 marks).
+            b. Short questions and answers (5 marks).
+        Part 2 (Vocabulary):
+          Generate another article (50 Word).
+          Include two sub-questions:
+            a. True or False (5 marks) on the article.
+            b. Match words from the article with their definitions (5 marks).
+
+        Writing Section (Total: 20 marks)
+          Question 1: A writing task worth 10 marks.
+          Question 2: Another writing task worth 10 marks.
+
+
+          Make sure that all the questions has their marks assigned to them.
+        
+        Take to consideration this relevant information from past exams: ${relevant_info}
+        
+        Return only the exam and nothing else. using the structure provided
+
+        Return only the JSON no other text
+        
+        `;
+  } else {
+    prompt = `
+        Act as a school exam generator and create an exam for grade ${data.class} ${data.subject} students.
+        The exam should have only the following :
+      `;
+    // Dynamically build the prompt for each question type
+    Object.entries(data.question_types).forEach(([type, count]) => {
+      //@ts-ignore
+      if (count > 0) {
+        //@ts-ignore
+        prompt += `include ${count} ${type} question${count > 1 ? "s" : ""}, `;
+      }
+    });
+    retrieveCommand.input.retrievalQuery = {
+      text: `grade ${data.class} ${data.subject} questions ${Object.entries(data.question_types).map(([type, count]) => `${count} ${type}`).join(", ")}`,
+    };
+    // console.log(retrieveCommand);
+    const relevant_info = (await bedrockAgentClient.send(retrieveCommand)).retrievalResults?.map(e => e.content?.text).join("\n").toString();
+    prompt += `
+        The total duration of the exam should not exceed ${data.duration} hours with total ${data.total_mark} marks.
+        Take to consideration this relevant information from past exams: ${relevant_info}
+      `;
+  }
+>>>>>>> origin/main
 
       const existingExam = JSON.parse(result.Item.examContent);
 
@@ -116,6 +216,7 @@ export async function createExam(event: APIGatewayProxyEvent) {
       const responseText = response.output.message.content[0].text;
       console.log("Updated Exam Content:", responseText);
 
+<<<<<<< HEAD
       await dynamo.send(
         new UpdateCommand({
           TableName: tableName,
@@ -127,6 +228,11 @@ export async function createExam(event: APIGatewayProxyEvent) {
           },
         })
       );
+=======
+    console.log("Prompt built");
+
+    const response = await bedrockClient.send(command);
+>>>>>>> origin/main
 
       body = { message: "Exam successfully regenerated", updatedExamContent: responseText };
     } catch (error) {
@@ -150,6 +256,7 @@ export async function createExam(event: APIGatewayProxyEvent) {
         },
       });
 
+<<<<<<< HEAD
       if (!data.customize) {
         const relevant_info = (await bedrockAgentClient.send(retrieveCommand)).retrievalResults?.map(e => e.content?.text).join("\n").toString();
         prompt = ENG102PROMPT + ' Refer to the following relevant information from past exams:' + relevant_info;
@@ -158,6 +265,11 @@ export async function createExam(event: APIGatewayProxyEvent) {
         Create an exam for grade ${data.class} ${data.subject} students. 
         Include ${data.duration} hours, total ${data.total_mark} marks, and the following question types:
         ${Object.entries(data.question_types).map(([type, count]) => `${count} ${type} question(s)`).join(", ")}.
+=======
+    console.log("Model done");
+    //@ts-ignore
+    console.log("ResponseText size:", Buffer.byteLength(responseText, "utf-8"));
+>>>>>>> origin/main
 
         Use the following relevant past exam data:
         ${JSON.stringify(retrieveCommand.input.retrievalQuery, null, 2)}
@@ -207,12 +319,24 @@ export async function createExam(event: APIGatewayProxyEvent) {
         })
       );
 
+<<<<<<< HEAD
       body = { examID: uuid, message: "Exam successfully created" };
     } catch (error) {
       console.error("Error creating exam:", error);
       statusCode = 500;
       body = { error: "Failed to create exam", details: error.message };
     }
+=======
+    console.log("Put done")
+
+    body = { exam_id: uuid };
+  } catch (error: any) {
+    statusCode = 400;
+    body = error.message;
+    console.log(error.message)
+  } finally {
+    body = JSON.stringify(body);
+>>>>>>> origin/main
   }
 
   return {
