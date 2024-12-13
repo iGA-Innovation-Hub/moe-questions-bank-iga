@@ -42,7 +42,7 @@ export function ApiStack({ stack }: StackContext) {
 
       "GET /uploadFiles": {
         function: {
-          handler: "packages/functions/src/getSignedUrl.getSignedUrl",
+          handler: "packages/functions/src/getSignedUrl.getUploadLink",
           runtime: "nodejs20.x",
           timeout: 180,
           permissions: ["s3", materialsBucket],

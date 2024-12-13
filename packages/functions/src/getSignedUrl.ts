@@ -1,14 +1,13 @@
-import S3 from "aws-sdk/clients/s3";
+import { S3, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { APIGatewayProxyEvent } from "aws-lambda";
 
 const s3 = new S3({
-  apiVersion: "2006-03-01",
   region: process.env.AWS_REGION,
-  signatureVersion: "v4",
 });
 
-export async function getSignedUrl(event: APIGatewayProxyEvent) {
+export async function getUploadLink(event: APIGatewayProxyEvent) {
   try {
     const queryParams = event.queryStringParameters || {};
     const fileType = queryParams.fileType; // MIME type
@@ -16,7 +15,9 @@ export async function getSignedUrl(event: APIGatewayProxyEvent) {
     if (!extension || !fileType) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: "File extension is required" }),
+        body: JSON.stringify({
+          error: "File extension and fileType are required",
+        }),
       };
     }
 
@@ -27,11 +28,12 @@ export async function getSignedUrl(event: APIGatewayProxyEvent) {
     const s3Params = {
       Bucket: process.env.BUCKET_NAME,
       Key,
-      Expires: 60, // URL expiration time in seconds
       ContentType: fileType,
     };
 
-    const uploadUrl = await s3.getSignedUrlPromise("putObject", s3Params);
+    const uploadUrl = await getSignedUrl(s3, new PutObjectCommand(s3Params), {
+      expiresIn: 60, // Set expiration time in seconds
+    });
 
     return {
       statusCode: 200,

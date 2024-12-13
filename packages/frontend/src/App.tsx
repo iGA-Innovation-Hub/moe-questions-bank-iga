@@ -3,7 +3,6 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
-  Navigate,
 } from "react-router-dom"; // Navigation between pages.
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/LoginPage";
@@ -23,8 +22,6 @@ import NotFound from "./pages/NotFound";
 import ViewExam from "./pages/ViewExam";
 import UploadPage from "./pages/UploadPage";
 import DefaultRouting from "./pages/UserDefaultComponent";
-import UploaderRoute from "./pages/UploaderRoute";
-import GenAppRoute from "./pages/GenAppRoutes";
 const App: React.FC = () => {
   // Authentication state
   const [isAuthenticated, setAuthenticated] = useState<boolean>(

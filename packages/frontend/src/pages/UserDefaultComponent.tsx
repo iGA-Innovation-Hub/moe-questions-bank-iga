@@ -18,7 +18,7 @@ const DefaultRouting: React.FC = () => {
         navigate("/upload");
         break;
       default:
-        navigate("/");
+        navigate("/login");
         break;
     }
   }, [userRole, navigate]); // Ensure dependency array includes all dependencies

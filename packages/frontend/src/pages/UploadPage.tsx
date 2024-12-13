@@ -163,6 +163,7 @@ const UploadPage: React.FC = () => {
             className="file-input"
             onChange={handleFolderChange}
             multiple
+            //@ts-ignore
             webkitdirectory="true"
           />
           Choose a folder
@@ -206,17 +207,24 @@ async function uploadToS3(file: File) {
   const fileExtension = file.name.split(".").pop();
   const fileType = file.type;
 
+  console.log("File extension:", fileExtension);
+  console.log("fle type: ", file.type);
+
   const data = await invokeApig({
     path: "/uploadFiles",
     method: "GET",
     queryParams: {
       fileType: fileType,
+      //@ts-ignore
       extension: fileExtension,
     },
   });
 
   const uploadUrl = data.uploadUrl;
   const key = data.key;
+
+  console.log("uploadUrl: ", uploadUrl);
+  console.log("key: ", key)
 
   const response = await fetch(uploadUrl, {
     method: "PUT",
