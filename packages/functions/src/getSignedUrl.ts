@@ -1,6 +1,5 @@
 import { S3, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { randomUUID } from "crypto";
 import { APIGatewayProxyEvent } from "aws-lambda";
 
 const s3 = new S3({
@@ -11,8 +10,10 @@ export async function getUploadLink(event: APIGatewayProxyEvent) {
   try {
     const queryParams = event.queryStringParameters || {};
     const fileType = queryParams.fileType; // MIME type
+    const name = queryParams.name;
+    const path = queryParams.path; // Relative path to the file
     const extension = queryParams.extension;
-    if (!extension || !fileType) {
+    if (!extension || !fileType || !name) {
       return {
         statusCode: 400,
         body: JSON.stringify({
@@ -21,9 +22,11 @@ export async function getUploadLink(event: APIGatewayProxyEvent) {
       };
     }
 
-    const Key = `${randomUUID()}.${extension}`;
+    // const Key = `${randomUUID()}.${extension}`;
 
     console.log(queryParams);
+
+    const Key = `${path}/${name}`;
 
     const s3Params = {
       Bucket: process.env.BUCKET_NAME,

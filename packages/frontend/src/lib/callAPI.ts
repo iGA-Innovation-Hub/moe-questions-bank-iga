@@ -58,6 +58,8 @@ export default async function invokeApig({
 
   body = body ? JSON.stringify(body) : body;
 
+  console.log(body)
+
   // Sends the signed request
   const results = await fetch(signedRequest.url, {
     method,
@@ -67,6 +69,7 @@ export default async function invokeApig({
 
   if (!results.ok) {
     const errorText = await results.text();
+    console.error("Error response body:", errorText);
     throw new Error(`API call failed: ${errorText}`);
   }
 
