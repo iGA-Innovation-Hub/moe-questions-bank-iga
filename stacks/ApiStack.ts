@@ -5,6 +5,7 @@ import { DBStack } from "./DBStack"
 
 export function ApiStack({ stack }: StackContext) {
   const topic = new Topic(stack, "Report");
+  const userTopic = new Topic(stack, "UserTopic");
 
   const { users_table, exams_table } = use(DBStack);
 
@@ -105,9 +106,10 @@ export function ApiStack({ stack }: StackContext) {
           handler: "packages/functions/src/sendExamForApproval.sendForApproval",
           runtime: "nodejs20.x",
           timeout: "180 seconds",
-          permissions: ["dynamodb", exams_table],
+          permissions: ["dynamodb", exams_table,"sns"],
           environment: {
             TABLE_NAME: exams_table.tableName,
+            TOPIC_ARN: userTopic.topicArn,
           },
         },
       },
@@ -130,10 +132,11 @@ export function ApiStack({ stack }: StackContext) {
           handler: "packages/functions/src/approveExam.approve",
           runtime: "nodejs20.x",
           timeout: "180 seconds",
-          permissions: ["dynamodb", exams_table,"polly","s3","bedrock"],
+          permissions: ["dynamodb", exams_table,"polly","s3","bedrock","sns"],
           environment: {
             TABLE_NAME: exams_table.tableName,
             BUCKET_NAME: bucket.bucketName,
+            TOPIC_ARN: userTopic.topicArn,
           },
         },
       },
@@ -143,9 +146,10 @@ export function ApiStack({ stack }: StackContext) {
           handler: "packages/functions/src/disapproveExam.disapprove",
           runtime: "nodejs20.x",
           timeout: "180 seconds",
-          permissions: ["dynamodb", exams_table],
+          permissions: ["dynamodb", exams_table,"sns"],
           environment: {
             TABLE_NAME: exams_table.tableName,
+            TOPIC_ARN: userTopic.topicArn,
           },
         },
       },
