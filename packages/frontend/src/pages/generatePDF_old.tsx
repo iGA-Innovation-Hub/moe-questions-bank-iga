@@ -47,7 +47,7 @@ function addExamInfo(doc: jsPDF, exam: Exam, yPosition: number): void {
 }
 
 function addSection(doc: jsPDF, section: Section, yPosition: number): number {
-    if (yPosition > 200) {
+    if (yPosition > 260) {
         doc.addPage();
         yPosition = 30;
     }
@@ -63,7 +63,7 @@ function addSection(doc: jsPDF, section: Section, yPosition: number): number {
     }
 
     if (section.content) {
-        yPosition = addContent(doc, section, yPosition);
+        yPosition = addContent(doc, section.content, yPosition);
     }
 
     yPosition += 20; // Add extra spacing between sections
@@ -72,7 +72,7 @@ function addSection(doc: jsPDF, section: Section, yPosition: number): number {
 }
 
 function addSubSection(doc: jsPDF, subsection: SubSection, yPosition: number): number {
-    if (yPosition > 200) {
+    if (yPosition > 260) {
         doc.addPage();
         yPosition = 30;
     }
@@ -82,7 +82,7 @@ function addSubSection(doc: jsPDF, subsection: SubSection, yPosition: number): n
     yPosition += 10;
 
     if (subsection.content) {
-        yPosition = addContent(doc, subsection, yPosition);
+        yPosition = addContent(doc, subsection.content, yPosition);
     }
 
     yPosition += 10; // Add extra spacing between subsections
@@ -90,32 +90,28 @@ function addSubSection(doc: jsPDF, subsection: SubSection, yPosition: number): n
     return yPosition;
 }
 
-function addContent(doc: jsPDF, section: SubSection | Section, yPosition: number): number {
-
-    // it may be a SubSection or a Section
-    const content = section.content as Content;
-
-    if (content.passage && !section.title.includes("Listening")) {
-        yPosition = addTextBlock(doc, content.passage, yPosition + 10, "Passage:\n\n") + 20;
+function addContent(doc: jsPDF, content: Content, yPosition: number): number {
+    if (content.passage) {
+        yPosition = addTextBlock(doc, content.passage, yPosition, "Passage:") + 10;
     }
 
-    // if (content.dialogue) {
-    //     yPosition = addTextBlock(doc, content.dialogue, yPosition, "Dialogue:") + 10;
-    // }
+    if (content.dialogue) {
+        yPosition = addTextBlock(doc, content.dialogue, yPosition, "Dialogue:") + 10;
+    }
 
-    if (Array.isArray(content.questions) && !content.questions.every((q: any) => q.word_limit)) {
+    if (Array.isArray(content.questions) && ! content.questions.every((q: any) => q.word_limit)) {
         yPosition = addGeneralQuestions(doc, content.questions, yPosition);
     } else if (content.questions) {
         const questions = content.questions as ReadingQuestions;
 
         if (questions["multiple-choice"]) {
-            yPosition = addGeneralQuestions(doc, questions["multiple-choice"], yPosition + 20, "Multiple Choice:") + 20;
+            yPosition = addGeneralQuestions(doc, questions["multiple-choice"], yPosition, "Multiple Choice:");
         }
         if (questions["true-false"]) {
-            yPosition = addTrueFalseQuestions(doc, questions["true-false"], yPosition) + 10;
+            yPosition = addTrueFalseQuestions(doc, questions["true-false"], yPosition);
         }
         if (questions["vocabulary-matching"]) {
-            yPosition = addVocabularyMatching(doc, questions["vocabulary-matching"], yPosition) + 20;
+            yPosition = addVocabularyMatching(doc, questions["vocabulary-matching"], yPosition);
         }
     }
 
@@ -138,30 +134,25 @@ function addTextBlock(doc: jsPDF, text: string, yPosition: number, heading: stri
     doc.setFont("Times", "normal", 11);
     const lines = doc.splitTextToSize(text, 170);
     doc.text(lines, 20, yPosition);
-    return yPosition + lines.length * 6 + 30;
+    return yPosition + lines.length * 6;
 }
 
 function addGeneralQuestions(doc: jsPDF, questions: Question[], yPosition: number, heading?: string): number {
-
     if (heading) {
-        if (yPosition > 200) {
-            doc.addPage();
-            yPosition = 30;
-            doc.setFont("Times", "bold", 12);
-            doc.text(heading, 20, yPosition);
-            yPosition += 10;
-        }
+        doc.setFont("Times", "bold", 12);
+        doc.text(heading, 20, yPosition);
+        yPosition += 6;
     }
 
     questions.forEach((q, index) => {
-        if (yPosition > 200) {
+        if (yPosition > 260) {
             doc.addPage();
             yPosition = 30;
         }
 
         doc.setFont("Times", "normal", 11);
         doc.text(`${index + 1}. ${q.question || q.sentence}`, 20, yPosition);
-        yPosition += 13;
+        yPosition += 10;
 
         q.options?.forEach((option, i) => {
             doc.text(`   ${String.fromCharCode(65 + i)}. ${option}`, 20, yPosition);
@@ -175,52 +166,35 @@ function addGeneralQuestions(doc: jsPDF, questions: Question[], yPosition: numbe
 function addTrueFalseQuestions(doc: jsPDF, questions: Question[], yPosition: number): number {
     doc.setFont("Times", "bold", 12);
     doc.text("True/False Questions:", 20, yPosition);
-    yPosition += 13;
+    yPosition += 10;
 
     questions.forEach((q, index) => {
-        if (yPosition > 200) {
+        if (yPosition > 260) {
             doc.addPage();
             yPosition = 30;
         }
 
         doc.setFont("Times", "normal", 11);
         doc.text(`${index + 1}. ${q.statement} (   )`, 20, yPosition);
-        yPosition += 13;
+        yPosition += 10;
     });
 
     return yPosition;
 }
-
-function shuffleArray(A: Question[]): void {
-    for (let i = A.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1)); // Random index from 0 to i
-        [A[i], A[j]] = [A[j], A[i]]; // Swap elements
-    }
-}
-
 
 function addVocabularyMatching(doc: jsPDF, vocabList: Question[], yPosition: number): number {
     doc.setFont("Times", "bold", 12);
     doc.text("Vocabulary Matching:", 20, yPosition);
     yPosition += 10;
 
-    let list_of_vocab = '';
-    shuffleArray(vocabList); 
     vocabList.forEach((vocab, index) => {
-       list_of_vocab += `${index + 1}. ${(vocab as any).word}     `;
-    });
-
-    doc.setFont("Times", "bold", 11);
-    doc.text(list_of_vocab, 20, yPosition);
-
-    vocabList.forEach((vocab, index) => {
-        if (yPosition > 210) {
+        if (yPosition > 260) {
             doc.addPage();
             yPosition = 30;
         }
         doc.setFont("Times", "normal", 11);
-        doc.text(`${index + 1}. __________________ ${(vocab as any).definition}`, 20, yPosition + 20);
-        yPosition += 10;
+        doc.text(`${index + 1}. ${(vocab as any).word} - ${(vocab as any).definition}`, 20, yPosition);
+        yPosition += 8;
     });
 
     return yPosition;
@@ -229,10 +203,10 @@ function addVocabularyMatching(doc: jsPDF, vocabList: Question[], yPosition: num
 function addExercises(doc: jsPDF, exercises: Exercise[], yPosition: number): number {
     doc.setFont("Times", "bold", 12);
     doc.text("Exercises:", 20, yPosition);
-    yPosition += 15;
+    yPosition += 10;
 
     exercises.forEach((exercise, index) => {
-        if (yPosition > 200) {
+        if (yPosition > 260) {
             doc.addPage();
             yPosition = 30;
         }
