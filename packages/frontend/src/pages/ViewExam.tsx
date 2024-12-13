@@ -45,17 +45,18 @@ const ViewExam: React.FC = () => {
   const [contributers, setContributers] = useState("");
   const [examState, setExamState] = useState("");
   const [approverMsg, setApproverMsg] = useState("");
-  const [responseResult, setResponseResult] = useState<string>("");
+  const [_responseResult, _setResponseResult] = useState<string>("");
   const [loadingPage, setLoadingPage] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [loadingChangeState, setLoadingChangeState] = useState(false);
   const [loadingApprove, setLoadingApprove] = useState(false);
   const [LoadingDisapprove, setLoadingDisapprove] = useState(false);
   const [examContent, setExamContent] = useState<ExamContent | null>(null);
-  const [editMode, setEditMode] = useState(false); // Toggle edit mode
-  const [editedContent, setEditedContent] = useState<Record<string, any>>({});
+  const [_editMode, _setEditMode] = useState(false); // Toggle edit mode
+  const [_editedContent, _setEditedContent] = useState<Record<string, any>>({});
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState<Record<string, string>>({}); // Store feedback
   const { id } = useParams<{ id: string }>();
   const { userRole } = useAppContext();
@@ -216,6 +217,7 @@ const ViewExam: React.FC = () => {
 
 
   const handleFeedbackSubmission = async () => {
+    setIsLoading(true);
     // Prepare the feedback payload, including only non-empty feedback
     const feedbackPayload = Object.entries(feedback)
       .filter(([_, feedbackText]) => feedbackText.trim()) // Only include sections with feedback
@@ -274,18 +276,21 @@ const ViewExam: React.FC = () => {
     }
   };
 
-  const handleFeedbackChange = (section: string, value: string) => {
-    // Optional: Add input validation or transformation
-    const sanitizedValue = value.trim(); // Example: Trim whitespace
+  // const handleFeedbackChange = (section: string, value: string) => {
+  //   // Optional: Add input validation or transformation
+  //   const sanitizedValue = value.trim(); // Example: Trim whitespace
   
-    setFeedback((prev) => ({
-      ...prev,
-      [section]: sanitizedValue, // Update feedback for the specified section
-    }));
+  //   setFeedback((prev) => ({
+  //     ...prev,
+  //     [section]: sanitizedValue, // Update feedback for the specified section
+  //   }));
   
-    // Optional: Debugging log (can be removed in production)
-    console.log(`Feedback updated for section "${section}":`, sanitizedValue);
-  };
+  //   // Optional: Debugging log (can be removed in production)
+  //   console.log(`Feedback updated for section "${section}":`, sanitizedValue);
+  // };
+  
+
+  
 
 
   const changeExamStateToBuild = async () => {
@@ -378,110 +383,111 @@ const ViewExam: React.FC = () => {
 
 
 
-  const renderExamParts = (part: any, partKey: string) => {
-    const partFeedback = feedback[partKey] || ""; // Feedback for this part
+  // const renderExamParts = (part: any, partKey: string) => {
+  //   const partFeedback = feedback[partKey] || ""; // Feedback for this part
   
-    return (
-      <div key={partKey} style={{ marginBottom: "30px" }}>
-        <h2>
-          Part {part.part}: {part.title}
-        </h2>
-        <p>Total Marks: {part.total_marks}</p>
+  //   return (
+  //     <div key={partKey} style={{ marginBottom: "30px" }}>
+  //       <h2>
+  //         Part {part.part}: {part.title}
+  //       </h2>
+  //       <p>Total Marks: {part.total_marks}</p>
   
-        {part.subsections?.map((subsection: any, subKey: number) => (
-          <div key={`${partKey}-${subKey}`} style={{ marginBottom: "15px" }}>
-            <h3>
-              Subsection {subsection.subsection}: {subsection.title}
-            </h3>
-            <p>Marks: {subsection.marks}</p>
+  //       {part.subsections?.map((subsection: any, subKey: number) => (
+  //         <div key={`${partKey}-${subKey}`} style={{ marginBottom: "15px" }}>
+  //           <h3>
+  //             Subsection {subsection.subsection}: {subsection.title}
+  //           </h3>
+  //           <p>Marks: {subsection.marks}</p>
   
-            {/* Render content */}
-            {subsection.content && (
-              <div>
-                {subsection.content.passage && (
-                  <p>
-                    <strong>Passage:</strong> {subsection.content.passage}
-                  </p>
-                )}
-                {subsection.content.dialogue && (
-                  <p>
-                    <strong>Dialogue:</strong> {subsection.content.dialogue}
-                  </p>
-                )}
-                {subsection.content.questions && (
-                  <ul>
-                    {subsection.content.questions.map(
-                      (question: any, qIndex: number) => (
-                        <li key={qIndex}>
-                          {question.type}: {question.question}
-                        </li>
-                      )
-                    )}
-                  </ul>
-                )}
-              </div>
-            )}
+  //           {/* Render content */}
+  //           {subsection.content && (
+  //             <div>
+  //               {subsection.content.passage && (
+  //                 <p>
+  //                   <strong>Passage:</strong> {subsection.content.passage}
+  //                 </p>
+  //               )}
+  //               {subsection.content.dialogue && (
+  //                 <p>
+  //                   <strong>Dialogue:</strong> {subsection.content.dialogue}
+  //                 </p>
+  //               )}
+  //               {subsection.content.questions && (
+  //                 <ul>
+  //                   {subsection.content.questions.map(
+  //                     (question: any, qIndex: number) => (
+  //                       <li key={qIndex}>
+  //                         {question.type}: {question.question}
+  //                       </li>
+  //                     )
+  //                   )}
+  //                 </ul>
+  //               )}
+  //             </div>
+  //           )}
   
-            {/* Feedback text area in edit mode */}
-            {isEditing && (
-              <div style={{ marginTop: "10px" }}>
-                <label htmlFor={`feedback-${partKey}-${subKey}`}>
-                  Feedback for {subsection.title}:
-                </label>
-                <textarea
-                  id={`feedback-${partKey}-${subKey}`}
-                  placeholder={`Provide feedback for ${subsection.title}`}
-                  value={feedback[`${partKey}-${subKey}`] || ""} // Check for feedback by key, or show empty
-                  onChange={(e) =>
-                    setFeedback((prev) => ({
-                      ...prev,
-                      [`${partKey}-${subKey}`]: e.target.value,
-                    }))
-                  }
-                  style={{
-                    width: "100%",
-                    minHeight: "60px",
-                    marginTop: "5px",
-                    marginBottom: "10px",
-                    padding: "10px",
-                    borderRadius: "4px",
-                    border: "1px solid #ccc",
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        ))}
+  //           {/* Feedback text area in edit mode */}
+  //           {isEditing && (
+  //             <div style={{ marginTop: "10px" }}>
+  //               <label htmlFor={`feedback-${partKey}-${subKey}`}>
+  //                 Feedback for {subsection.title}:
+  //               </label>
+  //               <textarea
+  //                 id={`feedback-${partKey}-${subKey}`}
+  //                 placeholder={`Provide feedback for ${subsection.title}`}
+  //                 value={feedback[`${partKey}-${subKey}`] || ""} // Check for feedback by key, or show empty
+  //                 onChange={(e) =>
+  //                   setFeedback((prev) => ({
+  //                     ...prev,
+  //                     [`${partKey}-${subKey}`]: e.target.value,
+  //                   }))
+  //                 }
+  //                 style={{
+  //                   width: "100%",
+  //                   minHeight: "60px",
+  //                   marginTop: "5px",
+  //                   marginBottom: "10px",
+  //                   padding: "10px",
+  //                   borderRadius: "4px",
+  //                   border: "1px solid #ccc",
+  //                 }}
+  //               />
+  //             </div>
+  //           )}
+  //         </div>
+  //       ))}
   
-        {/* Feedback text area for the whole part */}
-        {isEditing && (
-          <div style={{ marginTop: "20px" }}>
-            <label htmlFor={`feedback-${partKey}`}>Feedback for {part.title}:</label>
-            <textarea
-              id={`feedback-${partKey}`}
-              placeholder={`Provide feedback for ${part.title}`}
-              value={partFeedback}
-              onChange={(e) =>
-                setFeedback((prev) => ({
-                  ...prev,
-                  [partKey]: e.target.value,
-                }))
-              }
-              style={{
-                width: "100%",
-                minHeight: "80px",
-                marginTop: "5px",
-                marginBottom: "10px",
-                padding: "10px",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-              }}
-            />
-          </div>
-        )}
-      </div>
-    );
-  };
+  //       {/* Feedback text area for the whole part */}
+  //       {isEditing && (
+  //         <div style={{ marginTop: "20px" }}>
+  //           <label htmlFor={`feedback-${partKey}`}>Feedback for {part.title}:</label>
+  //           <textarea
+  //             id={`feedback-${partKey}`}
+  //             placeholder={`Provide feedback for ${part.title}`}
+  //             value={partFeedback}
+  //             onChange={(e) =>
+  //               setFeedback((prev) => ({
+  //                 ...prev,
+  //                 [partKey]: e.target.value,
+  //               }))
+  //             }
+  //             style={{
+  //               width: "100%",
+  //               minHeight: "80px",
+  //               marginTop: "5px",
+  //               marginBottom: "10px",
+  //               padding: "10px",
+  //               borderRadius: "4px",
+  //               border: "1px solid #ccc",
+  //             }}
+  //           />
+  //         </div>
+  //       )}
+  //     </div>
+  //   );
+  // };
+
 
   // Show loading state
   if (loadingPage) {
@@ -1272,42 +1278,57 @@ const ViewExam: React.FC = () => {
         >
           {isEditing ? "Cancel Edit" : "Edit"}
         </button>
+
+
+
         {/* Feedback Submission Button */}
 {isEditing && (
   <button
-  onClick={handleFeedbackSubmission}
-  style={{
-    marginTop: "20px",
-    padding: "0.6rem 1rem",
-    backgroundColor: "#007bff", // Matching the blue color from the image
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    fontSize: "14px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    transition: "background-color 0.3s ease, transform 0.3s ease",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-  }}
-  onMouseOver={(e) =>
-    //@ts-ignore
-    (e.target.style.backgroundColor = "#0056b3") // Slightly darker blue on hover
-  }
-  onMouseOut={(e) =>
-    //@ts-ignore
-    (e.target.style.backgroundColor = "#007bff")
-  }
-  onMouseDown={(e) =>
-    //@ts-ignore
-    (e.target.style.transform = "scale(0.98)") // Slight press effect
-  }
-  //@ts-ignore
-  onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
->
-  Submit changes
-</button>
-
+    onClick={handleFeedbackSubmission}
+    style={{
+      marginTop: "20px",
+      padding: "0.6rem 1rem",
+      color: "#fff",
+      border: "none",
+      borderRadius: "4px",
+      fontSize: "14px",
+      fontWeight: "bold",
+      cursor: isLoading ? "not-allowed" : "pointer", // Disable pointer when loading
+      transition: "background-color 0.3s ease, transform 0.3s ease",
+      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+      backgroundColor: isLoading ? "#6c757d" : "#007bff", // Grey when loading
+     
+    }}
+    disabled={isLoading} // Disable button when loading
+  >
+    {isLoading ? (
+      <>
+        <span
+          style={{
+            width: "1rem",
+            height: "1rem",
+            border: "2px solid #fff",
+            borderRadius: "50%",
+            borderTop: "2px solid transparent",
+            animation: "spin 1s linear infinite",
+          }}
+        ></span>
+        Submitting...
+      </>
+    ) : (
+      "Submit changes"
+    )}
+    <style>
+      {`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}
+    </style>
+  </button>
 )}
+
 
 
                 <button
