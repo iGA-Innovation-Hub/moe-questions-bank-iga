@@ -3,12 +3,42 @@ import invokeApig from "../lib/callAPI.ts";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../lib/contextLib.ts";
+import { getCurrentUserEmail } from "../lib/getToken.ts";
+
+
+
+interface Part {
+  part: string; // Part number or identifier
+  title: string; // Title of the part
+  total_marks: number; // Total marks for this part
+  subsections: Subsection[]; // Array of subsections
+}
+
+interface Subsection {
+  subsection: string; // Subsection identifier
+  title: string; // Subsection title
+  marks: number; // Marks for the subsection
+  content: {
+    passage?: string; // Optional passage
+    questions?: Question[]; // Optional questions array
+  };
+}
+
+interface Question {
+  question: string; // Question text
+  options?: string[]; // Optional multiple-choice options
+}
+
+interface ExamContent {
+  parts: Part[]; // Add this to reflect the structure of the data
+  [key: string]: any; 
+}
 
 const ViewExam: React.FC = () => {
   const [grade, setGrade] = useState("");
   const [subject, setSubject] = useState("");
   const [duration, setDuration] = useState("");
-  const [totalMark, setMark] = useState("");
+  const [totalMark, setMark] = useState(""); // Dynamically updated Total Marks
   const [semester, setSemester] = useState("");
   const [createdBy, setCreator] = useState("");
   const [creationDate, setDate] = useState("");
@@ -21,6 +51,12 @@ const ViewExam: React.FC = () => {
   const [loadingChangeState, setLoadingChangeState] = useState(false);
   const [loadingApprove, setLoadingApprove] = useState(false);
   const [LoadingDisapprove, setLoadingDisapprove] = useState(false);
+  const [examContent, setExamContent] = useState<ExamContent | null>(null);
+  const [editMode, setEditMode] = useState(false); // Toggle edit mode
+  const [editedContent, setEditedContent] = useState<Record<string, any>>({});
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<Record<string, string>>({}); // Store feedback
   const { id } = useParams<{ id: string }>();
   const { userRole } = useAppContext();
   const navigate = useNavigate();
@@ -35,8 +71,8 @@ const ViewExam: React.FC = () => {
       });
 
       if (!response || Object.keys(response).length === 0) {
-        console.log(response);
-        setErrorMsg("Error getting exam data!");
+        console.error("Response is empty or undefined:", response);
+        setErrorMsg("Error fetching exam data. Please try again.");
         return;
       }
 
@@ -46,33 +82,211 @@ const ViewExam: React.FC = () => {
         navigate("/dashboard/examForm/" + id);
       }
 
-      setGrade(response.examClass);
-      setSubject(response.examSubject);
-      setSemester(response.examSemester);
-      setCreator(response.createdBy);
-      setDate(response.creationDate);
-      setContributers(String(response.contributers));
-      setResponseResult(response.examContent);
-      setDuration(response.examDuration);
-      setMark(response.examMark);
-      setExamState(response.examState);
-      setApproverMsg(response.approverMsg);
+      const content = response.examContent;
+
+      
+    // Parse examContent if it's a string
+    if (typeof content === "string") {
+      try {
+        const parsedContent = JSON.parse(content);
+        setExamContent(parsedContent);
+      } catch (parseError) {
+        console.error("Failed to parse exam content as JSON:", content);
+        setErrorMsg("Invalid exam data format.");
+        return;
+      }
+    } else if (typeof content === "object") {
+      setExamContent(content); // Set directly if already an object
+    } else {
+      console.error("Unexpected examContent format:", typeof content);
+      setErrorMsg("Exam data format is invalid!");
+      return;
+    }
+
+    
+
+      setGrade(response.examClass || "");
+    setSubject(response.examSubject || "");
+    setSemester(response.examSemester || "");
+    setCreator(response.createdBy || "");
+    setDate(response.creationDate || "");
+    setContributers(String(response.contributers || ""));
+    setDuration(response.examDuration || "");
+    setMark(response.examMark || "");
+    setExamState(response.examState || "");
+
+
+    
+
     } catch (err: any) {
       console.error("Error fetching initial data:", err);
+      setErrorMsg("Failed to load exam data. Please try again later.");
     } finally {
       setLoadingPage(false); // Mark loading as complete
     }
   };
 
   useEffect(() => {
-    // Add a timeout before fetching data
-    const timer = setTimeout(() => {
-      fetchInitialData();
-    }, 2000); // 3000ms = 3 seconds delay
+    if (examContent) {
+      const newTotalMarks = examContent.total_marks || examContent.parts?.reduce((sum: number, part: any) => sum + part.total_marks, 0) || 0;
+      setMark(newTotalMarks); // Update the Total Marks at the top
+    }
+  }, [examContent]);
 
-    // Cleanup the timeout if the component unmounts
-    return () => clearTimeout(timer);
+
+  const fetchExamContent = async () => {
+    try {
+      //@ts-ignore
+      const response = await invokeApig({
+        path: `/examForm/${id}`,
+        method: "GET",
+      });
+  
+      console.log("Raw Exam Content from Backend:", response.examContent);
+  
+      if (!response.examContent) {
+        setErrorMsg("Exam content is missing from the response.");
+        return;
+      }
+  
+      let parsedContent;
+      try {
+        // Extract the JSON portion from the descriptive text
+        const jsonStartIndex = response.examContent.indexOf("{");
+        const jsonEndIndex = response.examContent.lastIndexOf("}");
+        if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+          const jsonString = response.examContent.substring(jsonStartIndex, jsonEndIndex + 1).trim();
+          console.log("Extracted JSON String:", jsonString);
+          parsedContent = JSON.parse(jsonString); // Parse the JSON object
+        } else {
+          throw new Error("No valid JSON found in examContent string.");
+        }
+      } catch (error) {
+        console.error("Failed to parse exam content as JSON:", response.examContent);
+        setErrorMsg("Invalid exam content format!");
+        return;
+      }
+  
+      setExamContent(parsedContent);
+      console.log("Parsed Exam Content Successfully Set in State:", parsedContent);
+    } catch (error) {
+      console.error("Error fetching exam content:", error);
+      setErrorMsg("Failed to load exam content. Please try again later.");
+    }
+  };
+
+  
+
+  useEffect(() => {
+    const loadExamContent = async () => {
+      try {
+        await fetchExamContent(); // Fetch and parse content
+      } catch (err) {
+        console.error("Error loading exam content:", err);
+        setErrorMsg("Failed to load exam content. Please try again later.");
+      }
+    };
+    loadExamContent();
   }, [id]);
+
+
+  useEffect(() => {
+    let isCancelled = false;
+  
+    const timer = setTimeout(async () => {
+      try {
+        if (!isCancelled) {
+          await fetchInitialData();
+        }
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+        if (!isCancelled) {
+          setErrorMsg("Failed to fetch initial data. Please try again later.");
+        }
+      }
+    }, 2000); // 2-second delay
+  
+    // Cleanup function to handle component unmount
+    return () => {
+      clearTimeout(timer);
+      isCancelled = true;
+    };
+  }, [id]);
+
+
+
+  const handleFeedbackSubmission = async () => {
+    // Prepare the feedback payload, including only non-empty feedback
+    const feedbackPayload = Object.entries(feedback)
+      .filter(([_, feedbackText]) => feedbackText.trim()) // Only include sections with feedback
+      .map(([section, feedbackText]) => ({
+        section,
+        feedback: feedbackText.trim(),
+      }));
+  
+    if (feedbackPayload.length === 0) {
+      alert("No feedback to submit. Please provide feedback in at least one section.");
+      return;
+    }
+  
+    const requestBody = {
+      examID: id!, // Exam ID
+      feedback: feedbackPayload, // Include all provided feedback
+      contributors: await getCurrentUserEmail(), // Current user as contributor
+    };
+  
+    console.log("Submitting Feedback Request:", requestBody);
+  
+    try {
+      setLoading(true); // Start loading animation
+  
+      const response = await invokeApig({
+        path: "/createNewExam", // Update API endpoint
+        method: "POST",
+        body: requestBody,
+      });
+  
+      console.log("API Response:", response);
+  
+      // Check if the backend returns the updated content
+      if (response.updatedExamContent) {
+        setExamContent(response.updatedExamContent); // Update the entire exam content
+      }
+  
+      if (response.totalMarks) {
+        setMark(response.totalMarks); // Update the total marks
+      }
+  
+      // Provide feedback to the user
+      if (response.updatedExamContent || response.totalMarks) {
+        alert("Feedback submitted successfully, and exam content updated!");
+      } else {
+        alert("Feedback submitted successfully, but no updates were received.");
+      }
+  
+      // Clear the feedback fields after submission
+      setFeedback({});
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      setErrorMsg("Failed to submit feedback. Please try again later.");
+    } finally {
+      setLoading(false); // Stop loading animation
+    }
+  };
+
+  const handleFeedbackChange = (section: string, value: string) => {
+    // Optional: Add input validation or transformation
+    const sanitizedValue = value.trim(); // Example: Trim whitespace
+  
+    setFeedback((prev) => ({
+      ...prev,
+      [section]: sanitizedValue, // Update feedback for the specified section
+    }));
+  
+    // Optional: Debugging log (can be removed in production)
+    console.log(`Feedback updated for section "${section}":`, sanitizedValue);
+  };
+
 
   const changeExamStateToBuild = async () => {
     setLoadingChangeState(true);
@@ -159,6 +373,114 @@ const ViewExam: React.FC = () => {
       setLoadingChangeState(false);
       setLoadingDisapprove(false);
     }
+  };
+
+
+
+
+  const renderExamParts = (part: any, partKey: string) => {
+    const partFeedback = feedback[partKey] || ""; // Feedback for this part
+  
+    return (
+      <div key={partKey} style={{ marginBottom: "30px" }}>
+        <h2>
+          Part {part.part}: {part.title}
+        </h2>
+        <p>Total Marks: {part.total_marks}</p>
+  
+        {part.subsections?.map((subsection: any, subKey: number) => (
+          <div key={`${partKey}-${subKey}`} style={{ marginBottom: "15px" }}>
+            <h3>
+              Subsection {subsection.subsection}: {subsection.title}
+            </h3>
+            <p>Marks: {subsection.marks}</p>
+  
+            {/* Render content */}
+            {subsection.content && (
+              <div>
+                {subsection.content.passage && (
+                  <p>
+                    <strong>Passage:</strong> {subsection.content.passage}
+                  </p>
+                )}
+                {subsection.content.dialogue && (
+                  <p>
+                    <strong>Dialogue:</strong> {subsection.content.dialogue}
+                  </p>
+                )}
+                {subsection.content.questions && (
+                  <ul>
+                    {subsection.content.questions.map(
+                      (question: any, qIndex: number) => (
+                        <li key={qIndex}>
+                          {question.type}: {question.question}
+                        </li>
+                      )
+                    )}
+                  </ul>
+                )}
+              </div>
+            )}
+  
+            {/* Feedback text area in edit mode */}
+            {isEditing && (
+              <div style={{ marginTop: "10px" }}>
+                <label htmlFor={`feedback-${partKey}-${subKey}`}>
+                  Feedback for {subsection.title}:
+                </label>
+                <textarea
+                  id={`feedback-${partKey}-${subKey}`}
+                  placeholder={`Provide feedback for ${subsection.title}`}
+                  value={feedback[`${partKey}-${subKey}`] || ""} // Check for feedback by key, or show empty
+                  onChange={(e) =>
+                    setFeedback((prev) => ({
+                      ...prev,
+                      [`${partKey}-${subKey}`]: e.target.value,
+                    }))
+                  }
+                  style={{
+                    width: "100%",
+                    minHeight: "60px",
+                    marginTop: "5px",
+                    marginBottom: "10px",
+                    padding: "10px",
+                    borderRadius: "4px",
+                    border: "1px solid #ccc",
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        ))}
+  
+        {/* Feedback text area for the whole part */}
+        {isEditing && (
+          <div style={{ marginTop: "20px" }}>
+            <label htmlFor={`feedback-${partKey}`}>Feedback for {part.title}:</label>
+            <textarea
+              id={`feedback-${partKey}`}
+              placeholder={`Provide feedback for ${part.title}`}
+              value={partFeedback}
+              onChange={(e) =>
+                setFeedback((prev) => ({
+                  ...prev,
+                  [partKey]: e.target.value,
+                }))
+              }
+              style={{
+                width: "100%",
+                minHeight: "80px",
+                marginTop: "5px",
+                marginBottom: "10px",
+                padding: "10px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+              }}
+            />
+          </div>
+        )}
+      </div>
+    );
   };
 
   // Show loading state
@@ -566,29 +888,263 @@ const ViewExam: React.FC = () => {
         </div>
       </div>
 
-      {/* Text Area for Generated Exam */}
+      {/* Render Exam Sections */}
       <div
         style={{
-          marginTop: "1rem",
-          width: "100%",
-          maxWidth: "900px",
+          width: "900px",
+          padding: "20px",
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
         }}
       >
+        {/* Title and Overview */}
+  <p>
+    <strong>{examContent?.title}</strong> 
+  </p>
+  <p>
+    <strong>Total Marks:</strong> {examContent?.total_marks}
+  </p>
+  <p>
+    <strong>Time:</strong> {examContent?.time}
+  </p>
+
+
+   {/* Render Sections */}
+   {examContent?.sections?.map((section: any, sectionIndex: number) =>  (
+    <div
+      key={`section-${sectionIndex}`}
+      style={{
+        marginTop: "1rem",
+        padding: "1rem",
+        backgroundColor: "#f9f9f9",
+        borderRadius: "8px",
+        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+      }}
+    >
+      {/* Section Title */}
+      <h3 style={{ fontWeight: "bold", marginBottom: "1rem" }}>
+        Part {section.part}: {section.title} (Total Marks: {section.total_marks})
+      </h3>
+
+      {/* Feedback Text Area for Section */}
+      {isEditing && (
         <textarea
-          value={responseResult}
-          readOnly
+          placeholder={`Provide feedback for Part ${section.part}: ${section.title}`}
+          value={feedback[`section-${sectionIndex}`] || ""}
+          onChange={(e) =>
+            setFeedback((prev) => ({
+              ...prev,
+              [`section-${sectionIndex}`]: e.target.value,
+            }))
+          }
           style={{
             width: "100%",
-            height: "400px",
-            padding: "1rem",
-            borderRadius: "8px",
+            minHeight: "60px",
+            marginTop: "10px",
+            padding: "10px",
+            borderRadius: "4px",
             border: "1px solid #ccc",
-            fontSize: "14px",
-            resize: "none",
-            backgroundColor: "#fff",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+            backgroundColor: "#ffffff",
           }}
         />
+      )}
+
+       {/* Render Subsections */}
+
+      {/* Subsections (Optional) */}
+      {section.subsections?.map((subsection: any, subIndex: number) => (
+        <div
+          key={`subsection-${sectionIndex}-${subIndex}`}
+          style={{
+            marginTop: "1rem",
+            padding: "1rem",
+            backgroundColor: "#ffffff",
+            borderRadius: "8px",
+            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+          }}
+        >
+          <h4 style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>
+          {subsection.subsection}: {subsection.title} ({subsection.marks} Marks)
+          </h4>
+
+          {/* Content */}
+           {/* Content: Passage or Dialogue "listening"*/}
+          {subsection.content?.passage && (
+            <p style={{ fontStyle: "italic", marginBottom: "1rem" }}>
+              {subsection.content.passage}
+            </p>
+          )}
+          {subsection.content?.dialogue && (
+            <pre
+              style={{
+                fontStyle: "italic",
+                marginBottom: "1rem",
+                whiteSpace: "pre-wrap",
+                backgroundColor: "#f8f8f8",
+                padding: "10px",
+                borderRadius: "4px",
+              }}
+            >
+              {subsection.content.dialogue}
+            </pre>
+          )}
+
+       {/* Questions */}
+       {subsection.content?.questions && Array.isArray(subsection.content.questions) && (
+            <div style={{ marginBottom: "20px" }}>
+              <h4>Questions:</h4>
+              <ul>
+                {subsection.content.questions.map((question: any, questionIndex: number) => (
+                  <li key={`question-${sectionIndex}-${subIndex}-${questionIndex}`}>
+                    <p>
+                      <strong>Q{questionIndex + 1}:</strong> {question.question || question.sentence}
+                    </p>
+                    {/* Options for Multiple-Choice Questions */}
+                    {question.options && (
+                      <ul style={{ listStyleType: "disc", marginLeft: "20px" }}>
+                        {question.options.map((option: string, optionIndex: number) => (
+                          <li key={`option-${questionIndex}-${optionIndex}`}>
+                            {String.fromCharCode(65 + optionIndex)}. {option}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {/* Answer */}
+                    {question.answer && <p><strong>Answer:</strong> {question.answer}</p>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* True/False Questions */}
+{subsection.content?.questions?.["true-false"] && (
+  <div style={{ marginBottom: "20px" }}>
+    <h4>True/False Questions:</h4>
+    {subsection.content.questions["true-false"].map((question: any, questionIndex: number) => (
+      <p key={`true-false-${questionIndex}`} style={{ marginTop: "10px", marginBottom: "10px" }}>
+        {question.statement}________ (<span style={{ fontWeight: "bold" }}>answer: {question.answer}</span>)
+      </p>
+    ))}
+  </div>
+)}
+
+
+
+          {/* Vocabulary Matching */}
+{subsection.content?.questions?.["vocabulary-matching"] && (
+  <div style={{ marginBottom: "20px" }}>
+    <h4>Vocabulary Matching:</h4>
+    <p style={{ fontWeight: "bold", marginBottom: "10px" }}>Words:</p>
+    <ul style={{ marginLeft: "20px" }}>
+      {subsection.content.questions["vocabulary-matching"].map(
+        (question: any, questionIndex: number) => (
+          <li key={`word-${questionIndex}`} style={{ listStyleType: "circle" }}>
+            {question.word}
+          </li>
+        )
+      )}
+    </ul>
+    {subsection.content.questions["vocabulary-matching"].map(
+      (question: any, questionIndex: number) => (
+        <p key={`definition-${questionIndex}`} style={{ marginTop: "10px" }}>
+          {question.definition}: <span style={{ fontWeight: "bold" }}>________</span>
+          <br />
+          <strong>Answer:</strong> {question.word}
+        </p>
+      )
+    )}
+  </div>
+)}
+
+
+
+
+           {/* Exercises (Specific to "Use of English") */}
+           {subsection.content?.exercises && (
+            <div style={{ marginBottom: "20px" }}>
+              <h4>Exercises:</h4>
+              <ul>
+                {subsection.content.exercises.map((exercise: any, exerciseIndex: number) => (
+                  <li key={`exercise-${sectionIndex}-${subIndex}-${exerciseIndex}`} style={{ marginBottom: "10px" }}>
+                    <p>
+                      <strong>Type:</strong> {exercise.type}
+                    </p>
+                    <p>
+                      <strong>{exercise.question}</strong> 
+                    </p>
+                    <p>
+                      <strong>Answer:</strong> {exercise.answer}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+         
+
+
+
+
+          {/* Feedback Text Area for Subsection */}
+          {isEditing && (
+            <textarea
+              placeholder={`Provide feedback for Subsection ${subsection.subsection}: ${subsection.title}`}
+              value={feedback[`section-${sectionIndex}-subsection-${subIndex}`] || ""}
+              onChange={(e) =>
+                setFeedback((prev) => ({
+                  ...prev,
+                  [`section-${sectionIndex}-subsection-${subIndex}`]: e.target.value,
+                }))
+              }
+              style={{
+                width: "100%",
+                minHeight: "60px",
+                marginTop: "10px",
+                padding: "10px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                backgroundColor: "#ffffff",
+              }}
+            />
+          )}
+        </div>
+      ))}
+
+
+    </div>
+  ))}
+
+  {/* Writing Section */}
+{ examContent?.sections?.some((section: any) => section.part === "3") ? (
+    examContent.sections.map((section: any, sectionIndex: number) => {
+      if (section.part === "3") {
+        return (
+          <div key={`writing-${sectionIndex}`} style={{ marginTop: "20px" }}>
+            <h2>Part {section.part}: Writing (Total Marks: {section.total_marks})</h2>
+            {section.content?.questions?.map((question: any, questionIndex: number) => (
+              <div key={`writing-question-${questionIndex}`} style={{ marginLeft: "20px" }}>
+                <p>
+                  <strong>{question.type}:</strong> {question.prompt}
+                </p>
+                <p>
+                  <strong>Word Limit:</strong> {question.word_limit}
+                </p>
+              </div>
+            ))}
+          </div>
+        );
+      }
+      return null;
+    })
+  ) : (
+    <p>No writing section available.</p>
+  )}
+
+
+
 
         <div
           style={{
@@ -644,6 +1200,7 @@ const ViewExam: React.FC = () => {
                   justifyContent: "space-between",
                 }}
               >
+
                 <button
                   onClick={approveExam}
                   disabled={loadingChangeState}
@@ -700,6 +1257,59 @@ const ViewExam: React.FC = () => {
                     "Approve Exam"
                   )}
                 </button>
+
+
+                <button
+          onClick={() => setIsEditing(!isEditing)}
+          style={{
+            backgroundColor: isEditing ? "#FF5722" : "#007BFF",
+            color: "#fff",
+            border: "none",
+            padding: "10px 20px",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
+          {isEditing ? "Cancel Edit" : "Edit"}
+        </button>
+        {/* Feedback Submission Button */}
+{isEditing && (
+  <button
+  onClick={handleFeedbackSubmission}
+  style={{
+    marginTop: "20px",
+    padding: "0.6rem 1rem",
+    backgroundColor: "#007bff", // Matching the blue color from the image
+    color: "#fff",
+    border: "none",
+    borderRadius: "4px",
+    fontSize: "14px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    transition: "background-color 0.3s ease, transform 0.3s ease",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+  }}
+  onMouseOver={(e) =>
+    //@ts-ignore
+    (e.target.style.backgroundColor = "#0056b3") // Slightly darker blue on hover
+  }
+  onMouseOut={(e) =>
+    //@ts-ignore
+    (e.target.style.backgroundColor = "#007bff")
+  }
+  onMouseDown={(e) =>
+    //@ts-ignore
+    (e.target.style.transform = "scale(0.98)") // Slight press effect
+  }
+  //@ts-ignore
+  onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+>
+  Submit changes
+</button>
+
+)}
+
+
                 <button
                   onClick={disapproveExam}
                   disabled={loadingChangeState}

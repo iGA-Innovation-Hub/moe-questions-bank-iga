@@ -59,11 +59,15 @@ export default async function invokeApig({
   body = body ? JSON.stringify(body) : body;
 
   //Sends the signed request
+
+  console.log("Request Payload:", { path, method, headers, queryParams, body });
+  
   const results = await fetch(signedRequest.url, {
-    method,
+   method,
     headers: signedRequest.headers,
     body,
   });
+  
 
    if (!results.ok) {
      const errorText = await results.text();

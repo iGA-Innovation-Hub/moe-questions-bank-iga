@@ -114,6 +114,7 @@ export function InitialForm() {
       });
 
       console.log("API Response:", response);
+      console.log("Type of response content:", typeof response);
 
       const examID = response.exam_id;
       navigate("/dashboard/examForm/" + examID);

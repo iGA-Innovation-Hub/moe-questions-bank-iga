@@ -17,6 +17,8 @@ export async function getExamData(event: APIGatewayProxyEvent) {
   };
 
   try {
+   
+
     body = await dynamo.send(
       new GetCommand({
         TableName: tableName,
