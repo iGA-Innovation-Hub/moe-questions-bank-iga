@@ -63,7 +63,7 @@ function addExamInfo(doc: jsPDF, exam: Exam, yPosition: number): void {
 
     // Divider line
     yPosition += 8;
-    const line = "=".repeat(60);
+    const line = "=".repeat(55);
     doc.setFont("Times", "normal", 10);
     doc.text(line, marginLeft, yPosition);
 }
