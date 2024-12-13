@@ -8,6 +8,7 @@ import {
   ConverseCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { Readable } from "stream";
+import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 
 const client = new DynamoDBClient({});
 
@@ -20,11 +21,15 @@ const modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0";
 const pollyClient = new PollyClient({});
 const s3Client = new S3Client({});
 
+const snsClient = new SNSClient({ region: process.env.AWS_REGION });
+
 export async function approve(event: APIGatewayProxyEvent) {
   const tableName = process.env.TABLE_NAME;
   console.log("Table Name: " + process.env.TABLE_NAME);
   const bucketName = process.env.BUCKET_NAME;
   console.log("Bucket Name: " + process.env.BUCKET_NAME);
+  const topicArn = process.env.TOPIC_ARN;
+  console.log("topicArn: " + topicArn);
 
   let body;
   let statusCode = 200;
@@ -45,7 +50,7 @@ export async function approve(event: APIGatewayProxyEvent) {
       })
     );
     //@ts-ignore
-    const prompt = "Extract only the listening script if there is no script rturn no script only frome this " + dynamoresponse.Item.examContent +"only return the script or just no script";
+    const prompt = "Extract only the listening script if there is No script rturn No script only frome this " + dynamoresponse.Item.examContent +"only return the script or just No script";
     const conversation = [
       {
         role: "user",
@@ -66,9 +71,9 @@ export async function approve(event: APIGatewayProxyEvent) {
     
     // Extract and print the response text.
     const listeningScript = bedrockresponse?.output?.message?.content?.[0]?.text;
-    console.log("Model done");
+    console.log("Model done "+listeningScript);
 
-    if(listeningScript && listeningScript != "no script"){
+    if(listeningScript && listeningScript != "No script"){
       const pollyParams = {
         Text: listeningScript,
         OutputFormat: OutputFormat.MP3,
@@ -100,6 +105,20 @@ export async function approve(event: APIGatewayProxyEvent) {
 
       console.log(`Audio uploaded to S3 at: ${s3Key}`);
     }
+
+    await snsClient.send(
+      new PublishCommand({
+        TopicArn: topicArn,
+        Message: `The exam has been approved by the approver. Here is his comment: ${requestJSON.approverMsg}`,
+        Subject: "Your Exam has been approved!",
+        MessageAttributes: {
+          email: {
+            DataType: "String",
+            StringValue: dynamoresponse?.Item?.createdBy,
+          },
+        },
+      })
+    );
 
 
     await dynamo.send(
