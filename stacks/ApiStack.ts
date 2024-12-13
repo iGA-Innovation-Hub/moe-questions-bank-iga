@@ -2,6 +2,8 @@ import { Api, Bucket, StackContext, Topic, use } from "sst/constructs";
 import { CacheHeaderBehavior, CachePolicy } from "aws-cdk-lib/aws-cloudfront";
 import { Duration } from "aws-cdk-lib/core";
 import { DBStack } from "./DBStack"
+import * as iam from "aws-cdk-lib/aws-iam";
+
 
 export function ApiStack({ stack }: StackContext) {
   const topic = new Topic(stack, "Report");
