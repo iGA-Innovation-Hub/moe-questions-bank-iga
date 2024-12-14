@@ -42,8 +42,8 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
         setExamCount(0); // Set count to 0 if there's an error
       }
     }
-
-    fetchExamCount();
+   
+      fetchExamCount();
   }, [filterValue]); // Dependency array ensures fetchExamCount is only called when `filterValue` changes
 
   async function handleSignOut() {
@@ -92,41 +92,62 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
             />
           </NavLink>
           {userRole === "User" && (
-            <><NavLink
-              to="/dashboard/examForm"
-              onClick={() => setActivePage("generateExams")}
-              style={() => ({
-                backgroundColor: "#d32f2f",
-                color: "white",
-                padding: "0.5rem 1rem",
-                borderRadius: "16px",
-                fontSize: "16px",
-                fontWeight: "bold",
-                cursor: "pointer",
-                textDecoration: "none",
-                transition: "transform 0.3s, box-shadow 0.3s",
-                border: "none",
-              })}
-            >
-              Generate Exam
-            </NavLink><NavLink
-              to="/dashboard/history"
-              onClick={() => setActivePage("history")}
-              style={() => ({
-                backgroundColor: "#d32f2f",
-                color: "white",
-                padding: "0.5rem 1rem",
-                borderRadius: "16px",
-                fontSize: "16px",
-                fontWeight: "bold",
-                cursor: "pointer",
-                textDecoration: "none",
-                transition: "transform 0.3s, box-shadow 0.3s",
-                border: "none",
-              })}
-            >
+            <>
+              <NavLink
+                to="/dashboard/examForm"
+                onClick={() => setActivePage("generateExams")}
+                style={() => ({
+                  backgroundColor: "#d32f2f",
+                  color: "white",
+                  padding: "0.5rem 1rem",
+                  borderRadius: "16px",
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  textDecoration: "none",
+                  transition: "transform 0.3s, box-shadow 0.3s",
+                  border: "none",
+                })}
+              >
+                Generate Exam
+              </NavLink>
+              <NavLink
+                to="/dashboard/upload"
+                onClick={() => setActivePage("uploadMaterial")}
+                style={() => ({
+                  backgroundColor: "#d32f2f",
+                  color: "white",
+                  padding: "0.5rem 1rem",
+                  borderRadius: "16px",
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  textDecoration: "none",
+                  transition: "transform 0.3s, box-shadow 0.3s",
+                  border: "none",
+                })}
+              >
+                Upload Material
+              </NavLink>
+              <NavLink
+                to="/dashboard/history"
+                onClick={() => setActivePage("history")}
+                style={() => ({
+                  backgroundColor: "#d32f2f",
+                  color: "white",
+                  padding: "0.5rem 1rem",
+                  borderRadius: "16px",
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  textDecoration: "none",
+                  transition: "transform 0.3s, box-shadow 0.3s",
+                  border: "none",
+                })}
+              >
                 See Exams
-              </NavLink></>
+              </NavLink>
+            </>
           )}
 
           {userRole === "Admin" && (
@@ -213,66 +234,12 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
             }}
           >
             {userRole === "User" && (
-              <><NavLink
-                to="/dashboard/examForm"
-                onClick={() => setActivePage("generateExam")}
-                style={{ textDecoration: "none" }}
-              >
-                <div
-                  style={{
-                    width: "300px",
-                    height: "300px",
-                    backgroundColor: "white",
-                    color: "#d32f2f",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    borderRadius: "16px",
-                    fontSize: "20px",
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    cursor: "pointer",
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                    transition: "transform 0.3s, box-shadow 0.3s",
-                  }}
-                  onMouseEnter={(e) => {
-                    const card = e.currentTarget;
-                    card.style.transform = "scale(1.05)";
-                    card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
-                  } }
-                  onMouseLeave={(e) => {
-                    const card = e.currentTarget;
-                    card.style.transform = "scale(1)";
-                    card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                  } }
+              <>
+                <NavLink
+                  to="/dashboard/examForm"
+                  onClick={() => setActivePage("generateExam")}
+                  style={{ textDecoration: "none" }}
                 >
-                  <span
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "34px",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    Generate Exam
-                  </span>
-                  <p
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "normal",
-                      textAlign: "center",
-                      color: "black",
-                      maxWidth: "80%",
-                    }}
-                  >
-                    Create new exams using uploaded material.
-                  </p>
-                </div>
-              </NavLink><NavLink
-                to="/dashboard/history"
-                onClick={() => setActivePage("seeExams")}
-                style={{ textDecoration: "none" }}
-              >
                   <div
                     style={{
                       width: "300px",
@@ -295,12 +262,68 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                       const card = e.currentTarget;
                       card.style.transform = "scale(1.05)";
                       card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
-                    } }
+                    }}
                     onMouseLeave={(e) => {
                       const card = e.currentTarget;
                       card.style.transform = "scale(1)";
                       card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                    } }
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "34px",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      Generate Exam
+                    </span>
+                    <p
+                      style={{
+                        fontSize: "14px",
+                        fontWeight: "normal",
+                        textAlign: "center",
+                        color: "black",
+                        maxWidth: "80%",
+                      }}
+                    >
+                      Create new exams using uploaded material.
+                    </p>
+                  </div>
+                </NavLink>
+                <NavLink
+                  to="/dashboard/history"
+                  onClick={() => setActivePage("seeExams")}
+                  style={{ textDecoration: "none" }}
+                >
+                  <div
+                    style={{
+                      width: "300px",
+                      height: "300px",
+                      backgroundColor: "white",
+                      color: "#d32f2f",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      borderRadius: "16px",
+                      fontSize: "20px",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                      transition: "transform 0.3s, box-shadow 0.3s",
+                    }}
+                    onMouseEnter={(e) => {
+                      const card = e.currentTarget;
+                      card.style.transform = "scale(1.05)";
+                      card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
+                    }}
+                    onMouseLeave={(e) => {
+                      const card = e.currentTarget;
+                      card.style.transform = "scale(1)";
+                      card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                    }}
                   >
                     <span
                       style={{
@@ -323,7 +346,8 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                       View all previously generated exams.
                     </p>
                   </div>
-                </NavLink><NavLink
+                </NavLink>
+                <NavLink
                   to="/dashboard/audiopPage"
                   onClick={() => setActivePage("audio")}
                   style={{ textDecoration: "none" }}
@@ -350,12 +374,12 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                       const card = e.currentTarget;
                       card.style.transform = "scale(1.05)";
                       card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
-                    } }
+                    }}
                     onMouseLeave={(e) => {
                       const card = e.currentTarget;
                       card.style.transform = "scale(1)";
                       card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                    } }
+                    }}
                   >
                     <span
                       style={{
@@ -378,8 +402,8 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                       Generate Audio.
                     </p>
                   </div>
-                </NavLink></>
-
+                </NavLink>
+              </>
             )}
 
             {userRole === "Admin" && (
@@ -459,7 +483,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                 </div>
               </NavLink>
             )}
-        </div>
+          </div>
         )}
         {activePage !== "/dashboard" && <Outlet />}
       </div>

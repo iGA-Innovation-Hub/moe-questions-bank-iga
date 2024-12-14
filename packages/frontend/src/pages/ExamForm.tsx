@@ -258,25 +258,38 @@ const fetchExamContent = async () => {
     try {
       setLoading(true); // Start loading animation
   
-      const response = await invokeApig({
-        path: "/createNewExam", // Update API endpoint
+      // const response = await invokeApig({
+      //   path: "/createNewExam", // Update API endpoint
+      //   method: "POST",
+      //   body: requestBody,
+      // });
+
+      const functionURL = import.meta.env.VITE_CREATE_EXAM_FUNCTION_URL;
+      console.log("Function URL:", functionURL);
+
+      const response = await fetch(functionURL, {
         method: "POST",
-        body: requestBody,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
       });
   
       console.log("API Response:", response);
+
+      const data = await response.json();
   
       // Check if the backend returns the updated content
-      if (response.updatedExamContent) {
-        setExamContent(response.updatedExamContent); // Update the entire exam content
+      if (data.updatedExamContent) {
+        setExamContent(data.updatedExamContent); // Update the entire exam content
       }
   
-      if (response.totalMarks) {
-        setMark(response.totalMarks); // Update the total marks
+      if (data.totalMarks) {
+        setMark(data.totalMarks); // Update the total marks
       }
   
       // Provide feedback to the user
-      if (response.updatedExamContent || response.totalMarks) {
+      if (data.updatedExamContent || data.totalMarks) {
         alert("Feedback submitted successfully, and exam content updated!");
       } else {
         alert("Feedback submitted successfully, but no updates were received.");
@@ -291,127 +304,6 @@ const fetchExamContent = async () => {
       setLoading(false); // Stop loading animation
     }
   };
-  
-  //   const handleFeedbackChange = (section: string, value: string) => {
-  //    // Optional: Add input validation or transformation
-  //    const sanitizedValue = value.trim(); // Example: Trim whitespace
-  
-  //    setFeedback((prev) => ({
-  //      ...prev,
-  //      [section]: sanitizedValue, // Update feedback for the specified section
-  //    }));
-  
-  //    // Optional: Debugging log (can be removed in production)
-  //    console.log(`Feedback updated for section "${section}":`, sanitizedValue);
-  //  };
-  
-  
-
-
-  // const renderExamParts = (part: any, partKey: string) => {
-  //   const partFeedback = feedback[partKey] || ""; // Feedback for this part
-  
-  //   return (
-  //     <div key={partKey} style={{ marginBottom: "30px" }}>
-  //       <h2>
-  //         Part {part.part}: {part.title}
-  //       </h2>
-  //       <p>Total Marks: {part.total_marks}</p>
-  
-  //       {part.subsections?.map((subsection: any, subKey: number) => (
-  //         <div key={`${partKey}-${subKey}`} style={{ marginBottom: "15px" }}>
-  //           <h3>
-  //             Subsection {subsection.subsection}: {subsection.title}
-  //           </h3>
-  //           <p>Marks: {subsection.marks}</p>
-  
-  //           {/* Render content */}
-  //           {subsection.content && (
-  //             <div>
-  //               {subsection.content.passage && (
-  //                 <p>
-  //                   <strong>Passage:</strong> {subsection.content.passage}
-  //                 </p>
-  //               )}
-  //               {subsection.content.dialogue && (
-  //                 <p>
-  //                   <strong>Dialogue:</strong> {subsection.content.dialogue}
-  //                 </p>
-  //               )}
-  //               {subsection.content.questions && (
-  //                 <ul>
-  //                   {subsection.content.questions.map(
-  //                     (question: any, qIndex: number) => (
-  //                       <li key={qIndex}>
-  //                         {question.type}: {question.question}
-  //                       </li>
-  //                     )
-  //                   )}
-  //                 </ul>
-  //               )}
-  //             </div>
-  //           )}
-  
-  //           {/* Feedback text area in edit mode */}
-  //           {isEditing && (
-  //             <div style={{ marginTop: "10px" }}>
-  //               <label htmlFor={`feedback-${partKey}-${subKey}`}>
-  //                 Feedback for {subsection.title}:
-  //               </label>
-  //               <textarea
-  //                 id={`feedback-${partKey}-${subKey}`}
-  //                 placeholder={`Provide feedback for ${subsection.title}`}
-  //                 value={feedback[`${partKey}-${subKey}`] || ""} // Check for feedback by key, or show empty
-  //                 onChange={(e) =>
-  //                   setFeedback((prev) => ({
-  //                     ...prev,
-  //                     [`${partKey}-${subKey}`]: e.target.value,
-  //                   }))
-  //                 }
-  //                 style={{
-  //                   width: "100%",
-  //                   minHeight: "60px",
-  //                   marginTop: "5px",
-  //                   marginBottom: "10px",
-  //                   padding: "10px",
-  //                   borderRadius: "4px",
-  //                   border: "1px solid #ccc",
-  //                 }}
-  //               />
-  //             </div>
-  //           )}
-  //         </div>
-  //       ))}
-  
-  //       {/* Feedback text area for the whole part */}
-  //       {isEditing && (
-  //         <div style={{ marginTop: "20px" }}>
-  //           <label htmlFor={`feedback-${partKey}`}>Feedback for {part.title}:</label>
-  //           <textarea
-  //             id={`feedback-${partKey}`}
-  //             placeholder={`Provide feedback for ${part.title}`}
-  //             value={partFeedback}
-  //             onChange={(e) =>
-  //               setFeedback((prev) => ({
-  //                 ...prev,
-  //                 [partKey]: e.target.value,
-  //               }))
-  //             }
-  //             style={{
-  //               width: "100%",
-  //               minHeight: "80px",
-  //               marginTop: "5px",
-  //               marginBottom: "10px",
-  //               padding: "10px",
-  //               borderRadius: "4px",
-  //               border: "1px solid #ccc",
-  //             }}
-  //           />
-  //         </div>
-  //       )}
-  //     </div>
-  //   );
-  // };
   
 
   // Show loading state
@@ -897,9 +789,9 @@ const fetchExamContent = async () => {
       justifyContent: "center",
       gap: "0.5rem",
     }}
-    disabled={isLoading} // Disable button when loading
+    disabled={_loading} // Disable button when loading
   >
-    {isLoading ? (
+    {_loading ? (
       <>
         <span
           style={{

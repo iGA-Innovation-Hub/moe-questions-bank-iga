@@ -1,23 +1,33 @@
-import AWS from "aws-sdk";
+import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
+import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity";
 
+// Returns IAM credentials for the current user
+export default async function getAwsCredentials(userToken: string) {
+  const region = import.meta.env.VITE_REGION;
+  const identityPoolId = import.meta.env.VITE_IDENTITY_POOL_ID;
+  const userPoolId = import.meta.env.VITE_USER_POOL_ID;
 
-//Returns IAM cred for the current user
-export default function getAwsCredentials(userToken:any) {
-  const authenticator = `cognito-idp.${
-    import.meta.env.VITE_REGION
-  }.amazonaws.com/${import.meta.env.VITE_USER_POOL_ID}`;
+  const authenticator = `cognito-idp.${region}.amazonaws.com/${userPoolId}`;
 
-  AWS.config.update({ region: import.meta.env.VITE_REGION });
+  // Create a Cognito Identity client
+  const identityClient = new CognitoIdentityClient({ region });
 
-  AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-    IdentityPoolId: import.meta.env.VITE_IDENTITY_POOL_ID,
-    Logins: {
+  // Use the fromCognitoIdentityPool credential provider
+  const credentialsProvider = fromCognitoIdentityPool({
+    //@ts-ignore
+    client: identityClient,
+    identityPoolId,
+    logins: {
       [authenticator]: userToken,
     },
   });
 
-  return (
-    AWS.config.credentials as AWS.CognitoIdentityCredentials
-  ).getPromise();
-
+  try {
+    // Retrieve credentials
+    const credentials = await credentialsProvider();
+    return credentials;
+  } catch (error) {
+    console.error("Failed to retrieve AWS credentials:", error);
+    throw error;
+  }
 }

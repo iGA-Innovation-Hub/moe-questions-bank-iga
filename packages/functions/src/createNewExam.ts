@@ -25,7 +25,7 @@ const bedrockClient = new BedrockRuntimeClient({ region: "us-east-1" });
 
 const modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0";
 
-export async function createExam(event: APIGatewayProxyEvent) {
+export async function createExam(event) {
   if (!client || !dynamo) { 
     console.log("Error with DynamoDB client");
   }
@@ -41,6 +41,8 @@ export async function createExam(event: APIGatewayProxyEvent) {
   }
 
   let data = JSON.parse(event.body);
+  console.log(data)
+
   let body;
   let statusCode = 200;
   const headers = {
@@ -161,9 +163,7 @@ export async function createExam(event: APIGatewayProxyEvent) {
         Create an exam for grade ${data.class} ${data.subject} students. 
         Include ${data.duration} hours, total ${data.total_mark} marks, and the following question types:
         ${Object.entries(data.question_types).map(([type, count]) => `${count} ${type} question(s)`).join(", ")}.
-    console.log("Model done");
-    //@ts-ignore
-    console.log("ResponseText size:", Buffer.byteLength(responseText, "utf-8"));
+    
 
         Use the following relevant past exam data:
         ${JSON.stringify(retrieveCommand.input.retrievalQuery, null, 2)}
@@ -188,9 +188,19 @@ export async function createExam(event: APIGatewayProxyEvent) {
         inferenceConfig: { maxTokens: 4096, temperature: 0.5, topP: 0.9 },
       });
 
-      const response = await bedrockClient.send(command);
-      //@ts-ignore
-      const responseText = response.output.message.content[0].text;
+    console.log("Prompt built");
+
+    const response = await bedrockClient.send(command);
+
+    // Extract and print the response text.
+    //@ts-ignore
+    const responseText = response.output.message.content[0].text;
+
+    console.log(responseText)
+
+    console.log("Model done");
+    //@ts-ignore
+    console.log("ResponseText size:", Buffer.byteLength(responseText, "utf-8"));
 
       const uuid = uuidv4();
       await dynamo.send(
@@ -213,7 +223,7 @@ export async function createExam(event: APIGatewayProxyEvent) {
         })
       );
 
-      body = { examID: uuid, message: "Exam successfully created" };
+      body = {examID: uuid, message: "Exam successfully created"}
     } catch (error) {
       console.error("Error creating exam:", error);
       statusCode = 500;

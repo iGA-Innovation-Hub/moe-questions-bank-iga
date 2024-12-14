@@ -2,6 +2,7 @@ import { Table, StackContext } from "sst/constructs";
 
 export function DBStack({ stack, app }: StackContext) {
   // DynamoDB users table
+  //Not used
   const users_table = new Table(stack, "Users", {
     fields: {
       email: "string",
@@ -33,5 +34,19 @@ export function DBStack({ stack, app }: StackContext) {
     },
   });
 
-  return { users_table, exams_table };
+
+  const exams_dataset = new Table(stack, "ExamsDataset", {
+    fields: {
+      examID: "string",
+      examContent: "string",
+      examState: "string",
+      approverMsg: "string",
+    },
+    primaryIndex: { partitionKey: "examID" },
+    globalIndexes: {
+      examStateIndex: { partitionKey: "examState" },
+    },
+  });
+
+  return { users_table, exams_table, exams_dataset };
 }

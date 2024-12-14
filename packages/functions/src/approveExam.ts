@@ -1,6 +1,7 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, UpdateCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { APIGatewayProxyEvent } from "aws-lambda";
+import { randomUUID } from "crypto";
 import { OutputFormat, PollyClient, SynthesizeSpeechCommand, VoiceId } from "@aws-sdk/client-polly";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import {
@@ -24,8 +25,10 @@ const s3Client = new S3Client({});
 const snsClient = new SNSClient({ region: process.env.AWS_REGION });
 
 export async function approve(event: APIGatewayProxyEvent) {
-  const tableName = process.env.TABLE_NAME;
+  const examsTableName = process.env.EXAMS_TABLE_NAME;
+  const datasetTableName = process.env.DATASET_TABLE_NAME;
   console.log("Table Name: " + process.env.TABLE_NAME);
+  console.log("Dataset Table Name: " + datasetTableName);
   const bucketName = process.env.BUCKET_NAME;
   console.log("Bucket Name: " + process.env.BUCKET_NAME);
   const topicArn = process.env.TOPIC_ARN;
@@ -123,17 +126,30 @@ export async function approve(event: APIGatewayProxyEvent) {
 
     await dynamo.send(
       new UpdateCommand({
-        TableName: tableName,
+        TableName: examsTableName,
         Key: {
           examID: requestJSON.examID, // Primary key to find the item
         },
-        UpdateExpression: "SET examState = :examState, approverMsg = :approverMsg", // Update only examState
+        UpdateExpression:
+          "SET examState = :examState, approverMsg = :approverMsg", // Update only examState
         ExpressionAttributeValues: {
-            ":examState": "approved",
-            ":approverMsg": requestJSON.approverMsg,
+          ":examState": "approved",
+          ":approverMsg": requestJSON.approverMsg,
         },
       })
     );
+
+    await dynamo.send(
+      new PutCommand({
+        TableName: datasetTableName,
+        Item: {
+          examID: randomUUID(),
+          examContent: requestJSON.examContent,
+          examState: "approved",
+          approverMsg: requestJSON.approverMsg,
+        },
+      })
+    )
 
     body = { exam_id: requestJSON.examID };
   } catch (error: any) {

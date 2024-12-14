@@ -327,6 +327,7 @@ const ViewExam: React.FC = () => {
     }
     const payload = {
       examID: id,
+      examContent: _responseResult,
       approverMsg: approverMsg,
     };
 
@@ -359,6 +360,7 @@ const ViewExam: React.FC = () => {
     }
     const payload = {
       examID: id,
+      examContent: _responseResult,
       approverMsg: approverMsg,
     };
 
@@ -380,113 +382,6 @@ const ViewExam: React.FC = () => {
     }
   };
 
-
-
-
-  // const renderExamParts = (part: any, partKey: string) => {
-  //   const partFeedback = feedback[partKey] || ""; // Feedback for this part
-  
-  //   return (
-  //     <div key={partKey} style={{ marginBottom: "30px" }}>
-  //       <h2>
-  //         Part {part.part}: {part.title}
-  //       </h2>
-  //       <p>Total Marks: {part.total_marks}</p>
-  
-  //       {part.subsections?.map((subsection: any, subKey: number) => (
-  //         <div key={`${partKey}-${subKey}`} style={{ marginBottom: "15px" }}>
-  //           <h3>
-  //             Subsection {subsection.subsection}: {subsection.title}
-  //           </h3>
-  //           <p>Marks: {subsection.marks}</p>
-  
-  //           {/* Render content */}
-  //           {subsection.content && (
-  //             <div>
-  //               {subsection.content.passage && (
-  //                 <p>
-  //                   <strong>Passage:</strong> {subsection.content.passage}
-  //                 </p>
-  //               )}
-  //               {subsection.content.dialogue && (
-  //                 <p>
-  //                   <strong>Dialogue:</strong> {subsection.content.dialogue}
-  //                 </p>
-  //               )}
-  //               {subsection.content.questions && (
-  //                 <ul>
-  //                   {subsection.content.questions.map(
-  //                     (question: any, qIndex: number) => (
-  //                       <li key={qIndex}>
-  //                         {question.type}: {question.question}
-  //                       </li>
-  //                     )
-  //                   )}
-  //                 </ul>
-  //               )}
-  //             </div>
-  //           )}
-  
-  //           {/* Feedback text area in edit mode */}
-  //           {isEditing && (
-  //             <div style={{ marginTop: "10px" }}>
-  //               <label htmlFor={`feedback-${partKey}-${subKey}`}>
-  //                 Feedback for {subsection.title}:
-  //               </label>
-  //               <textarea
-  //                 id={`feedback-${partKey}-${subKey}`}
-  //                 placeholder={`Provide feedback for ${subsection.title}`}
-  //                 value={feedback[`${partKey}-${subKey}`] || ""} // Check for feedback by key, or show empty
-  //                 onChange={(e) =>
-  //                   setFeedback((prev) => ({
-  //                     ...prev,
-  //                     [`${partKey}-${subKey}`]: e.target.value,
-  //                   }))
-  //                 }
-  //                 style={{
-  //                   width: "100%",
-  //                   minHeight: "60px",
-  //                   marginTop: "5px",
-  //                   marginBottom: "10px",
-  //                   padding: "10px",
-  //                   borderRadius: "4px",
-  //                   border: "1px solid #ccc",
-  //                 }}
-  //               />
-  //             </div>
-  //           )}
-  //         </div>
-  //       ))}
-  
-  //       {/* Feedback text area for the whole part */}
-  //       {isEditing && (
-  //         <div style={{ marginTop: "20px" }}>
-  //           <label htmlFor={`feedback-${partKey}`}>Feedback for {part.title}:</label>
-  //           <textarea
-  //             id={`feedback-${partKey}`}
-  //             placeholder={`Provide feedback for ${part.title}`}
-  //             value={partFeedback}
-  //             onChange={(e) =>
-  //               setFeedback((prev) => ({
-  //                 ...prev,
-  //                 [partKey]: e.target.value,
-  //               }))
-  //             }
-  //             style={{
-  //               width: "100%",
-  //               minHeight: "80px",
-  //               marginTop: "5px",
-  //               marginBottom: "10px",
-  //               padding: "10px",
-  //               borderRadius: "4px",
-  //               border: "1px solid #ccc",
-  //             }}
-  //           />
-  //         </div>
-  //       )}
-  //     </div>
-  //   );
-  // };
 
 
   // Show loading state
