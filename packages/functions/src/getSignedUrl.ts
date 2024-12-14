@@ -25,8 +25,13 @@ export async function getUploadLink(event: APIGatewayProxyEvent) {
     // const Key = `${randomUUID()}.${extension}`;
 
     console.log(queryParams);
+    let Key = "";
 
-    const Key = `${path}/${name}`;
+    if (path) {
+      Key = `${path}/${name}`;
+    } else {
+      Key = name;
+    }
 
     const s3Params = {
       Bucket: process.env.BUCKET_NAME,

@@ -3,7 +3,6 @@ import invokeApig from "../lib/callAPI.ts";
 import { getCurrentUserEmail } from "../lib/getToken.js";
 import { getFormattedDateTime } from "../lib/getDateTime.js";
 import { useNavigate } from "react-router-dom";
-import { AES } from "crypto-js";
 
 export function InitialForm() {
   const [grade, setGrade] = useState("Grade 10");
@@ -129,6 +128,7 @@ export function InitialForm() {
       })
 
       console.log("API Response:", response);
+      console.log("Type of response content:", typeof response);
 
       console.log(response.body)
 
@@ -136,7 +136,7 @@ export function InitialForm() {
 
       console.log(data);
 
-      const examID = data.exam_id;
+      const examID = data.examID;
       navigate("/dashboard/examForm/" + examID);
     } catch (error) {
       console.error("Error submitting form:", error);

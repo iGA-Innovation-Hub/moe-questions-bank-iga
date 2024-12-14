@@ -21,7 +21,8 @@ import ExamApproval from "./pages/ExamApproval";
 import NotFound from "./pages/NotFound";
 import ViewExam from "./pages/ViewExam";
 import UploadPage from "./pages/UploadPage";
-import DefaultRouting from "./pages/UserDefaultComponent";
+import DefaultRouting from "./pages/UserDefaultComponent";import AudioScriptForm from "./pages/AudioPage";
+
 const App: React.FC = () => {
   // Authentication state
   const [isAuthenticated, setAuthenticated] = useState<boolean>(
@@ -60,14 +61,6 @@ const App: React.FC = () => {
     <AppContext.Provider value={appContextValue}>
       <Router>
         <Routes>
-          <Route
-            path="/upload"
-            element={
-              
-                <UploadPage />
-             
-            }
-          />
           {/* Public Routes */}
           <Route
             path="/login"
@@ -83,7 +76,6 @@ const App: React.FC = () => {
             path="/dashboard"
             element={
               <AuthRoute>
-               
                 <Dashboard />
               </AuthRoute>
             }
@@ -98,10 +90,26 @@ const App: React.FC = () => {
                 </GeneratorRoute>
               }
             />
+            <Route
+              path="upload"
+              element={
+                <GeneratorRoute>
+                  <UploadPage />
+                </GeneratorRoute>
+              }
+            />
             <Route path="examForm/:id" element={<ExamForm />} />
             <Route path="viewExam/:id" element={<ViewExam />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="feedback-form" element={<FeedbackForm />} />
+            <Route
+              path="audiopPage"
+              element={
+                <GeneratorRoute>
+                  <AudioScriptForm />
+                </GeneratorRoute>
+              }
+            />
             <Route
               path="approveExam"
               element={
