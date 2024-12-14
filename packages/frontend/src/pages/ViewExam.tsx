@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../lib/contextLib.ts";
 import { generateExamPDF } from "./generatePDF"; // Make sure to import the function
 import { useAlert } from "./AlertComponent";
+import { generateModelPDF } from "./generateModelAnswerPDF.tsx";
 
 const ViewExam: React.FC = () => {
   const [grade, setGrade] = useState("");
@@ -204,7 +205,8 @@ const ViewExam: React.FC = () => {
       type: "confirm",
       message: "Are you sure you want to download the Exam as PDF?",
       action: () => {
-        generateExamPDF(responseResult); // Wait for the PDF generation
+        generateExamPDF(responseResult);
+        generateModelPDF(responseResult);
       },
     });
   };
