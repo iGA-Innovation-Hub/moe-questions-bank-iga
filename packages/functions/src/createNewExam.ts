@@ -24,7 +24,7 @@ const bedrockClient = new BedrockRuntimeClient({ region: "us-east-1" });
 
 const modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0";
 
-export async function createExam(event: APIGatewayProxyEvent) {
+export async function createExam(event) {
   if (!client || !dynamo) { 
     console.log("Error with dynamo")
   }
@@ -40,6 +40,7 @@ export async function createExam(event: APIGatewayProxyEvent) {
   }
 
   let data = JSON.parse(event.body);
+  console.log(data)
 
   let body;
   let statusCode = 200;
@@ -149,6 +150,8 @@ export async function createExam(event: APIGatewayProxyEvent) {
     //@ts-ignore
     const responseText = response.output.message.content[0].text;
 
+    console.log(responseText)
+
     console.log("Model done");
     //@ts-ignore
     console.log("ResponseText size:", Buffer.byteLength(responseText, "utf-8"));
@@ -178,7 +181,7 @@ export async function createExam(event: APIGatewayProxyEvent) {
 
     console.log("Put done")
 
-    body = { exam_id: uuid };
+    body = {exam_id: uuid}
   } catch (error: any) {
     statusCode = 400;
     body = error.message;
