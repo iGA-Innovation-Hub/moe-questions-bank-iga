@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { Exam, Section, SubSection, Content, Question, Exercise, ReadingQuestions } from "./InterfacesPDF";
 
+
 const marginLeft = 20;
 const marginRight = 190; // Adjust according to the document size
 

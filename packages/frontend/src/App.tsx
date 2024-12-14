@@ -21,15 +21,16 @@ import ApproverRoute from "./pages/ApproverRoute";
 import ExamApproval from "./pages/ExamApproval";
 import NotFound from "./pages/NotFound";
 import ViewExam from "./pages/ViewExam";
+import { AlertProvider, Notification, ConfirmAction } from "./pages/AlertComponent"; // Import Alert components
 
 const App: React.FC = () => {
   // Authentication state
-   const [isAuthenticated, setAuthenticated] = useState<boolean>(
-     localStorage.getItem("isAuthenticated") === "true"
-   );
-   const [userRole, setUserRole] = useState<string>(
-     localStorage.getItem("userRole") || ""
-   );
+  const [isAuthenticated, setAuthenticated] = useState<boolean>(
+    localStorage.getItem("isAuthenticated") === "true"
+  );
+  const [userRole, setUserRole] = useState<string>(
+    localStorage.getItem("userRole") || ""
+  );
 
   // Restore authentication state on app load
   useEffect(() => {
@@ -58,57 +59,63 @@ const App: React.FC = () => {
 
   return (
     <AppContext.Provider value={appContextValue}>
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route
-            path="/login"
-            element={
-              <AlreadyAuthRoute>
-                <Login />
-              </AlreadyAuthRoute>
-            }
-          />
-
-          {/* Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <AuthRoute>
-                <Dashboard />
-              </AuthRoute>
-            }
-          >
-            {/* Nested Routes for Dashboard */}
-            <Route index element={<div></div>} /> {/* Default Content */}
+      <AlertProvider> {/* Wrap everything with AlertProvider */}
+        <Router>
+          <Routes>
+            {/* Public Routes */}
             <Route
-              path="examForm"
+              path="/login"
               element={
-                <GeneratorRoute>
-                  <InitialForm />
-                </GeneratorRoute>
+                <AlreadyAuthRoute>
+                  <Login />
+                </AlreadyAuthRoute>
               }
             />
-            <Route path="examForm/:id" element={<ExamForm />} />
-            <Route path="viewExam/:id" element={<ViewExam />} />
-            <Route path="history" element={<HistoryPage />} />
-            <Route path="feedback-form" element={<FeedbackForm />} />
+
+            {/* Protected Routes */}
             <Route
-              path="approveExam"
+              path="/dashboard"
               element={
-                <ApproverRoute>
-                  <ExamApproval />
-                </ApproverRoute>
+                <AuthRoute>
+                  <Dashboard />
+                </AuthRoute>
               }
-            />
-          </Route>
+            >
+              {/* Nested Routes for Dashboard */}
+              <Route index element={<div></div>} /> {/* Default Content */}
+              <Route
+                path="examForm"
+                element={
+                  <GeneratorRoute>
+                    <InitialForm />
+                  </GeneratorRoute>
+                }
+              />
+              <Route path="examForm/:id" element={<ExamForm />} />
+              <Route path="viewExam/:id" element={<ViewExam />} />
+              <Route path="history" element={<HistoryPage />} />
+              <Route path="feedback-form" element={<FeedbackForm />} />
+              <Route
+                path="approveExam"
+                element={
+                  <ApproverRoute>
+                    <ExamApproval />
+                  </ApproverRoute>
+                }
+              />
+            </Route>
 
-          {/* Redirect '/' to '/dashboard' */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            {/* Redirect '/' to '/dashboard' */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Router>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Router>
+
+        {/* Include the alert components to display alerts */}
+        <Notification />  {/* Displays success/failure alerts */}
+        <ConfirmAction />  {/* Displays confirmation dialogs */}
+      </AlertProvider>
     </AppContext.Provider>
   );
 };
