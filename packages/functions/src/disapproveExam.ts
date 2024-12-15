@@ -11,7 +11,7 @@ const dynamo = DynamoDBDocumentClient.from(client);
 const snsClient = new SNSClient({ region: process.env.AWS_REGION });
 
 export async function disapprove(event: APIGatewayProxyEvent) {
-  const examsTableName = process.env.EXAMS_TABLE_NAME;
+  const examsTableName = process.env.TABLE_NAME;
   const datasetTableName = process.env.DATASET_TABLE_NAME;
   console.log("Table Name: " + process.env.EXAMS_TABLE_NAME);
   console.log("Dataset Table Name: " + datasetTableName);
@@ -31,7 +31,7 @@ export async function disapprove(event: APIGatewayProxyEvent) {
 
     let dynamoresponse = await dynamo.send(
       new GetCommand({
-        TableName: tableName,
+        TableName: examsTableName,
         Key: {
           examID: requestJSON.examID,
         },

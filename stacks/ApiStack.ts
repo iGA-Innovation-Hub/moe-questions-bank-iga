@@ -148,11 +148,12 @@ export function ApiStack({ stack }: StackContext) {
           handler: "packages/functions/src/approveExam.approve",
           runtime: "nodejs20.x",
           timeout: "180 seconds",
-          permissions: ["dynamodb", exams_table,"polly","s3","bedrock","sns"],
+          permissions: ["dynamodb", exams_table, exams_dataset,"polly","s3","bedrock","sns"],
           environment: {
             TABLE_NAME: exams_table.tableName,
             BUCKET_NAME: bucket.bucketName,
             TOPIC_ARN: userTopic.topicArn,
+            DATASET_TABLE_NAME:exams_dataset.tableName
           },
         },
       },
@@ -162,10 +163,11 @@ export function ApiStack({ stack }: StackContext) {
           handler: "packages/functions/src/disapproveExam.disapprove",
           runtime: "nodejs20.x",
           timeout: "180 seconds",
-          permissions: ["dynamodb", exams_table,"sns"],
+          permissions: ["dynamodb", exams_table, exams_dataset, "sns"],
           environment: {
             TABLE_NAME: exams_table.tableName,
             TOPIC_ARN: userTopic.topicArn,
+            DATASET_TABLE_NAME:exams_dataset.tableName
           },
         },
       },

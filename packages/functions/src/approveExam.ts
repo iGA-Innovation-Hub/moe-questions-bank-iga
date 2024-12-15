@@ -4,10 +4,6 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import { randomUUID } from "crypto";
 import { OutputFormat, PollyClient, SynthesizeSpeechCommand, VoiceId } from "@aws-sdk/client-polly";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import {
-  BedrockRuntimeClient,
-  ConverseCommand,
-} from "@aws-sdk/client-bedrock-runtime";
 import { Readable } from "stream";
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 
@@ -15,17 +11,14 @@ const client = new DynamoDBClient({});
 
 const dynamo = DynamoDBDocumentClient.from(client);
 
-const bedrockClient = new BedrockRuntimeClient({ region: "us-east-1" });
-
-const modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0";
-
 const pollyClient = new PollyClient({});
+
 const s3Client = new S3Client({});
 
 const snsClient = new SNSClient({ region: process.env.AWS_REGION });
 
 export async function approve(event: APIGatewayProxyEvent) {
-  const examsTableName = process.env.EXAMS_TABLE_NAME;
+  const examsTableName = process.env.TABLE_NAME;
   const datasetTableName = process.env.DATASET_TABLE_NAME;
   console.log("Table Name: " + process.env.TABLE_NAME);
   console.log("Dataset Table Name: " + datasetTableName);
@@ -43,72 +36,92 @@ export async function approve(event: APIGatewayProxyEvent) {
   try {
     //@ts-ignore
     let requestJSON = JSON.parse(event.body);
-
     let dynamoresponse = await dynamo.send(
       new GetCommand({
-        TableName: tableName,
+        TableName: examsTableName,
         Key: {
           examID: requestJSON.examID,
         },
       })
     );
-    //@ts-ignore
-    const prompt = "Extract only the listening script if there is No script rturn No script only frome this " + dynamoresponse.Item.examContent +"only return the script or just No script";
-    const conversation = [
-      {
-        role: "user",
-        content: [{ text: prompt }],
-      },
-    ];
-    
+    let listeningScript = "";
+    const json = JSON.parse(dynamoresponse.Item?.examContent);
+    for (const [sectionIndex, section] of json.sections.entries()) {
+      if (section.title.toLowerCase().includes("listening")) {
+        for (const [subIndex, subsection] of section.subsections.entries()) {
+          const content = subsection.content;
+          if (content?.passage || content?.dialogue) {
+            const script = content.passage || content.dialogue;
+            listeningScript += `Listening ${subIndex + 1}\n`;
+            listeningScript += `${script}\n`;
+          }
+        }
+      }
+    }
+    console.log("listeningScript" + listeningScript)
 
-    const command = new ConverseCommand({
-      modelId,
-      //@ts-ignore
-      messages: conversation,
-      inferenceConfig: { maxTokens: 1200, temperature: 0.5, topP: 0.9 },
-    });
+    if(listeningScript != ""){
+      listeningScript += "End of Listening"
+    try{
+    // Split the listeningScript into chunks of 3000 characters or less
+    const textChunks = [];
+    let currentChunk = "";
 
-    console.log("Prompt built");
-    const bedrockresponse = await bedrockClient.send(command);
-    
-    // Extract and print the response text.
-    const listeningScript = bedrockresponse?.output?.message?.content?.[0]?.text;
-    console.log("Model done "+listeningScript);
+    for (const line of listeningScript.split("\n")) {
+      if ((currentChunk + line).length > 3000) {
+        textChunks.push(currentChunk);
+        currentChunk = "";
+      }
+      currentChunk += `${line}\n`;
+    }
+    if (currentChunk) {
+      textChunks.push(currentChunk);
+    }
 
-    if(listeningScript && listeningScript != "No script"){
+    console.log(`Text split into ${textChunks.length} chunks.`);
+
+    // Process each chunk
+    const audioBuffers = [];
+
+    for (const [index, chunk] of textChunks.entries()) {
       const pollyParams = {
-        Text: listeningScript,
+        Text: chunk,
         OutputFormat: OutputFormat.MP3,
         VoiceId: VoiceId.Joanna,
       };
-      
-      console.log(`pollyParams: ${pollyParams}`);
+
+      console.log(`Processing chunk ${index + 1}/${textChunks.length}`);
       const synthesizeSpeechCommand = new SynthesizeSpeechCommand(pollyParams);
       const pollyResponse = await pollyClient.send(synthesizeSpeechCommand);
-  
+
       if (!pollyResponse.AudioStream) {
-        throw new Error("Failed to generate audio from Polly");
+        throw new Error(`Failed to generate audio for chunk ${index + 1}`);
       }
-  
-      // Convert the AudioStream to a buffer
+
       const audioBuffer = await streamToBuffer(pollyResponse.AudioStream as Readable);
-
-      // Save audio to S3
-      const s3Key = `${requestJSON.examID}.mp3`;
-      const s3Params = {
-        Bucket: bucketName,
-        Key: s3Key,
-        Body: audioBuffer,
-        ContentType: "audio/mpeg",
-      };
-
-      const putObjectCommand = new PutObjectCommand(s3Params);
-      await s3Client.send(putObjectCommand);
-
-      console.log(`Audio uploaded to S3 at: ${s3Key}`);
+      audioBuffers.push(audioBuffer);
     }
 
+    console.log("end audio")
+    // Concatenate all audio buffers into a single file
+    const concatenatedAudio = Buffer.concat(audioBuffers);
+    console.log("uploading")
+        // upload audio to S3
+        const s3Key = `${requestJSON.examID}.mp3`;
+        const s3Params = {
+          Bucket: bucketName,
+          Key: s3Key,
+          Body: concatenatedAudio,
+          ContentType: "audio/mpeg",
+        };
+        
+        const putObjectCommand = new PutObjectCommand(s3Params);
+        await s3Client.send(putObjectCommand);
+        console.log(`Audio uploaded to S3 successfully at: ${s3Key}`);
+      } catch (error) {
+        console.error("Error during Polly or S3 operations:", error);
+      }
+    }
     await snsClient.send(
       new PublishCommand({
         TopicArn: topicArn,
@@ -122,6 +135,7 @@ export async function approve(event: APIGatewayProxyEvent) {
         },
       })
     );
+    console.log("email send")
 
 
     await dynamo.send(
