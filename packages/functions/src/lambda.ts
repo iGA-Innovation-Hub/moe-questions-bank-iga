@@ -1,7 +1,8 @@
-import { DynamoDB } from "aws-sdk";
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
 import { Table } from "sst/node/table";
 
-const dynamoDb = new DynamoDB.DocumentClient();
+const dynamoDb = DynamoDBDocument.from(new DynamoDB());
 
 export async function main() {
   const getParams = {
@@ -12,7 +13,7 @@ export async function main() {
       counter: "clicks",
     },
   };
-  const results = await dynamoDb.get(getParams).promise();
+  const results = await dynamoDb.get(getParams);
 
   // If there is a row, then get the value of the
   // column called "tally"
@@ -30,7 +31,7 @@ export async function main() {
       ":count": ++count,
     },
   };
-  await dynamoDb.update(putParams).promise();
+  await dynamoDb.update(putParams);
 
   return {
     statusCode: 200,

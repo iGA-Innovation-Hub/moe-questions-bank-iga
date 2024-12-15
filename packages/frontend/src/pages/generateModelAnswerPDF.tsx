@@ -6,14 +6,14 @@ import { Exam, Section, SubSection, Content, Question, Exercise, ReadingQuestion
 const marginLeft = 20;
 const marginRight = 190; // Adjust according to the document size
 
-export const generateModelPDF = (jsonString: string) => {
-    const jsonContent = jsonString.substring(
-        jsonString.indexOf("{"),
-        jsonString.lastIndexOf("}") + 1
-    );
-    const parsedExam = JSON.parse(jsonContent);
-    console.log(parsedExam);
-    const exam: Exam = parsedExam;
+export const generateModelPDF = (jsonString: any) => {
+    // const jsonContent = jsonString.substring(
+    //     jsonString.indexOf("{"),
+    //     jsonString.lastIndexOf("}") + 1
+    // );
+    // const parsedExam = JSON.parse(jsonContent);
+    // console.log(parsedExam);
+    const exam: Exam = jsonString;
 
     const doc = new jsPDF();
     let yPosition = 30;
@@ -27,7 +27,7 @@ export const generateModelPDF = (jsonString: string) => {
 
     addFooter(doc, exam.title);
 
-    doc.save(`${exam.title.replace(/\s+/g, '_')}.pdf`);
+    doc.save(`${exam.title.replace(/\s+/g, '_')}_Answer.pdf`);
 };
 
 function addFooter(doc: jsPDF, title: string): void {

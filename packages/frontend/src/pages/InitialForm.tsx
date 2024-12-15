@@ -107,15 +107,36 @@ export function InitialForm() {
 
       console.log(payload);
 
-      const response = await invokeApig({
-        path: "/createNewExam",
+      const functionURL = import.meta.env.VITE_CREATE_EXAM_FUNCTION_URL;
+      console.log("Function URL:", functionURL);
+
+      //@ts-ignore
+      // const response = await invokeApig({
+      //   method: "POST",
+      //   body: payload,
+      //   functionRequest: true,
+      //   functionURL: functionURL,
+      // });
+
+
+      const response = await fetch(functionURL, {
         method: "POST",
-        body: payload,
-      });
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
 
       console.log("API Response:", response);
+      console.log("Type of response content:", typeof response);
 
-      const examID = response.exam_id;
+      console.log(response.body)
+
+      const data = await response.json();
+
+      console.log(data);
+
+      const examID = data.examID;
       navigate("/dashboard/examForm/" + examID);
     } catch (error) {
       console.error("Error submitting form:", error);

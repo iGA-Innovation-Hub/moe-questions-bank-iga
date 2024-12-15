@@ -1,8 +1,9 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { APIGatewayProxyEvent } from "aws-lambda";
-const AWS = require("aws-sdk");
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+
+const { DynamoDBDocument } = require("@aws-sdk/lib-dynamodb");
+const { DynamoDB } = require("@aws-sdk/client-dynamodb");
+
+const dynamodb = DynamoDBDocument.from(new DynamoDB());
 
 export async function getExams(event: APIGatewayProxyEvent) {
   const tableName = process.env.TABLE_NAME;
@@ -29,7 +30,7 @@ export async function getExams(event: APIGatewayProxyEvent) {
         },
       };
       
-    body = await dynamodb.query(params).promise();
+    body = await dynamodb.query(params);
     console.log(body);
   } catch (error) {
     console.error("Error querying exams:", error);

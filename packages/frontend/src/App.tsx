@@ -3,7 +3,6 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
-  Navigate,
 } from "react-router-dom"; // Navigation between pages.
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/LoginPage";
@@ -14,7 +13,7 @@ import { AppContext, AppContextType } from "./lib/contextLib";
 import "@aws-amplify/ui-react/styles.css";
 import AuthRoute from "./pages/AuthRoute";
 import { InitialForm } from "./pages/InitialForm";
-import { getCurrentUser } from "./lib/getToken"
+import { getCurrentUser } from "./lib/getToken";
 import AlreadyAuthRoute from "./pages/AlreadyAuthRoute";
 import GeneratorRoute from "./pages/generatorRoutes";
 import ApproverRoute from "./pages/ApproverRoute";
@@ -22,6 +21,8 @@ import ExamApproval from "./pages/ExamApproval";
 import NotFound from "./pages/NotFound";
 import ViewExam from "./pages/ViewExam";
 import { AlertProvider, Notification, ConfirmAction } from "./pages/AlertComponent"; // Import Alert components
+import UploadPage from "./pages/UploadPage";
+import DefaultRouting from "./pages/UserDefaultComponent";import AudioScriptForm from "./pages/AudioPage";
 
 const App: React.FC = () => {
   // Authentication state
@@ -31,6 +32,7 @@ const App: React.FC = () => {
   const [userRole, setUserRole] = useState<string>(
     localStorage.getItem("userRole") || ""
   );
+ 
 
   // Restore authentication state on app load
   useEffect(() => {
@@ -91,11 +93,27 @@ const App: React.FC = () => {
                   </GeneratorRoute>
                 }
               />
-              <Route path="examForm/:id" element={<ExamForm />} />
+              <Route
+              path="upload"
+              element={
+                <GeneratorRoute>
+                  <UploadPage />
+                </GeneratorRoute>
+              }
+            />
+            <Route path="examForm/:id" element={<ExamForm />} />
               <Route path="viewExam/:id" element={<ViewExam />} />
               <Route path="history" element={<HistoryPage />} />
               <Route path="feedback-form" element={<FeedbackForm />} />
               <Route
+              path="audiopPage"
+              element={
+                <GeneratorRoute>
+                  <AudioScriptForm />
+                </GeneratorRoute>
+              }
+            />
+            <Route
                 path="approveExam"
                 element={
                   <ApproverRoute>
@@ -105,8 +123,8 @@ const App: React.FC = () => {
               />
             </Route>
 
-            {/* Redirect '/' to '/dashboard' */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* Redirect '/' to '/dashboard' */}
+          <Route path="/" element={<DefaultRouting />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

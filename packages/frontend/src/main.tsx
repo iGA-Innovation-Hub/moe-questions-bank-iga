@@ -12,8 +12,6 @@ import config from "./config.ts";
 Amplify.configure({
   Auth: {
     Cognito: {
-      // @ts-ignore
-      region: config.cognito.REGION,
       userPoolId: config.cognito.USER_POOL_ID,
       identityPoolId: config.cognito.IDENTITY_POOL_ID,
       userPoolClientId: config.cognito.APP_CLIENT_ID,
@@ -22,17 +20,16 @@ Amplify.configure({
       }, // Avoid errors caused by undefined `loginWith`
     },
   },
-  API: {
-    // @ts-ignore
-    endpoints: [
-      {
-        name: "Api",
-        endpoint: config.apiGateway.URL,
-        region: config.apiGateway.REGION,
-      },
-    ],
+  
+  Storage: {
+    S3: {
+      bucket: config.s3.BUCKET, // Your bucket name
+      region: config.s3.REGION, // Bucket region
+    },
   },
 });
+
+// console.log(Amplify.getConfig())
 
 
 // Render the App component inside the HTML element with ID "root".

@@ -13,6 +13,7 @@ import { getUserAttributes } from "../lib/getUserAttributes";
 export default function Login() {
   const [username, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { userHasAuthenticated, updateUserRole } = useAppContext();
 
@@ -42,6 +43,7 @@ export default function Login() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setLoading(true);
 
     try {
       await signIn({ username, password });
@@ -99,8 +101,20 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </Form.Group>
-          <Button size="lg" type="submit" disabled={!validateForm()}>
-            Login
+          <Button
+            size="lg"
+            type="submit"
+            disabled={!validateForm() || isLoading}
+            className="login-button"
+          >
+            {isLoading ? (
+              <>
+                <span className="spinner"></span>
+                Authenticating...
+              </>
+            ) : (
+              "Login"
+            )}
           </Button>
         </Stack>
       </Form>

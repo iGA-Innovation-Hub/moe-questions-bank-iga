@@ -14,7 +14,7 @@ const dbClient = new DynamoDBClient({});
 
 const dynamo = DynamoDBDocumentClient.from(dbClient);
 
-export async function generate(event: APIGatewayProxyEvent) {
+export async function regenerate(event: APIGatewayProxyEvent) {
   const tableName = process.env.TABLE_NAME;
   let data;
 
@@ -40,12 +40,14 @@ export async function generate(event: APIGatewayProxyEvent) {
     const prompt = `
       As a school exam generator, you will be given an exam that you will have to change based on the
       user's discription. Change only what the user asked for. Return only the newly modified exam.
+      
 
       This is the user's discription and changes to do: ${discription}.
 
 
       This is the exam to modify: 
       ${exam}
+      the type of your response should be JSON OBJECT ONLY
     `;
 
     const conversation = [

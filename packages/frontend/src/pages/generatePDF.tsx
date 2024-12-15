@@ -1,19 +1,20 @@
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { Exam, Section, SubSection, Content, Question, Exercise, ReadingQuestions } from "./InterfacesPDF";
+import { json } from "react-router-dom";
 
 
 const marginLeft = 20;
 const marginRight = 190; // Adjust according to the document size
 
-export const generateExamPDF = (jsonString: string) => {
-    const jsonContent = jsonString.substring(
-        jsonString.indexOf("{"),
-        jsonString.lastIndexOf("}") + 1
-    );
-    const parsedExam = JSON.parse(jsonContent);
-    console.log(parsedExam);
-    const exam: Exam = parsedExam;
+export const generateExamPDF = (jsonString: any) => {
+    // const jsonContent = jsonString.substring(
+    //     jsonString.indexOf("{"),
+    //     jsonString.lastIndexOf("}") + 1
+    // );
+    // const parsedExam = JSON.parse(jsonContent);
+    // console.log(parsedExam);
+    const exam: Exam = jsonString;
 
     const doc = new jsPDF();
     let yPosition = 30;

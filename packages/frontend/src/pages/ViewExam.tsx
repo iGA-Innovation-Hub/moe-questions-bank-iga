@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import invokeApig from "../lib/callAPI.ts";
 import { useParams } from "react-router-dom";
@@ -6,28 +7,65 @@ import { useAppContext } from "../lib/contextLib.ts";
 import { generateExamPDF } from "./generatePDF"; // Make sure to import the function
 import { useAlert } from "./AlertComponent";
 import { generateModelPDF } from "./generateModelAnswerPDF.tsx";
+//import { getCurrentUserEmail } from "../lib/getToken.ts";
+
+
+
+interface Part {
+  part: string; // Part number or identifier
+  title: string; // Title of the part
+  total_marks: number; // Total marks for this part
+  subsections: Subsection[]; // Array of subsections
+}
+
+interface Subsection {
+  subsection: string; // Subsection identifier
+  title: string; // Subsection title
+  marks: number; // Marks for the subsection
+  content: {
+    passage?: string; // Optional passage
+    questions?: Question[]; // Optional questions array
+  };
+}
+
+interface Question {
+  question: string; // Question text
+  options?: string[]; // Optional multiple-choice options
+}
+
+interface ExamContent {
+  parts: Part[]; // Add this to reflect the structure of the data
+  [key: string]: any; 
+}
 
 const ViewExam: React.FC = () => {
   const [grade, setGrade] = useState("");
   const [subject, setSubject] = useState("");
   const [duration, setDuration] = useState("");
-  const [totalMark, setMark] = useState("");
+  const [totalMark, setMark] = useState(""); // Dynamically updated Total Marks
   const [semester, setSemester] = useState("");
   const [createdBy, setCreator] = useState("");
   const [creationDate, setDate] = useState("");
   const [contributers, setContributers] = useState("");
   const [examState, setExamState] = useState("");
   const [approverMsg, setApproverMsg] = useState("");
-  const [responseResult, setResponseResult] = useState<string>("");
+  const [_responseResult, _setResponseResult] = useState<string>("");
   const [loadingPage, setLoadingPage] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [loadingChangeState, setLoadingChangeState] = useState(false);
   const [loadingApprove, setLoadingApprove] = useState(false);
   const [LoadingDisapprove, setLoadingDisapprove] = useState(false);
+  const [examContent, setExamContent] = useState<ExamContent | null>(null);
+  const [_editMode, _setEditMode] = useState(false); // Toggle edit mode
+  const [_editedContent, _setEditedContent] = useState<Record<string, any>>({});
+  const [isEditing, _setIsEditing] = useState(false);
+  const [_loading, _setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<Record<string, string>>({}); // Store feedback
   const { id } = useParams<{ id: string }>();
   const { userRole } = useAppContext();
   const navigate = useNavigate();
   const { showAlert } = useAlert(); // to show alerts
+  var content: string;
 
   // !Examples to be used in the component (To be deleted later)
   const handleSuccess = () => {
@@ -64,8 +102,8 @@ const ViewExam: React.FC = () => {
       });
 
       if (!response || Object.keys(response).length === 0) {
-        console.log(response);
-        setErrorMsg("Error getting exam data!");
+        console.error("Response is empty or undefined:", response);
+        setErrorMsg("Error fetching exam data. Please try again.");
         return;
       }
 
@@ -75,32 +113,139 @@ const ViewExam: React.FC = () => {
         navigate("/dashboard/examForm/" + id);
       }
 
-      setGrade(response.examClass);
-      setSubject(response.examSubject);
-      setSemester(response.examSemester);
-      setCreator(response.createdBy);
-      setDate(response.creationDate);
-      setContributers(String(response.contributers));
-      setResponseResult(response.examContent);
-      setDuration(response.examDuration);
-      setMark(response.examMark);
-      setExamState(response.examState);
-      setApproverMsg(response.approverMsg);
+      content = response.examContent;
+
+      console.log(content)
+
+      
+    // Parse examContent if it's a string
+      if (typeof content === "string") {
+      console.log("is string")
+      try {
+        const parsedContent = JSON.parse(content);
+        setExamContent(parsedContent);
+      } catch (parseError) {
+        console.error("Failed to parse exam content as JSON:", content);
+        setErrorMsg("Invalid exam data format.");
+        return;
+      }
+      } else if (typeof content === "object") {
+        console.log("is object")
+      setExamContent(content); // Set directly if already an object
+    } else {
+      console.error("Unexpected examContent format:", typeof content);
+      setErrorMsg("Exam data format is invalid!");
+      return;
+    }
+
+    
+
+      setGrade(response.examClass || "");
+    setSubject(response.examSubject || "");
+    setSemester(response.examSemester || "");
+    setCreator(response.createdBy || "");
+    setDate(response.creationDate || "");
+    setContributers(String(response.contributers || ""));
+    setDuration(response.examDuration || "");
+    setMark(response.examMark || "");
+    setExamState(response.examState || "");
+
+
+    
+
     } catch (err: any) {
       console.error("Error fetching initial data:", err);
+      setErrorMsg("Failed to load exam data. Please try again later.");
     } finally {
       setLoadingPage(false); // Mark loading as complete
     }
   };
 
   useEffect(() => {
-    // Add a timeout before fetching data
-    const timer = setTimeout(() => {
-      fetchInitialData();
-    }, 2000); // 3000ms = 3 seconds delay
+    if (examContent) {
+      const newTotalMarks = examContent.total_marks || examContent.parts?.reduce((sum: number, part: any) => sum + part.total_marks, 0) || 0;
+      setMark(newTotalMarks); // Update the Total Marks at the top
+    }
+  }, [examContent]);
 
-    // Cleanup the timeout if the component unmounts
-    return () => clearTimeout(timer);
+
+  const fetchExamContent = async () => {
+    try {
+      //@ts-ignore
+      const response = await invokeApig({
+        path: `/examForm/${id}`,
+        method: "GET",
+      });
+  
+      console.log("Raw Exam Content from Backend:", response.examContent);
+  
+      if (!response.examContent) {
+        setErrorMsg("Exam content is missing from the response.");
+        return;
+      }
+  
+      let parsedContent;
+      try {
+        // Extract the JSON portion from the descriptive text
+        const jsonStartIndex = response.examContent.indexOf("{");
+        const jsonEndIndex = response.examContent.lastIndexOf("}");
+        if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+          const jsonString = response.examContent.substring(jsonStartIndex, jsonEndIndex + 1).trim();
+          console.log("Extracted JSON String:", jsonString);
+          parsedContent = JSON.parse(jsonString); // Parse the JSON object
+        } else {
+          throw new Error("No valid JSON found in examContent string.");
+        }
+      } catch (error) {
+        console.error("Failed to parse exam content as JSON:", response.examContent);
+        setErrorMsg("Invalid exam content format!");
+        return;
+      }
+  
+      setExamContent(parsedContent);
+      console.log("Parsed Exam Content Successfully Set in State:", parsedContent);
+    } catch (error) {
+      console.error("Error fetching exam content:", error);
+      setErrorMsg("Failed to load exam content. Please try again later.");
+    }
+  };
+
+  
+
+  useEffect(() => {
+    const loadExamContent = async () => {
+      try {
+        await fetchExamContent(); // Fetch and parse content
+      } catch (err) {
+        console.error("Error loading exam content:", err);
+        setErrorMsg("Failed to load exam content. Please try again later.");
+      }
+    };
+    loadExamContent();
+  }, [id]);
+
+
+  useEffect(() => {
+    let isCancelled = false;
+  
+    const timer = setTimeout(async () => {
+      try {
+        if (!isCancelled) {
+          await fetchInitialData();
+        }
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+        if (!isCancelled) {
+          setErrorMsg("Failed to fetch initial data. Please try again later.");
+        }
+      }
+    }, 2000); // 2-second delay
+  
+    // Cleanup function to handle component unmount
+    return () => {
+      clearTimeout(timer);
+      isCancelled = true;
+    };
   }, [id]);
 
   const changeExamStateToBuild = async () => {
@@ -190,6 +335,59 @@ const ViewExam: React.FC = () => {
     }
   };
 
+
+
+
+  // const renderExamParts = (part: any, partKey: string) => {
+  //   //const partFeedback = feedback[partKey] || ""; // Feedback for this part
+  
+  //   return (
+  //     <div key={partKey} style={{ marginBottom: "30px" }}>
+  //       <h2>
+  //         Part {part.part}: {part.title}
+  //       </h2>
+  //       <p>Total Marks: {part.total_marks}</p>
+  
+  //       {part.subsections?.map((subsection: any, subKey: number) => (
+  //         <div key={`${partKey}-${subKey}`} style={{ marginBottom: "15px" }}>
+  //           <h3>
+  //             Subsection {subsection.subsection}: {subsection.title}
+  //           </h3>
+  //           <p>Marks: {subsection.marks}</p>
+  
+  //           {/* Render content */}
+  //           {subsection.content && (
+  //             <div>
+  //               {subsection.content.passage && (
+  //                 <p>
+  //                   <strong>Passage:</strong> {subsection.content.passage}
+  //                 </p>
+  //               )}
+  //               {subsection.content.dialogue && (
+  //                 <p>
+  //                   <strong>Dialogue:</strong> {subsection.content.dialogue}
+  //                 </p>
+  //               )}
+  //               {subsection.content.questions && (
+  //                 <ul>
+  //                   {subsection.content.questions.map(
+  //                     (question: any, qIndex: number) => (
+  //                       <li key={qIndex}>
+  //                         {question.type}: {question.question}
+  //                       </li>
+  //                     )
+  //                   )}
+  //                 </ul>
+  //               )}
+  //             </div>
+  //           )}
+  //         </div>
+  //       ))}
+  
+  //     </div>
+  //   );
+  // };
+
   // Show loading state
   if (loadingPage) {
     return <div>Loading...</div>;
@@ -205,8 +403,9 @@ const ViewExam: React.FC = () => {
       type: "confirm",
       message: "Are you sure you want to download the Exam as PDF?",
       action: () => {
-        generateExamPDF(responseResult);
-        generateModelPDF(responseResult);
+        console.log(examContent);
+        generateExamPDF(examContent);
+        generateModelPDF(examContent);
       },
     });
   };
@@ -607,29 +806,263 @@ const ViewExam: React.FC = () => {
         </div>
       </div>
 
-      {/* Text Area for Generated Exam */}
+      {/* Render Exam Sections */}
       <div
         style={{
-          marginTop: "1rem",
-          width: "100%",
-          maxWidth: "900px",
+          width: "900px",
+          padding: "20px",
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
         }}
       >
+        {/* Title and Overview */}
+  <p>
+    <strong>{examContent?.title}</strong> 
+  </p>
+  <p>
+    <strong>Total Marks:</strong> {examContent?.total_marks}
+  </p>
+  <p>
+    <strong>Time:</strong> {examContent?.time}
+  </p>
+
+
+   {/* Render Sections */}
+   {examContent?.sections?.map((section: any, sectionIndex: number) =>  (
+    <div
+      key={`section-${sectionIndex}`}
+      style={{
+        marginTop: "1rem",
+        padding: "1rem",
+        backgroundColor: "#f9f9f9",
+        borderRadius: "8px",
+        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+      }}
+    >
+      {/* Section Title */}
+      <h3 style={{ fontWeight: "bold", marginBottom: "1rem" }}>
+        Part {section.part}: {section.title} (Total Marks: {section.total_marks})
+      </h3>
+
+      {/* Feedback Text Area for Section */}
+      {isEditing && (
         <textarea
-          value={responseResult}
-          readOnly
+          placeholder={`Provide feedback for Part ${section.part}: ${section.title}`}
+          value={feedback[`section-${sectionIndex}`] || ""}
+          onChange={(e) =>
+            setFeedback((prev) => ({
+              ...prev,
+              [`section-${sectionIndex}`]: e.target.value,
+            }))
+          }
           style={{
             width: "100%",
-            height: "400px",
-            padding: "1rem",
-            borderRadius: "8px",
+            minHeight: "60px",
+            marginTop: "10px",
+            padding: "10px",
+            borderRadius: "4px",
             border: "1px solid #ccc",
-            fontSize: "14px",
-            resize: "none",
-            backgroundColor: "#fff",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+            backgroundColor: "#ffffff",
           }}
         />
+      )}
+
+       {/* Render Subsections */}
+
+      {/* Subsections (Optional) */}
+      {section.subsections?.map((subsection: any, subIndex: number) => (
+        <div
+          key={`subsection-${sectionIndex}-${subIndex}`}
+          style={{
+            marginTop: "1rem",
+            padding: "1rem",
+            backgroundColor: "#ffffff",
+            borderRadius: "8px",
+            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+          }}
+        >
+          <h4 style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>
+          {subsection.subsection}: {subsection.title} ({subsection.marks} Marks)
+          </h4>
+
+          {/* Content */}
+           {/* Content: Passage or Dialogue "listening"*/}
+          {subsection.content?.passage && (
+            <p style={{ fontStyle: "italic", marginBottom: "1rem" }}>
+              {subsection.content.passage}
+            </p>
+          )}
+          {subsection.content?.dialogue && (
+            <pre
+              style={{
+                fontStyle: "italic",
+                marginBottom: "1rem",
+                whiteSpace: "pre-wrap",
+                backgroundColor: "#f8f8f8",
+                padding: "10px",
+                borderRadius: "4px",
+              }}
+            >
+              {subsection.content.dialogue}
+            </pre>
+          )}
+
+       {/* Questions */}
+       {subsection.content?.questions && Array.isArray(subsection.content.questions) && (
+            <div style={{ marginBottom: "20px" }}>
+              <h4>Questions:</h4>
+              <ul>
+                {subsection.content.questions.map((question: any, questionIndex: number) => (
+                  <li key={`question-${sectionIndex}-${subIndex}-${questionIndex}`}>
+                    <p>
+                      <strong>Q{questionIndex + 1}:</strong> {question.question || question.sentence}
+                    </p>
+                    {/* Options for Multiple-Choice Questions */}
+                    {question.options && (
+                      <ul style={{ listStyleType: "disc", marginLeft: "20px" }}>
+                        {question.options.map((option: string, optionIndex: number) => (
+                          <li key={`option-${questionIndex}-${optionIndex}`}>
+                            {String.fromCharCode(65 + optionIndex)}. {option}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {/* Answer */}
+                    {question.answer && <p><strong>Answer:</strong> {question.answer}</p>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* True/False Questions */}
+{subsection.content?.questions?.["true-false"] && (
+  <div style={{ marginBottom: "20px" }}>
+    <h4>True/False Questions:</h4>
+    {subsection.content.questions["true-false"].map((question: any, questionIndex: number) => (
+      <p key={`true-false-${questionIndex}`} style={{ marginTop: "10px", marginBottom: "10px" }}>
+        {question.statement}________ (<span style={{ fontWeight: "bold" }}>answer: {question.answer}</span>)
+      </p>
+    ))}
+  </div>
+)}
+
+
+
+          {/* Vocabulary Matching */}
+{subsection.content?.questions?.["vocabulary-matching"] && (
+  <div style={{ marginBottom: "20px" }}>
+    <h4>Vocabulary Matching:</h4>
+    <p style={{ fontWeight: "bold", marginBottom: "10px" }}>Words:</p>
+    <ul style={{ marginLeft: "20px" }}>
+      {subsection.content.questions["vocabulary-matching"].map(
+        (question: any, questionIndex: number) => (
+          <li key={`word-${questionIndex}`} style={{ listStyleType: "circle" }}>
+            {question.word}
+          </li>
+        )
+      )}
+    </ul>
+    {subsection.content.questions["vocabulary-matching"].map(
+      (question: any, questionIndex: number) => (
+        <p key={`definition-${questionIndex}`} style={{ marginTop: "10px" }}>
+          {question.definition}: <span style={{ fontWeight: "bold" }}>________</span>
+          <br />
+          <strong>Answer:</strong> {question.word}
+        </p>
+      )
+    )}
+  </div>
+)}
+
+
+
+
+           {/* Exercises (Specific to "Use of English") */}
+           {subsection.content?.exercises && (
+            <div style={{ marginBottom: "20px" }}>
+              <h4>Exercises:</h4>
+              <ul>
+                {subsection.content.exercises.map((exercise: any, exerciseIndex: number) => (
+                  <li key={`exercise-${sectionIndex}-${subIndex}-${exerciseIndex}`} style={{ marginBottom: "10px" }}>
+                    <p>
+                      <strong>Type:</strong> {exercise.type}
+                    </p>
+                    <p>
+                      <strong>{exercise.question}</strong> 
+                    </p>
+                    <p>
+                      <strong>Answer:</strong> {exercise.answer}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+         
+
+
+
+
+          {/* Feedback Text Area for Subsection */}
+          {isEditing && (
+            <textarea
+              placeholder={`Provide feedback for Subsection ${subsection.subsection}: ${subsection.title}`}
+              value={feedback[`section-${sectionIndex}-subsection-${subIndex}`] || ""}
+              onChange={(e) =>
+                setFeedback((prev) => ({
+                  ...prev,
+                  [`section-${sectionIndex}-subsection-${subIndex}`]: e.target.value,
+                }))
+              }
+              style={{
+                width: "100%",
+                minHeight: "60px",
+                marginTop: "10px",
+                padding: "10px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                backgroundColor: "#ffffff",
+              }}
+            />
+          )}
+        </div>
+      ))}
+
+
+    </div>
+  ))}
+
+  {/* Writing Section */}
+{ examContent?.sections?.some((section: any) => section.part === "3") ? (
+    examContent.sections.map((section: any, sectionIndex: number) => {
+      if (section.part === "3") {
+        return (
+          <div key={`writing-${sectionIndex}`} style={{ marginTop: "20px" }}>
+            <h2>Part {section.part}: Writing (Total Marks: {section.total_marks})</h2>
+            {section.content?.questions?.map((question: any, questionIndex: number) => (
+              <div key={`writing-question-${questionIndex}`} style={{ marginLeft: "20px" }}>
+                <p>
+                  <strong>{question.type}:</strong> {question.prompt}
+                </p>
+                <p>
+                  <strong>Word Limit:</strong> {question.word_limit}
+                </p>
+              </div>
+            ))}
+          </div>
+        );
+      }
+      return null;
+    })
+  ) : (
+    <p></p>
+  )}
+
+
+
 
         <div
           style={{
@@ -685,6 +1118,7 @@ const ViewExam: React.FC = () => {
                   justifyContent: "space-between",
                 }}
               >
+
                 <button
                   onClick={approveExam}
                   disabled={loadingChangeState}

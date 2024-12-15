@@ -1,12 +1,19 @@
-import { Api, StackContext, Topic, use } from "sst/constructs";
+import { Api, Bucket, StackContext, Topic, use } from "sst/constructs";
 import { CacheHeaderBehavior, CachePolicy } from "aws-cdk-lib/aws-cloudfront";
 import { Duration } from "aws-cdk-lib/core";
 import { DBStack } from "./DBStack"
+import { StorageStack } from "./StorageStack";
+import * as iam from "aws-cdk-lib/aws-iam";
+
 
 export function ApiStack({ stack }: StackContext) {
   const topic = new Topic(stack, "Report");
+  const userTopic = new Topic(stack, "UserTopic");
 
-  const { users_table, exams_table } = use(DBStack);
+  const { users_table, exams_table, exams_dataset } = use(DBStack);
+  const { materialsBucket } = use(StorageStack);
+
+  const bucket = new Bucket(stack, "Audio");
 
   // Create the HTTP API
   const api = new Api(stack, "Api", {
@@ -18,7 +25,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/getExam.getExamData",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -30,10 +37,22 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/getExamHistory.getExams",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
-          permissions: ["dynamodb", exams_table],
+          timeout: 180,
+          permissions: ["dynamodb", exams_table], // Ensure necessary permissions
           environment: {
-            TABLE_NAME: exams_table.tableName,
+            TABLE_NAME: exams_table.tableName, // Pass the table name to the Lambda
+          },
+        },
+      },
+
+      "GET /uploadFiles": {
+        function: {
+          handler: "packages/functions/src/getSignedUrl.getUploadLink",
+          runtime: "nodejs20.x",
+          timeout: 180,
+          permissions: ["s3", materialsBucket],
+          environment: {
+            BUCKET_NAME: materialsBucket.bucketName,
           },
         },
       },
@@ -42,7 +61,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/getExamsCount.getExamsCount",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table], // Ensure necessary permissions
           environment: {
             TABLE_NAME: exams_table.tableName, // Pass the table name to the Lambda
@@ -54,7 +73,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/getBuildingExams.getExams",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -66,7 +85,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/getPendingExams.getExams",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -74,11 +93,11 @@ export function ApiStack({ stack }: StackContext) {
         },
       },
 
-      "POST /generate": {
+      "POST /regenerate": {
         function: {
-          handler: "packages/functions/src/generateExam.generate",
+          handler: "packages/functions/src/regenerateExam.regenerate",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["bedrock", "dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -90,7 +109,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/createNewExam.createExam",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table, "bedrock"],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -103,9 +122,10 @@ export function ApiStack({ stack }: StackContext) {
           handler: "packages/functions/src/sendExamForApproval.sendForApproval",
           runtime: "nodejs20.x",
           timeout: "180 seconds",
-          permissions: ["dynamodb", exams_table],
+          permissions: ["dynamodb", exams_table,"sns"],
           environment: {
             TABLE_NAME: exams_table.tableName,
+            TOPIC_ARN: userTopic.topicArn,
           },
         },
       },
@@ -115,7 +135,7 @@ export function ApiStack({ stack }: StackContext) {
           handler:
             "packages/functions/src/changeExamStateToBuild.changeToBuild",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", exams_table],
           environment: {
             TABLE_NAME: exams_table.tableName,
@@ -128,9 +148,12 @@ export function ApiStack({ stack }: StackContext) {
           handler: "packages/functions/src/approveExam.approve",
           runtime: "nodejs20.x",
           timeout: "180 seconds",
-          permissions: ["dynamodb", exams_table],
+          permissions: ["dynamodb", exams_table, exams_dataset,"polly","s3","bedrock","sns"],
           environment: {
             TABLE_NAME: exams_table.tableName,
+            BUCKET_NAME: bucket.bucketName,
+            TOPIC_ARN: userTopic.topicArn,
+            DATASET_TABLE_NAME:exams_dataset.tableName
           },
         },
       },
@@ -140,9 +163,11 @@ export function ApiStack({ stack }: StackContext) {
           handler: "packages/functions/src/disapproveExam.disapprove",
           runtime: "nodejs20.x",
           timeout: "180 seconds",
-          permissions: ["dynamodb", exams_table],
+          permissions: ["dynamodb", exams_table, exams_dataset, "sns"],
           environment: {
             TABLE_NAME: exams_table.tableName,
+            TOPIC_ARN: userTopic.topicArn,
+            DATASET_TABLE_NAME:exams_dataset.tableName
           },
         },
       },
@@ -151,7 +176,7 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/feedback.handler",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           environment: {
             TOPIC_ARN: topic.topicArn, // Add the ARN to the environment
           },
@@ -163,11 +188,19 @@ export function ApiStack({ stack }: StackContext) {
         function: {
           handler: "packages/functions/src/checkUser.handler",
           runtime: "nodejs20.x",
-          timeout: "180 seconds",
+          timeout: 180,
           permissions: ["dynamodb", users_table],
           environment: {
             TABLE_NAME: users_table.tableName,
           },
+        },
+      },
+      "POST /convertToAudio": {
+        function: {
+          handler: "packages/functions/src/generateAudio.handler",
+          runtime: "nodejs20.x",
+          timeout: "180 seconds",
+          permissions: ["polly"],
         },
       },
     },

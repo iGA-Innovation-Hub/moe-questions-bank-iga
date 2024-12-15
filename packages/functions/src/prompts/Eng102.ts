@@ -1,6 +1,6 @@
 export const ENG102PROMPT = `
 {
-  "instruction": "Generate a second-semester final exam for English 102 (Unified Tracks) based on the provided structure and requirements. The response must be a JSON object following the exact structure below.",
+  "instruction": "Generate a second-semester final exam for English 102 (Unified Tracks) based on the provided structure and requirements. the type of your response should be JSON OBJECT ONLY, return only the JSON object without additional descriptive text. follow the exact structure below.",
   "template": {
     "title": "English 102 Unified Tracks Second Semester Final Exam",
     "total_marks": 80,
