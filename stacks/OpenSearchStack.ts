@@ -1,8 +1,9 @@
 import { StackContext, Function } from "sst/constructs"; // Import necessary constructs from SST
 import { CfnAccessPolicy, CfnCollection, CfnSecurityPolicy } from "aws-cdk-lib/aws-opensearchserverless";
 import { ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
-import { Aws } from "aws-cdk-lib"; // Import AWS class to access account and region info
+import { Aws, Token } from "aws-cdk-lib"; // Import AWS class to access account and region info
 import { Construct } from "constructs"; // Import Construct to define resources
+import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from "aws-cdk-lib/custom-resources";
 
 function getResourceName(name: string, stage: string) {
   return `${name}-${stage}`;
@@ -14,7 +15,7 @@ function getCollectionName(stage: string) {
 }
 
 // OpenSearch Construct for creating a collection and necessary policies
-export function OpenSearchConstruct(scope: Construct, executorRole: Role, stage: string) {
+export function OpenSearchConstruct(scope: Construct, executorRole: Role, stage: string): {collectionEndpoint: string, collectionArn: string} {
   const accountId = Aws.ACCOUNT_ID; // Dynamically retrieve AWS account ID
 
   const collectionName = getCollectionName(stage);
@@ -113,9 +114,8 @@ export function OpenSearchConstruct(scope: Construct, executorRole: Role, stage:
     ]),
   });
   collection.addDependency(dataAccessPolicy);
-
   // Return the collection endpoint
-  return collection.attrCollectionEndpoint;
+  return { collectionEndpoint: collection.attrCollectionEndpoint, collectionArn: collection.attrArn };
 }
 
 // MyStack function to set up the IAM role, OpenSearch collection, and Lambda function
@@ -148,7 +148,7 @@ export function MyStack({ stack }: StackContext) {
   );
 
   // Create the OpenSearch resources and get the collection endpoint
-  const collectionEndpoint = OpenSearchConstruct(stack, executorRole, stack.stage);
+  const {collectionEndpoint, collectionArn} = OpenSearchConstruct(stack, executorRole, stack.stage);
 
   // Define the Lambda function to create the vector index
   const createIndexLambda = new Function(stack, "CreateIndexLambda", {
@@ -160,12 +160,38 @@ export function MyStack({ stack }: StackContext) {
     },
     role: executorRole as any, // Use the executorRole for the Lambda function
   });
+  
+    // Add a custom resource to invoke the Lambda during deployment
+    const customResource = new AwsCustomResource(stack, "CreateIndexResource", {
+      onCreate: {
+        physicalResourceId: PhysicalResourceId.of("CreateIndex"),
+        service: "Lambda",
+        action: "invoke",
+        parameters: {
+          FunctionName: createIndexLambda.functionArn
+        },
+        region: stack.region,
+      },
+      policy: AwsCustomResourcePolicy.fromStatements([
+        new PolicyStatement({
+          actions: ["lambda:InvokeFunction"],
+          resources: [createIndexLambda.functionArn],
+        }),
+      ]),
+    });
 
-  // Export the Lambda function ARN and collection endpoint for reference
-  stack.addOutputs({
-    CreateIndexLambdaArn: createIndexLambda.functionArn,
-    OpenSearchEndpoint: collectionEndpoint, // Output the OpenSearch endpoint
-  });
+    // await customResouce to ensure the Lambda function is invoked
+    customResource.node.addDependency(createIndexLambda);
+    
 
-  return { collectionEndpoint };
+
+    // Export the Lambda function ARN and collection endpoint for reference
+    stack.addOutputs({
+      CreateIndexLambdaArn: createIndexLambda.functionArn,
+      OpenSearchEndpoint: collectionEndpoint, // Output the OpenSearch endpoint
+      LambdaResource: customResource.toString(),
+      CollectionArn: collectionArn
+    });  
+
+  return { collectionEndpoint, customResource, collectionArn };
 }
