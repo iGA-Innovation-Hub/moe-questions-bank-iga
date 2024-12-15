@@ -4,9 +4,6 @@ import { Readable } from "stream";
 const pollyClient = new PollyClient({});
 
 export async function handler(event: { body: string }) {
-  const bucketName = process.env.BUCKET_NAME;
-  console.log("Bucket Name: " + process.env.BUCKET_NAME);
-
   const data = JSON.parse(event.body);
   const audioName = data.audioName;
   const script = data.script;
