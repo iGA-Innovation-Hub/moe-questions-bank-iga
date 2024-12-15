@@ -4,6 +4,9 @@ import invokeApig from "../lib/callAPI.ts";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../lib/contextLib.ts";
+import { generateExamPDF } from "./generatePDF"; // Make sure to import the function
+import { useAlert } from "./AlertComponent";
+import { generateModelPDF } from "./generateModelAnswerPDF.tsx";
 //import { getCurrentUserEmail } from "../lib/getToken.ts";
 
 
@@ -61,6 +64,33 @@ const ViewExam: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { userRole } = useAppContext();
   const navigate = useNavigate();
+  const { showAlert } = useAlert(); // to show alerts
+  var content: string;
+
+  // !Examples to be used in the component (To be deleted later)
+  // const handleSuccess = () => {
+  //   showAlert({
+  //     type: "success", // Alert type: "success", "failure", or "confirm"
+  //     message: "This is a success message!",
+  //   });
+  // };
+
+  // const handleFailure = () => {
+  //   showAlert({
+  //     type: "failure", // Alert type: "failure"
+  //     message: "Oops, something went wrong!",
+  //   });
+  // };
+
+  // const handleConfirm = () => {
+  //   showAlert({
+  //     type: "confirm", // Alert type: "confirm"
+  //     message: "Are you sure?",
+  //     action: () => {
+  //       alert("Action confirmed!");
+  //     },
+  //   });
+  // };
 
   // Fetch initial data
   const fetchInitialData = async () => {
@@ -83,11 +113,14 @@ const ViewExam: React.FC = () => {
         navigate("/dashboard/examForm/" + id);
       }
 
-      const content = response.examContent;
+      content = response.examContent;
+
+      console.log(content)
 
       
     // Parse examContent if it's a string
-    if (typeof content === "string") {
+      if (typeof content === "string") {
+      console.log("is string")
       try {
         const parsedContent = JSON.parse(content);
         setExamContent(parsedContent);
@@ -96,7 +129,8 @@ const ViewExam: React.FC = () => {
         setErrorMsg("Invalid exam data format.");
         return;
       }
-    } else if (typeof content === "object") {
+      } else if (typeof content === "object") {
+        console.log("is object")
       setExamContent(content); // Set directly if already an object
     } else {
       console.error("Unexpected examContent format:", typeof content);
@@ -238,12 +272,12 @@ const ViewExam: React.FC = () => {
 
   const approveExam = async () => {
     setLoadingChangeState(true);
-    setLoadingApprove(true); 
+    setLoadingApprove(true);
 
     if (!approverMsg) {
       alert("Please add feedback!");
       setLoadingChangeState(false);
-      setLoadingApprove(false); 
+      setLoadingApprove(false);
       return;
     }
     const payload = {
@@ -271,7 +305,7 @@ const ViewExam: React.FC = () => {
 
   const disapproveExam = async () => {
     setLoadingChangeState(true);
-    setLoadingDisapprove(true); 
+    setLoadingDisapprove(true);
     if (!approverMsg) {
       alert("Please add feedback!");
       setLoadingChangeState(false);
@@ -362,6 +396,19 @@ const ViewExam: React.FC = () => {
   if (errorMsg) {
     return <div>{errorMsg}</div>;
   }
+
+  // For handling download (when clicking button)
+  const handleDownloadPDF = async () => {
+    showAlert({
+      type: "confirm",
+      message: "Are you sure you want to download the Exam as PDF?",
+      action: () => {
+        console.log(examContent);
+        generateExamPDF(examContent);
+        generateModelPDF(examContent);
+      },
+    });
+  };
 
   return (
     <div
@@ -1187,6 +1234,42 @@ const ViewExam: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* download PDF start here */}
+          <div>
+            {/* Conditionally render the "Download PDF" button if the exam is approved */}
+            {examState === "approved" && (
+              <button
+                onClick={handleDownloadPDF} // This triggers the PDF download function
+                style={{
+                  padding: "0.6rem 1rem",
+                  backgroundColor: "#007bff", // Blue color for the download button
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  transition: "background-color 0.3s ease, transform 0.3s ease",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                }}
+                onMouseOver={(
+                  e //@ts-ignore (color change on hover)
+                ) => (e.target.style.backgroundColor = "#0056b3")}
+                onMouseOut={(
+                  e //@ts-ignore (reset to original color on mouse out)
+                ) => (e.target.style.backgroundColor = "#007bff")}
+                onMouseDown={(
+                  e //@ts-ignore (scale button on mouse down)
+                ) => (e.target.style.transform = "scale(0.98)")}
+                //@ts-ignore
+                onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+              >
+                Download as PDF
+              </button>
+            )}
+          </div>
+          {/* END OF DOWNLOAD PDF */}
         </div>
       </div>
       <style>
