@@ -68,29 +68,29 @@ const ViewExam: React.FC = () => {
   var content: string;
 
   // !Examples to be used in the component (To be deleted later)
-  const handleSuccess = () => {
-    showAlert({
-      type: "success", // Alert type: "success", "failure", or "confirm"
-      message: "This is a success message!",
-    });
-  };
+  // const handleSuccess = () => {
+  //   showAlert({
+  //     type: "success", // Alert type: "success", "failure", or "confirm"
+  //     message: "This is a success message!",
+  //   });
+  // };
 
-  const handleFailure = () => {
-    showAlert({
-      type: "failure", // Alert type: "failure"
-      message: "Oops, something went wrong!",
-    });
-  };
+  // const handleFailure = () => {
+  //   showAlert({
+  //     type: "failure", // Alert type: "failure"
+  //     message: "Oops, something went wrong!",
+  //   });
+  // };
 
-  const handleConfirm = () => {
-    showAlert({
-      type: "confirm", // Alert type: "confirm"
-      message: "Are you sure?",
-      action: () => {
-        alert("Action confirmed!");
-      },
-    });
-  };
+  // const handleConfirm = () => {
+  //   showAlert({
+  //     type: "confirm", // Alert type: "confirm"
+  //     message: "Are you sure?",
+  //     action: () => {
+  //       alert("Action confirmed!");
+  //     },
+  //   });
+  // };
 
   // Fetch initial data
   const fetchInitialData = async () => {

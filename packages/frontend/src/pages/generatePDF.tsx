@@ -1,7 +1,6 @@
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { Exam, Section, SubSection, Content, Question, Exercise, ReadingQuestions } from "./InterfacesPDF";
-import { json } from "react-router-dom";
 
 
 const marginLeft = 20;
