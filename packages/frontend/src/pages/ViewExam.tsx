@@ -1353,7 +1353,7 @@ const ViewExam: React.FC = () => {
           {/* download PDF start here */}
           <div>
             {/* Conditionally render the "Download PDF" button if the exam is approved */}
-            {examState === "approved" && (
+            {examState === "approved" && subject === "ENG102" &&(
               <button
                 onClick={handleDownloadPDF} // This triggers the PDF download function
                 style={{
