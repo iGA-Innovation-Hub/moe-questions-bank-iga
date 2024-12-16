@@ -140,7 +140,7 @@ const ViewExam: React.FC = () => {
 
     
 
-      setGrade(response.examClass || "");
+    setGrade(response.examClass || "");
     setSubject(response.examSubject || "");
     setSemester(response.examSemester || "");
     setCreator(response.createdBy || "");
@@ -409,6 +409,45 @@ const ViewExam: React.FC = () => {
       },
     });
   };
+
+  const handleDownloadAudio = async () => {
+
+      const payload = {
+        examID: id,
+      };
+  
+      try {
+        const response = await invokeApig({
+          path: "/getAudio",
+          method: "POST",
+          body: payload,
+        });
+
+        if (!response) {
+          throw new Error("Failed to get audio content from the server");
+        }
+
+        const { audioContent } = await response; 
+
+        const audioBlob = new Blob(
+          [Uint8Array.from(atob(audioContent), (c) => c.charCodeAt(0))],
+          { type: "audio/mpeg" }
+        );
+
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(audioBlob);
+        link.download = `${id}.mp3`; // Download file as examID.mp3
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        console.log("Audio downloaded successfully");
+    } catch (error) {
+        console.error('Error downloading audio:', error);
+        alert('Could not download the audio. Please try again later.');
+    }
+
+};
 
   return (
     <div
@@ -1270,6 +1309,41 @@ const ViewExam: React.FC = () => {
             )}
           </div>
           {/* END OF DOWNLOAD PDF */}
+          {/* download Audio start here */}
+          <div>
+            {/* Conditionally render the "Download Audio" button if the exam is approved */}
+            {examState === "approved" && (
+              <button
+                onClick={handleDownloadAudio} // This triggers the Audio download function
+                style={{
+                  padding: "0.6rem 1rem",
+                  backgroundColor: "#007bff",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  transition: "background-color 0.3s ease, transform 0.3s ease",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                }}
+                onMouseOver={(
+                  e //@ts-ignore (color change on hover)
+                ) => (e.target.style.backgroundColor = "#0056b3")}
+                onMouseOut={(
+                  e //@ts-ignore (reset to original color on mouse out)
+                ) => (e.target.style.backgroundColor = "#007bff")}
+                onMouseDown={(
+                  e //@ts-ignore (scale button on mouse down)
+                ) => (e.target.style.transform = "scale(0.98)")}
+                //@ts-ignore
+                onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+              >
+                Download Audio
+              </button>
+            )}
+          </div>
+          {/* END OF DOWNLOAD Audio */}
         </div>
       </div>
       <style>
