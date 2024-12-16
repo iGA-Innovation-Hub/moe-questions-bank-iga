@@ -1094,6 +1094,7 @@ const ExamForm: React.FC = () => {
               backgroundColor: "#f9f9f9", // Light background color
             }}
           >
+            {/*@ts-ignore*/}
             {examContent}
           </textarea>
 

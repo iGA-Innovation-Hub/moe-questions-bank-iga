@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { getCurrentUserEmail } from "../lib/getToken.js";
 import { getFormattedDateTime } from "../lib/getDateTime.js";
 import { useNavigate } from "react-router-dom";
@@ -16,13 +16,14 @@ export function InitialForm() {
     FillInTheBlank: 0,
     ShortAnswer: 0,
   });
-  const [customize, setCustomize] = useState(false);
-  const [newExam, setNewExam] = useState(true); // Track which option is selected
+  // const [customize, setCustomize] = useState(false);
+  // const [newExam, setNewExam] = useState(true); // Track which option is selected
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   // const [gettingExams, setGettingExams] = useState(true);
   // const [gettingExamsError, setGetExamsError] = useState("");
   // const [exams, setExams] = useState([]);
+  const newExam = true;
   const navigate = useNavigate();
 
   // // Fetch initial data
@@ -78,18 +79,17 @@ export function InitialForm() {
       if (
         !grade ||
         !subject ||
-        !semester ||
-        (customize && (!duration || !totalMark))
+        !semester
       ) {
         console.log(grade, subject, semester, duration, totalMark);
         setErrorMsg("Please fill the form!");
         setLoading(false);
         return;
       }
-      if (customize) {
-        setDuration(duration);
-        setMark(totalMark);
-      }
+      // if (customize) {
+      //   setDuration(duration);
+      //   setMark(totalMark);
+      // }
       setErrorMsg("");
       const payload = {
         class: grade,
@@ -98,7 +98,7 @@ export function InitialForm() {
         duration: duration,
         total_mark: totalMark,
         question_types: questionCounts,
-        customize: customize,
+        customize: false,
         created_by: currentUserEmail,
         creation_date: createDate,
         contributors: currentUserEmail,
@@ -279,138 +279,6 @@ export function InitialForm() {
             </label>
           </div>
 
-          {/* Conditional Rendering */}
-          {customize && (
-            <>
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "1.5rem",
-                }}
-              >
-                <label
-                  style={{
-                    flex: "1",
-                    minWidth: "200px",
-                    fontSize: "16px",
-                    color: "#4b4b4b",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Duration:
-                  <input
-                    min={1}
-                    max={3}
-                    type="number"
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      marginTop: "0.5rem",
-                      padding: "0.75rem",
-                      borderRadius: "8px",
-                      border: "1px solid #ccc",
-                      fontSize: "14px",
-                    }}
-                  />
-                </label>
-
-                <label
-                  style={{
-                    flex: "1",
-                    minWidth: "200px",
-                    fontSize: "16px",
-                    color: "#4b4b4b",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Total Mark:
-                  <input
-                    min={10}
-                    max={100}
-                    type="number"
-                    value={totalMark}
-                    onChange={(e) => setMark(e.target.value)}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      marginTop: "0.5rem",
-                      padding: "0.75rem",
-                      borderRadius: "8px",
-                      border: "1px solid #ccc",
-                      fontSize: "14px",
-                    }}
-                  />
-                </label>
-              </div>
-              <fieldset
-                style={{
-                  padding: "1rem",
-                  border: "1px solid #ccc",
-                  borderRadius: "8px",
-                }}
-              >
-                <legend
-                  style={{
-                    fontSize: "16px",
-                    fontWeight: "bold",
-                    color: "#4b4b4b",
-                  }}
-                >
-                  Question Types
-                </legend>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1rem",
-                  }}
-                >
-                  {/* Question Type Inputs */}
-                  {[
-                    "MCQ",
-                    "Essay",
-                    "TrueFalse",
-                    "FillInTheBlank",
-                    "ShortAnswer",
-                  ].map((type) => (
-                    <label
-                      key={type}
-                      style={{
-                        fontSize: "14px",
-                        color: "#333",
-                        fontWeight: "normal",
-                      }}
-                    >
-                      {type}:
-                      <input
-                        type="number"
-                        min={0}
-                        //@ts-ignore
-                        value={questionCounts[type] || 0}
-                        onChange={(e) =>
-                          setQuestionCounts((prev) => ({
-                            ...prev,
-                            [type]: Number(e.target.value),
-                          }))
-                        }
-                        style={{
-                          display: "block",
-                          width: "100%",
-                          marginTop: "0.5rem",
-                          padding: "0.5rem",
-                          borderRadius: "8px",
-                          border: "1px solid #ccc",
-                        }}
-                      />
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-            </>
-          )}
 
           <button
             type="submit"
@@ -458,182 +326,6 @@ export function InitialForm() {
             )}
           </button>
         </form>
-      )}
-
-      {!newExam && gettingExams && <div>Loading exams...</div>}
-
-      {!newExam && gettingExamsError && <div>Error Fetching Exams!</div>}
-
-      {!newExam && !gettingExams && !gettingExamsError && exams.length > 0 && (
-        <div
-          style={{
-            marginTop: "2rem",
-            width: "100%",
-            padding: "1rem",
-            backgroundColor: "#fafafa",
-            borderRadius: "8px",
-            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          <h3 style={{ marginBottom: "1.5rem", color: "#333" }}>
-            Available Exams To Edit:
-          </h3>
-          {exams.map((exam) => (
-            <div
-              //@ts-ignore
-              key={exam.examID}
-              //@ts-ignore
-              onClick={() => navigate(`/dashboard/viewExam/${exam.examID}`)} // Redirect to the exam form page
-              style={{
-                marginBottom: "1rem",
-                padding: "1rem",
-                backgroundColor: "#fff",
-                borderRadius: "8px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                cursor: "pointer",
-                transition: "background-color 0.3s ease",
-                border: "1px solid rgba(0, 0, 0, 0.05)",
-                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = "#f9f9f9")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor = "#fff")
-              }
-            >
-              {/* Creator */}
-              <div style={{ flex: 1, marginRight: "1rem" }}>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "12px",
-                    color: "#777",
-                  }}
-                >
-                  Creator
-                </p>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "14px",
-                    color: "#333",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {/*@ts-ignore*/}
-                  {exam.createdBy}
-                </p>
-              </div>
-
-              {/* Date */}
-              <div style={{ flex: 1, marginRight: "1rem" }}>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "12px",
-                    color: "#777",
-                  }}
-                >
-                  Date
-                </p>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "14px",
-                    color: "#333",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {/*@ts-ignore*/}
-                  {exam.creationDate}
-                </p>
-              </div>
-
-              {/* Subject */}
-              <div style={{ flex: 1, marginRight: "1rem" }}>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "12px",
-                    color: "#777",
-                  }}
-                >
-                  Subject
-                </p>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "14px",
-                    color: "#333",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {/*@ts-ignore*/}
-                  {exam.examSubject}
-                </p>
-              </div>
-
-              {/* Class */}
-              <div style={{ flex: 1, marginRight: "1rem" }}>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "12px",
-                    color: "#777",
-                  }}
-                >
-                  Class
-                </p>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "14px",
-                    color: "#333",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {/*@ts-ignore*/}
-                  {exam.examClass}
-                </p>
-              </div>
-
-              {/* Semester */}
-              <div style={{ flex: 1 }}>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "12px",
-                    color: "#777",
-                  }}
-                >
-                  Semester
-                </p>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "14px",
-                    color: "#333",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {/*@ts-ignore*/}
-                  {exam.examSemester}
-                </p>
-              </div>
-
-              {/* State */}
-              <div
-                style={{
-                  flex: 1,
-                  textAlign: "right",
-                }}
-              ></div>
-            </div>
-          ))}
-        </div>
       )}
 
       <style>

@@ -668,6 +668,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                       key={exam.examID}
                       //@ts-ignore
                       onClick={() =>
+                        //@ts-ignore
                         navigate(`/dashboard/viewExam/${exam.examID}`)
                       } // Redirect to the exam form page
                       style={{
