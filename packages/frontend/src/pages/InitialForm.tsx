@@ -7,15 +7,15 @@ export function InitialForm() {
   const [grade, setGrade] = useState("Grade 10");
   const [subject, setSubject] = useState("ENG102");
   const [semester, setSemester] = useState("Second 2024/2025");
-  const [duration, setDuration] = useState("2");
-  const [totalMark, setMark] = useState("50");
-  const [questionCounts, setQuestionCounts] = useState({
+  const duration = "2";
+  const totalMark = "50";
+  const questionCounts ={
     MCQ: 0,
     Essay: 0,
     TrueFalse: 0,
     FillInTheBlank: 0,
     ShortAnswer: 0,
-  });
+  };
   // const [customize, setCustomize] = useState(false);
   // const [newExam, setNewExam] = useState(true); // Track which option is selected
   const [loading, setLoading] = useState(false);
