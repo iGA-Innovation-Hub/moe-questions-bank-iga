@@ -102,7 +102,7 @@ export function InitialForm() {
         customize: customize,
         created_by: currentUserEmail,
         creation_date: createDate,
-        contributers: [currentUserEmail],
+        contributors: currentUserEmail,
       };
 
       console.log(payload);
@@ -315,6 +315,7 @@ export function InitialForm() {
                 }}
               >
                 <option value="Second 2024/2025">Second 2024/2025</option>
+                <option value="First 2024/2025">First 2024/2025</option>
               </select>
             </label>
 
@@ -342,6 +343,7 @@ export function InitialForm() {
                 }}
               >
                 <option value="ENG102">ENG102</option>
+                <option value="ARAB101">ARAB101</option>
               </select>
             </label>
           </div>
