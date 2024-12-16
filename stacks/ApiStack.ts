@@ -203,6 +203,17 @@ export function ApiStack({ stack }: StackContext) {
           permissions: ["polly"],
         },
       },
+      "POST /getAudio": {
+        function: {
+          handler: "packages/functions/src/getAudio.handler",
+          runtime: "nodejs20.x",
+          timeout: "180 seconds",
+          permissions: ["s3"],
+          environment: {
+            BUCKET_NAME: bucket.bucketName,
+          },
+        },
+      },
     },
   });
 
