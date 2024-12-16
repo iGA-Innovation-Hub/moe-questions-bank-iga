@@ -420,8 +420,8 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
               >
                 <div
                   style={{
-                    width: "300px",
-                    height: "300px",
+                    width: "250px",
+                    height: "250px",
                     backgroundColor: "white",
                     color: "#d32f2f",
                     display: "flex",
@@ -429,7 +429,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                     justifyContent: "center",
                     alignItems: "center",
                     borderRadius: "16px",
-                    fontSize: "20px",
+                    fontSize: "18px",
                     fontWeight: "bold",
                     textAlign: "center",
                     cursor: "pointer",
@@ -450,23 +450,12 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                   <span
                     style={{
                       fontWeight: "bold",
-                      fontSize: "34px",
+                      fontSize: "28px",
                       marginBottom: "0.5rem",
                     }}
                   >
                     Generate Exam
                   </span>
-                  <p
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "normal",
-                      textAlign: "center",
-                      color: "black",
-                      maxWidth: "80%",
-                    }}
-                  >
-                    Create new exams using uploaded material.
-                  </p>
                 </div>
               </NavLink><NavLink
                 to="/dashboard/upload"
@@ -475,8 +464,8 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
               >
                   <div
                     style={{
-                      width: "300px",
-                      height: "300px",
+                      width: "250px",
+                      height: "250px",
                       backgroundColor: "white",
                       color: "#d32f2f",
                       display: "flex",
@@ -484,7 +473,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                       justifyContent: "center",
                       alignItems: "center",
                       borderRadius: "16px",
-                      fontSize: "20px",
+                      fontSize: "18px",
                       fontWeight: "bold",
                       textAlign: "center",
                       cursor: "pointer",
@@ -505,23 +494,12 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                     <span
                       style={{
                         fontWeight: "bold",
-                        fontSize: "34px",
+                        fontSize: "28px",
                         marginBottom: "0.5rem",
                       }}
                     >
                       Upload Material
                     </span>
-                    <p
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: "normal",
-                        textAlign: "center",
-                        color: "black",
-                        maxWidth: "80%",
-                      }}
-                    >
-                      Upload Material.
-                    </p>
                   </div>
                 </NavLink><NavLink
                   to="/dashboard/audiopPage"
@@ -530,8 +508,8 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                 >
                   <div
                     style={{
-                      width: "300px",
-                      height: "300px",
+                      width: "250px",
+                      height: "250px",
                       backgroundColor: "white",
                       color: "#d32f2f",
                       display: "flex",
@@ -539,7 +517,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                       justifyContent: "center",
                       alignItems: "center",
                       borderRadius: "16px",
-                      fontSize: "20px",
+                      fontSize: "18px",
                       fontWeight: "bold",
                       textAlign: "center",
                       cursor: "pointer",
@@ -560,23 +538,12 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                     <span
                       style={{
                         fontWeight: "bold",
-                        fontSize: "34px",
+                        fontSize: "28px",
                         marginBottom: "0.5rem",
                       }}
                     >
                       Generate Audio
                     </span>
-                    <p
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: "normal",
-                        textAlign: "center",
-                        color: "black",
-                        maxWidth: "80%",
-                      }}
-                    >
-                      Generate Audio.
-                    </p>
                   </div>
                 </NavLink></>
 

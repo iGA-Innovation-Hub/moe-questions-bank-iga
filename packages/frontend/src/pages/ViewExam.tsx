@@ -65,6 +65,7 @@ const ViewExam: React.FC = () => {
   const { userRole } = useAppContext();
   const navigate = useNavigate();
   const { showAlert } = useAlert(); // to show alerts
+  const [loading, setLoading] = useState(false);
   var content: string;
 
   // !Examples to be used in the component (To be deleted later)
@@ -412,6 +413,8 @@ const ViewExam: React.FC = () => {
 
   const handleDownloadAudio = async () => {
 
+    setLoading(true);
+
       const payload = {
         examID: id,
       };
@@ -436,7 +439,7 @@ const ViewExam: React.FC = () => {
 
         const link = document.createElement("a");
         link.href = URL.createObjectURL(audioBlob);
-        link.download = `${id}.mp3`; // Download file as examID.mp3
+        link.download = `${subject}-${creationDate}.mp3`; // Download file as examID.mp3
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -445,6 +448,8 @@ const ViewExam: React.FC = () => {
     } catch (error) {
         console.error('Error downloading audio:', error);
         alert('Could not download the audio. Please try again later.');
+    }finally{
+      setLoading(false);
     }
 
 };
@@ -1339,7 +1344,30 @@ const ViewExam: React.FC = () => {
                 //@ts-ignore
                 onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
               >
-                Download Audio
+                {loading ? (
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <span
+                  style={{
+                    width: "1rem",
+                    height: "1rem",
+                    border: "2px solid #fff",
+                    borderRadius: "50%",
+                    borderTop: "2px solid transparent",
+                    animation: "spin 1s linear infinite",
+                  }}
+                ></span>
+                Loading...
+              </span>
+            ) : (
+              "Download Audio"
+            )}
               </button>
             )}
           </div>
