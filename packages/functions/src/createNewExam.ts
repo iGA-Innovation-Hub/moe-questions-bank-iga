@@ -81,7 +81,7 @@ export async function createExam(event) {
 
        // Build prompt to update exam content
       if (data.feedback) {
-        if (result.Item.examSubjet === "ENG102") { 
+        if (result.Item.examSubject === "ENG102") { 
           prompt = `
           Update the following exam based on the feedback provided.
           Ensure that all related information is recalculated to maintain consistency.
@@ -92,7 +92,7 @@ export async function createExam(event) {
           
           The type of your response must be a JSON object containing the updated exam only. Ensure all changes are reflected accurately
           `;
-        } else {
+        } else{
           prompt = `
             اضف التغيرات التي ستحصل عليها على الامتحان. غير فقط ما يطلب منك.
              تاكد من انه التغيرات تكون مطابقة للامتحان و الاسئلة و ان كان التغيير يتضمن تغيرا في الدرجات فعليك تغيير باقي الدرجات لتطابق التغيير.
