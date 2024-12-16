@@ -44,13 +44,15 @@ export async function approve(event: APIGatewayProxyEvent) {
         },
       })
     );
-    let listeningScript = "";
-    const json = JSON.parse(dynamoresponse.Item?.examContent);
-    for (const [sectionIndex, section] of json.sections.entries()) {
-      if (section.title.toLowerCase().includes("listening")) {
-        for (const [subIndex, subsection] of section.subsections.entries()) {
-          const content = subsection.content;
-          if (content?.passage || content?.dialogue) {
+    if (dynamoresponse?.Item?.examSubject === "ENG102") {
+      
+      let listeningScript = "";
+      const json = JSON.parse(dynamoresponse.Item?.examContent);
+      for (const [sectionIndex, section] of json.sections.entries()) {
+        if (section.title.toLowerCase().includes("listening")) {
+          for (const [subIndex, subsection] of section.subsections.entries()) {
+            const content = subsection.content;
+            if (content?.passage || content?.dialogue) {
             const script = content.passage || content.dialogue;
             listeningScript += `Listening ${subIndex + 1}\n`;
             listeningScript += `${script}\n`;
@@ -61,53 +63,53 @@ export async function approve(event: APIGatewayProxyEvent) {
       }
     }
     console.log("listeningScript" + listeningScript)
-
+    
     if(listeningScript != ""){
       listeningScript += "End of Listening"
-    try{
-    // Split the listeningScript into chunks of 3000 characters or less
-    const textChunks = [];
-    let currentChunk = "";
-
-    for (const line of listeningScript.split("\n")) {
-      if ((currentChunk + line).length > 3000) {
-        textChunks.push(currentChunk);
-        currentChunk = "";
-      }
-      currentChunk += `${line}\n`;
-    }
-    if (currentChunk) {
-      textChunks.push(currentChunk);
-    }
-
-    console.log(`Text split into ${textChunks.length} chunks.`);
-
-    // Process each chunk
-    const audioBuffers = [];
-
-    for (const [index, chunk] of textChunks.entries()) {
-      const pollyParams = {
-        Text: chunk,
-        OutputFormat: OutputFormat.MP3,
-        VoiceId: VoiceId.Joanna,
-      };
-
-      console.log(`Processing chunk ${index + 1}/${textChunks.length}`);
-      const synthesizeSpeechCommand = new SynthesizeSpeechCommand(pollyParams);
-      const pollyResponse = await pollyClient.send(synthesizeSpeechCommand);
-
-      if (!pollyResponse.AudioStream) {
-        throw new Error(`Failed to generate audio for chunk ${index + 1}`);
-      }
-
-      const audioBuffer = await streamToBuffer(pollyResponse.AudioStream as Readable);
-      audioBuffers.push(audioBuffer);
-    }
-
-    console.log("end audio")
-    // Concatenate all audio buffers into a single file
-    const concatenatedAudio = Buffer.concat(audioBuffers);
-    console.log("uploading")
+      try{
+        // Split the listeningScript into chunks of 3000 characters or less
+        const textChunks = [];
+        let currentChunk = "";
+        
+        for (const line of listeningScript.split("\n")) {
+          if ((currentChunk + line).length > 3000) {
+            textChunks.push(currentChunk);
+            currentChunk = "";
+          }
+          currentChunk += `${line}\n`;
+        }
+        if (currentChunk) {
+          textChunks.push(currentChunk);
+        }
+        
+        console.log(`Text split into ${textChunks.length} chunks.`);
+        
+        // Process each chunk
+        const audioBuffers = [];
+        
+        for (const [index, chunk] of textChunks.entries()) {
+          const pollyParams = {
+            Text: chunk,
+            OutputFormat: OutputFormat.MP3,
+            VoiceId: VoiceId.Joanna,
+          };
+          
+          console.log(`Processing chunk ${index + 1}/${textChunks.length}`);
+          const synthesizeSpeechCommand = new SynthesizeSpeechCommand(pollyParams);
+          const pollyResponse = await pollyClient.send(synthesizeSpeechCommand);
+          
+          if (!pollyResponse.AudioStream) {
+            throw new Error(`Failed to generate audio for chunk ${index + 1}`);
+          }
+          
+          const audioBuffer = await streamToBuffer(pollyResponse.AudioStream as Readable);
+          audioBuffers.push(audioBuffer);
+        }
+        
+        console.log("end audio")
+        // Concatenate all audio buffers into a single file
+        const concatenatedAudio = Buffer.concat(audioBuffers);
+        console.log("uploading")
         // upload audio to S3
         const s3Key = `${requestJSON.examID}.mp3`;
         const s3Params = {
@@ -124,6 +126,7 @@ export async function approve(event: APIGatewayProxyEvent) {
         console.error("Error during Polly or S3 operations:", error);
       }
     }
+  }
     await snsClient.send(
       new PublishCommand({
         TopicArn: topicArn,

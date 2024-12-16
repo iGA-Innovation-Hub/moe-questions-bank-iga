@@ -39,7 +39,7 @@ export function getCurrentUser() {
 }
 
 
-export function getCurrentUserEmail() {
+export function getCurrentUserEmail():any {
   const userPool = new CognitoUserPool({
     UserPoolId: import.meta.env.VITE_USER_POOL_ID,
     ClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,

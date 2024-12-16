@@ -25,6 +25,9 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
   const [gettingExams, setGettingExams] = useState(true);
   const [gettingExamsError, setGetExamsError] = useState("");
   const [exams, setExams] = useState([]);
+  const [examsType, setExamsType] = useState(
+    userRole === "User" ? "building" : "pending"
+  );
   const [filterValue, setFilterValue] = useState(
     userRole === "User" ? "building" : "pending"
   );
@@ -84,6 +87,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
     
           // Store the retrieved exams in the state
           setExams(response);
+          setExamsType(filterValue)
     
           console.log("Initial Data Loaded:", response);
         } catch (err: any) {
@@ -262,210 +266,169 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
             }}
           >
             <div
+              style={{
+                width: "200px",
+                height: "200px",
+                backgroundColor: "white",
+                color: "rgba(255, 140, 0, 0.9)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: "16px",
+                fontSize: "20px",
+                fontWeight: "bold",
+                textAlign: "center",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                transition: "transform 0.3s, box-shadow 0.3s",
+                position: "relative",
+              }}
+            >
+              <span
                 style={{
-                  width: "200px",
-                  height: "200px",
-                  backgroundColor: "white",
-                  color: "rgba(255, 140, 0, 0.9)",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderRadius: "16px",
-                  fontSize: "20px",
                   fontWeight: "bold",
-                  textAlign: "center",
-                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                  transition: "transform 0.3s, box-shadow 0.3s",
-                  position: "relative",
+                  fontSize: "20px",
+                  marginBottom: "0.5rem",
                 }}
               >
-                <span
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: "20px",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  Pending Exams
-                </span>
-                <span
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: "20px",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  {pending}
-                </span>
-              </div><div
+                Pending Exams
+              </span>
+              <span
                 style={{
-                  width: "200px",
-                  height: "200px",
-                  backgroundColor: "white",
-                  color: "rgba(34, 139, 34, 0.9)",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderRadius: "16px",
-                  fontSize: "20px",
                   fontWeight: "bold",
-                  textAlign: "center",
-                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                  transition: "transform 0.3s, box-shadow 0.3s",
-                  position: "relative",
+                  fontSize: "20px",
+                  marginBottom: "0.5rem",
                 }}
               >
-                  <span
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "20px",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    Approved Exams
-                  </span>
-                  <span
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "20px",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    {approved}
-                  </span>
-                </div><div
-                  style={{
-                    width: "200px",
-                    height: "200px",
-                    backgroundColor: "white",
-                    color: "rgba(255, 0, 0, 0.9)",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    borderRadius: "16px",
-                    fontSize: "20px",
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                    transition: "transform 0.3s, box-shadow 0.3s",
-                    position: "relative",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "20px",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    Disapproved Exams
-                  </span>
-                  <span
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "20px",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    {disapproved}
-                  </span>
-                </div>
-              <div
+                {pending}
+              </span>
+            </div>
+            <div
+              style={{
+                width: "200px",
+                height: "200px",
+                backgroundColor: "white",
+                color: "rgba(34, 139, 34, 0.9)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: "16px",
+                fontSize: "20px",
+                fontWeight: "bold",
+                textAlign: "center",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                transition: "transform 0.3s, box-shadow 0.3s",
+                position: "relative",
+              }}
+            >
+              <span
                 style={{
-                  width: "200px",
-                  height: "200px",
-                  backgroundColor: "white",
-                  color: "rgba(105, 105, 105, 0.9)",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderRadius: "16px",
-                  fontSize: "20px",
                   fontWeight: "bold",
-                  textAlign: "center",
-                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                  transition: "transform 0.3s, box-shadow 0.3s",
-                  position: "relative",
+                  fontSize: "20px",
+                  marginBottom: "0.5rem",
                 }}
               >
-                  <span
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "20px",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    Building Exams
-                  </span>
-                  <span
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "20px",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    {building}
-                  </span>
-                </div>
+                Approved Exams
+              </span>
+              <span
+                style={{
+                  fontWeight: "bold",
+                  fontSize: "20px",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                {approved}
+              </span>
+            </div>
+            <div
+              style={{
+                width: "200px",
+                height: "200px",
+                backgroundColor: "white",
+                color: "rgba(255, 0, 0, 0.9)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: "16px",
+                fontSize: "20px",
+                fontWeight: "bold",
+                textAlign: "center",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                transition: "transform 0.3s, box-shadow 0.3s",
+                position: "relative",
+              }}
+            >
+              <span
+                style={{
+                  fontWeight: "bold",
+                  fontSize: "20px",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                Disapproved Exams
+              </span>
+              <span
+                style={{
+                  fontWeight: "bold",
+                  fontSize: "20px",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                {disapproved}
+              </span>
+            </div>
+            <div
+              style={{
+                width: "200px",
+                height: "200px",
+                backgroundColor: "white",
+                color: "rgba(105, 105, 105, 0.9)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: "16px",
+                fontSize: "20px",
+                fontWeight: "bold",
+                textAlign: "center",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                transition: "transform 0.3s, box-shadow 0.3s",
+                position: "relative",
+              }}
+            >
+              <span
+                style={{
+                  fontWeight: "bold",
+                  fontSize: "20px",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                Building Exams
+              </span>
+              <span
+                style={{
+                  fontWeight: "bold",
+                  fontSize: "20px",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                {building}
+              </span>
+            </div>
 
-                {userRole === "User" && (
-              <><NavLink
-                to="/dashboard/examForm"
-                onClick={() => setActivePage("generateExam")}
-                style={{ textDecoration: "none" }}
-              >
-                <div
-                  style={{
-                    width: "250px",
-                    height: "250px",
-                    backgroundColor: "white",
-                    color: "#d32f2f",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    borderRadius: "16px",
-                    fontSize: "18px",
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    cursor: "pointer",
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                    transition: "transform 0.3s, box-shadow 0.3s",
-                  }}
-                  onMouseEnter={(e) => {
-                    const card = e.currentTarget;
-                    card.style.transform = "scale(1.05)";
-                    card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
-                  } }
-                  onMouseLeave={(e) => {
-                    const card = e.currentTarget;
-                    card.style.transform = "scale(1)";
-                    card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                  } }
+            {userRole === "User" && (
+              <>
+                <NavLink
+                  to="/dashboard/examForm"
+                  onClick={() => setActivePage("generateExam")}
+                  style={{ textDecoration: "none" }}
                 >
-                  <span
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "28px",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    Generate Exam
-                  </span>
-                </div>
-              </NavLink><NavLink
-                to="/dashboard/upload"
-                onClick={() => setActivePage("uploadMaterial")}
-                style={{ textDecoration: "none" }}
-              >
                   <div
                     style={{
                       width: "250px",
-                      height: "250px",
+                      height: "200px",
                       backgroundColor: "white",
                       color: "#d32f2f",
                       display: "flex",
@@ -484,12 +447,57 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                       const card = e.currentTarget;
                       card.style.transform = "scale(1.05)";
                       card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
-                    } }
+                    }}
                     onMouseLeave={(e) => {
                       const card = e.currentTarget;
                       card.style.transform = "scale(1)";
                       card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                    } }
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "28px",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      Generate Exam
+                    </span>
+                  </div>
+                </NavLink>
+                <NavLink
+                  to="/dashboard/upload"
+                  onClick={() => setActivePage("uploadMaterial")}
+                  style={{ textDecoration: "none" }}
+                >
+                  <div
+                    style={{
+                      width: "250px",
+                      height: "200px",
+                      backgroundColor: "white",
+                      color: "#d32f2f",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      borderRadius: "16px",
+                      fontSize: "18px",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                      transition: "transform 0.3s, box-shadow 0.3s",
+                    }}
+                    onMouseEnter={(e) => {
+                      const card = e.currentTarget;
+                      card.style.transform = "scale(1.05)";
+                      card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
+                    }}
+                    onMouseLeave={(e) => {
+                      const card = e.currentTarget;
+                      card.style.transform = "scale(1)";
+                      card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                    }}
                   >
                     <span
                       style={{
@@ -501,7 +509,8 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                       Upload Material
                     </span>
                   </div>
-                </NavLink><NavLink
+                </NavLink>
+                <NavLink
                   to="/dashboard/audiopPage"
                   onClick={() => setActivePage("audio")}
                   style={{ textDecoration: "none" }}
@@ -509,7 +518,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                   <div
                     style={{
                       width: "250px",
-                      height: "250px",
+                      height: "200px",
                       backgroundColor: "white",
                       color: "#d32f2f",
                       display: "flex",
@@ -528,12 +537,12 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                       const card = e.currentTarget;
                       card.style.transform = "scale(1.05)";
                       card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
-                    } }
+                    }}
                     onMouseLeave={(e) => {
                       const card = e.currentTarget;
                       card.style.transform = "scale(1)";
                       card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                    } }
+                    }}
                   >
                     <span
                       style={{
@@ -545,14 +554,12 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                       Generate Audio
                     </span>
                   </div>
-                </NavLink></>
-
+                </NavLink>
+              </>
             )}
 
-
-                <div>
-
-                <div
+            <div>
+              <div
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
@@ -594,7 +601,9 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
                     <option value="disapproved">Disapproved</option>
-                    {userRole === "User" && <option value="building">Building</option>}
+                    {userRole === "User" && (
+                      <option value="building">Building</option>
+                    )}
                   </select>
                 </div>
                 <button
@@ -637,210 +646,213 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                 </button>
               </div>
 
-            {gettingExams && <div>Loading exams...</div>}
+              {gettingExams && <div>Loading exams...</div>}
 
-            {!gettingExams && !gettingExamsError && exams.length > 0 && (
-              <div
-                style={{
-                  marginTop: "2rem",
-                  width: "100%",
-                  padding: "1rem",
-                  backgroundColor: "#fafafa",
-                  borderRadius: "8px",
-                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                }}
-              >
-                <h3 style={{ marginBottom: "1.5rem", color: "#333" }}>
-                  Pending Exams:
-                </h3>
-                {exams.map((exam) => (
-                  <div
-                    //@ts-ignore
-                    key={exam.examID}
-                    //@ts-ignore
-                    onClick={() => navigate(`/dashboard/viewExam/${exam.examID}`)} // Redirect to the exam form page
-                    style={{
-                      marginBottom: "1rem",
-                      padding: "1rem",
-                      backgroundColor: "#fff",
-                      borderRadius: "8px",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      cursor: "pointer",
-                      transition: "background-color 0.3s ease",
-                      border: "1px solid rgba(0, 0, 0, 0.05)",
-                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f9f9f9")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#fff")
-                    }
-                  >
-                    {/* Creator */}
-                    <div style={{ flex: 1, marginRight: "1rem" }}>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "12px",
-                          color: "#777",
-                        }}
-                      >
-                        Creator
-                      </p>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "14px",
-                          color: "#333",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {/*@ts-ignore*/}
-                        {exam.createdBy}
-                      </p>
-                    </div>
-
-                    {/* Date */}
-                    <div style={{ flex: 1, marginRight: "1rem" }}>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "12px",
-                          color: "#777",
-                        }}
-                      >
-                        Date
-                      </p>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "14px",
-                          color: "#333",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {/*@ts-ignore*/}
-                        {exam.creationDate}
-                      </p>
-                    </div>
-
-                    {/* Subject */}
-                    <div style={{ flex: 1, marginRight: "1rem" }}>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "12px",
-                          color: "#777",
-                        }}
-                      >
-                        Subject
-                      </p>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "14px",
-                          color: "#333",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {/*@ts-ignore*/}
-                        {exam.examSubject}
-                      </p>
-                    </div>
-
-                    {/* Class */}
-                    <div style={{ flex: 1, marginRight: "1rem" }}>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "12px",
-                          color: "#777",
-                        }}
-                      >
-                        Class
-                      </p>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "14px",
-                          color: "#333",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {/*@ts-ignore*/}
-                        {exam.examClass}
-                      </p>
-                    </div>
-
-                    {/* Semester */}
-                    <div style={{ flex: 1 }}>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "12px",
-                          color: "#777",
-                        }}
-                      >
-                        Semester
-                      </p>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "14px",
-                          color: "#333",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {/*@ts-ignore*/}
-                        {exam.examSemester}
-                      </p>
-                    </div>
-
-                    {/* State */}
+              {!gettingExams && !gettingExamsError && exams.length > 0 && (
+                <div
+                  style={{
+                    marginTop: "2rem",
+                    width: "100%",
+                    padding: "1rem",
+                    backgroundColor: "#fafafa",
+                    borderRadius: "8px",
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                  }}
+                >
+                  <h3 style={{ marginBottom: "1.5rem", color: "#333" }}>
+                    {examsType.toUpperCase()} EXAMS:
+                  </h3>
+                  {exams.map((exam) => (
                     <div
+                      //@ts-ignore
+                      key={exam.examID}
+                      //@ts-ignore
+                      onClick={() =>
+                        //@ts-ignore
+                        navigate(`/dashboard/viewExam/${exam.examID}`)
+                      } // Redirect to the exam form page
                       style={{
-                        flex: 1,
-                        textAlign: "right",
+                        marginBottom: "1rem",
+                        padding: "1rem",
+                        backgroundColor: "#fff",
+                        borderRadius: "8px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        cursor: "pointer",
+                        transition: "background-color 0.3s ease",
+                        border: "1px solid rgba(0, 0, 0, 0.05)",
+                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                       }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor = "#f9f9f9")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = "#fff")
+                      }
                     >
-                      <p
+                      {/* Creator */}
+                      <div style={{ flex: 1, marginRight: "1rem" }}>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "12px",
+                            color: "#777",
+                          }}
+                        >
+                          Creator
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "14px",
+                            color: "#333",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {/*@ts-ignore*/}
+                          {exam.createdBy}
+                        </p>
+                      </div>
+
+                      {/* Date */}
+                      <div style={{ flex: 1, marginRight: "1rem" }}>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "12px",
+                            color: "#777",
+                          }}
+                        >
+                          Date
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "14px",
+                            color: "#333",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {/*@ts-ignore*/}
+                          {exam.creationDate}
+                        </p>
+                      </div>
+
+                      {/* Subject */}
+                      <div style={{ flex: 1, marginRight: "1rem" }}>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "12px",
+                            color: "#777",
+                          }}
+                        >
+                          Subject
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "14px",
+                            color: "#333",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {/*@ts-ignore*/}
+                          {exam.examSubject}
+                        </p>
+                      </div>
+
+                      {/* Class */}
+                      <div style={{ flex: 1, marginRight: "1rem" }}>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "12px",
+                            color: "#777",
+                          }}
+                        >
+                          Class
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "14px",
+                            color: "#333",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {/*@ts-ignore*/}
+                          {exam.examClass}
+                        </p>
+                      </div>
+
+                      {/* Semester */}
+                      <div style={{ flex: 1 }}>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "12px",
+                            color: "#777",
+                          }}
+                        >
+                          Semester
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "14px",
+                            color: "#333",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {/*@ts-ignore*/}
+                          {exam.examSemester}
+                        </p>
+                      </div>
+
+                      {/* State */}
+                      <div
                         style={{
-                          marginTop: "14px",
-                          textAlign: "center",
-                          margin: 0,
-                          fontSize: "14px",
-                          fontWeight: "bold",
-                          //@ts-ignore
-                          color: getColorForState(exam.examState), // Dynamic color based on exam state
+                          flex: 1,
+                          textAlign: "right",
                         }}
                       >
-                        {/*@ts-ignore*/}
-                        {exam.examState.toUpperCase()}
-                      </p>
+                        <p
+                          style={{
+                            marginTop: "14px",
+                            textAlign: "center",
+                            margin: 0,
+                            fontSize: "14px",
+                            fontWeight: "bold",
+                            //@ts-ignore
+                            color: getColorForState(exam.examState), // Dynamic color based on exam state
+                          }}
+                        >
+                          {/*@ts-ignore*/}
+                          {exam.examState.toUpperCase()}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
 
-            {!gettingExams && gettingExamsError && (
-              <div
-                style={{
-                  marginTop: "2rem",
-                  padding: "1rem",
-                  backgroundColor: "#fff",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                  color: "red",
-                }}
-              >
-                {gettingExamsError}
-              </div>
-            )}
-          </div>
+              {!gettingExams && gettingExamsError && (
+                <div
+                  style={{
+                    marginTop: "2rem",
+                    padding: "1rem",
+                    backgroundColor: "#fff",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                    color: "red",
+                  }}
+                >
+                  {gettingExamsError}
+                </div>
+              )}
+            </div>
           </div>
         )}
         {activePage !== "/dashboard" && <Outlet />}

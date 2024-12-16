@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import invokeApig from "../lib/callAPI.ts";
 import { useParams } from "react-router-dom";
@@ -8,8 +7,6 @@ import { generateExamPDF } from "./generatePDF"; // Make sure to import the func
 import { useAlert } from "./AlertComponent";
 import { generateModelPDF } from "./generateModelAnswerPDF.tsx";
 //import { getCurrentUserEmail } from "../lib/getToken.ts";
-
-
 
 interface Part {
   part: string; // Part number or identifier
@@ -35,7 +32,7 @@ interface Question {
 
 interface ExamContent {
   parts: Part[]; // Add this to reflect the structure of the data
-  [key: string]: any; 
+  [key: string]: any;
 }
 
 const ViewExam: React.FC = () => {
@@ -56,6 +53,7 @@ const ViewExam: React.FC = () => {
   const [loadingApprove, setLoadingApprove] = useState(false);
   const [LoadingDisapprove, setLoadingDisapprove] = useState(false);
   const [examContent, setExamContent] = useState<ExamContent | null>(null);
+  const [arabExamContent, setArabExamContent] = useState("");
   const [_editMode, _setEditMode] = useState(false); // Toggle edit mode
   const [_editedContent, _setEditedContent] = useState<Record<string, any>>({});
   const [isEditing, _setIsEditing] = useState(false);
@@ -116,44 +114,42 @@ const ViewExam: React.FC = () => {
 
       content = response.examContent;
 
-      console.log(content)
+      console.log(content);
 
-      
-    // Parse examContent if it's a string
-      if (typeof content === "string") {
-      console.log("is string")
-      try {
-        const parsedContent = JSON.parse(content);
-        setExamContent(parsedContent);
-      } catch (parseError) {
-        console.error("Failed to parse exam content as JSON:", content);
-        setErrorMsg("Invalid exam data format.");
-        return;
+      if (response.examSubject !== "ARAB101") {
+        // Parse examContent if it's a string
+        if (typeof content === "string") {
+          console.log("is string");
+          try {
+            const parsedContent = JSON.parse(content);
+            setExamContent(parsedContent);
+          } catch (parseError) {
+            console.error("Failed to parse exam content as JSON:", content);
+            setErrorMsg("Invalid exam data format.");
+            return;
+          }
+        } else if (typeof content === "object") {
+          console.log("is object");
+          setExamContent(content); // Set directly if already an object
+        } else {
+          console.error("Unexpected examContent format:", typeof content);
+          setErrorMsg("Exam data format is invalid!");
+          return;
+        }
+      } else {
+        setArabExamContent(content);
       }
-      } else if (typeof content === "object") {
-        console.log("is object")
-      setExamContent(content); // Set directly if already an object
-    } else {
-      console.error("Unexpected examContent format:", typeof content);
-      setErrorMsg("Exam data format is invalid!");
-      return;
-    }
 
-    
-
-    setGrade(response.examClass || "");
-    setSubject(response.examSubject || "");
-    setSemester(response.examSemester || "");
-    setCreator(response.createdBy || "");
-    setDate(response.creationDate || "");
-    setContributers(String(response.contributers || ""));
-    setDuration(response.examDuration || "");
-    setMark(response.examMark || "");
-    setExamState(response.examState || "");
-
-
-    
-
+      setGrade(response.examClass || "");
+      setSubject(response.examSubject || "");
+      setSemester(response.examSemester || "");
+      setCreator(response.createdBy || "");
+      setDate(response.creationDate || "");
+      setContributers(String(response.contributors || ""));
+      setDuration(response.examDuration || "");
+      setMark(response.examMark || "");
+      setExamState(response.examState || "");
+      setApproverMsg(response.approverMsg || "");
     } catch (err: any) {
       console.error("Error fetching initial data:", err);
       setErrorMsg("Failed to load exam data. Please try again later.");
@@ -164,11 +160,18 @@ const ViewExam: React.FC = () => {
 
   useEffect(() => {
     if (examContent) {
-      const newTotalMarks = examContent.total_marks || examContent.parts?.reduce((sum: number, part: any) => sum + part.total_marks, 0) || 0;
+      const newTotalMarks =
+        examContent.total_marks ||
+        examContent.parts?.reduce(
+          (sum: number, part: any) => sum + part.total_marks,
+          0
+        ) ||
+        0;
       setMark(newTotalMarks); // Update the Total Marks at the top
+    } else if (arabExamContent) {
+      setMark("60")
     }
   }, [examContent]);
-
 
   const fetchExamContent = async () => {
     try {
@@ -177,41 +180,52 @@ const ViewExam: React.FC = () => {
         path: `/examForm/${id}`,
         method: "GET",
       });
-  
+
       console.log("Raw Exam Content from Backend:", response.examContent);
-  
+
       if (!response.examContent) {
         setErrorMsg("Exam content is missing from the response.");
         return;
       }
-  
-      let parsedContent;
-      try {
-        // Extract the JSON portion from the descriptive text
-        const jsonStartIndex = response.examContent.indexOf("{");
-        const jsonEndIndex = response.examContent.lastIndexOf("}");
-        if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
-          const jsonString = response.examContent.substring(jsonStartIndex, jsonEndIndex + 1).trim();
-          console.log("Extracted JSON String:", jsonString);
-          parsedContent = JSON.parse(jsonString); // Parse the JSON object
-        } else {
-          throw new Error("No valid JSON found in examContent string.");
+
+      if (response.examSubject !== "ARAB101") { 
+
+        let parsedContent;
+        try {
+          // Extract the JSON portion from the descriptive text
+          const jsonStartIndex = response.examContent.indexOf("{");
+          const jsonEndIndex = response.examContent.lastIndexOf("}");
+          if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+            const jsonString = response.examContent
+            .substring(jsonStartIndex, jsonEndIndex + 1)
+            .trim();
+            console.log("Extracted JSON String:", jsonString);
+            parsedContent = JSON.parse(jsonString); // Parse the JSON object
+          } else {
+            throw new Error("No valid JSON found in examContent string.");
+          }
+        } catch (error) {
+          console.error(
+            "Failed to parse exam content as JSON:",
+            response.examContent
+          );
+          setErrorMsg("Invalid exam content format!");
+          return;
         }
-      } catch (error) {
-        console.error("Failed to parse exam content as JSON:", response.examContent);
-        setErrorMsg("Invalid exam content format!");
-        return;
+        
+        setExamContent(parsedContent);
+        console.log(
+          "Parsed Exam Content Successfully Set in State:",
+          parsedContent
+        );
+      } else {
+        setArabExamContent(response.examContent);
       }
-  
-      setExamContent(parsedContent);
-      console.log("Parsed Exam Content Successfully Set in State:", parsedContent);
     } catch (error) {
       console.error("Error fetching exam content:", error);
       setErrorMsg("Failed to load exam content. Please try again later.");
     }
   };
-
-  
 
   useEffect(() => {
     const loadExamContent = async () => {
@@ -225,10 +239,9 @@ const ViewExam: React.FC = () => {
     loadExamContent();
   }, [id]);
 
-
   useEffect(() => {
     let isCancelled = false;
-  
+
     const timer = setTimeout(async () => {
       try {
         if (!isCancelled) {
@@ -241,7 +254,7 @@ const ViewExam: React.FC = () => {
         }
       }
     }, 2000); // 2-second delay
-  
+
     // Cleanup function to handle component unmount
     return () => {
       clearTimeout(timer);
@@ -337,57 +350,6 @@ const ViewExam: React.FC = () => {
   };
 
 
-
-
-  // const renderExamParts = (part: any, partKey: string) => {
-  //   //const partFeedback = feedback[partKey] || ""; // Feedback for this part
-  
-  //   return (
-  //     <div key={partKey} style={{ marginBottom: "30px" }}>
-  //       <h2>
-  //         Part {part.part}: {part.title}
-  //       </h2>
-  //       <p>Total Marks: {part.total_marks}</p>
-  
-  //       {part.subsections?.map((subsection: any, subKey: number) => (
-  //         <div key={`${partKey}-${subKey}`} style={{ marginBottom: "15px" }}>
-  //           <h3>
-  //             Subsection {subsection.subsection}: {subsection.title}
-  //           </h3>
-  //           <p>Marks: {subsection.marks}</p>
-  
-  //           {/* Render content */}
-  //           {subsection.content && (
-  //             <div>
-  //               {subsection.content.passage && (
-  //                 <p>
-  //                   <strong>Passage:</strong> {subsection.content.passage}
-  //                 </p>
-  //               )}
-  //               {subsection.content.dialogue && (
-  //                 <p>
-  //                   <strong>Dialogue:</strong> {subsection.content.dialogue}
-  //                 </p>
-  //               )}
-  //               {subsection.content.questions && (
-  //                 <ul>
-  //                   {subsection.content.questions.map(
-  //                     (question: any, qIndex: number) => (
-  //                       <li key={qIndex}>
-  //                         {question.type}: {question.question}
-  //                       </li>
-  //                     )
-  //                   )}
-  //                 </ul>
-  //               )}
-  //             </div>
-  //           )}
-  //         </div>
-  //       ))}
-  
-  //     </div>
-  //   );
-  // };
 
   // Show loading state
   if (loadingPage) {
@@ -858,255 +820,365 @@ const ViewExam: React.FC = () => {
           backgroundColor: "#fff",
           borderRadius: "8px",
           boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+          marginTop:"1rem"
         }}
       >
         {/* Title and Overview */}
-  <p>
-    <strong>{examContent?.title}</strong> 
-  </p>
-  <p>
-    <strong>Total Marks:</strong> {examContent?.total_marks}
-  </p>
-  <p>
-    <strong>Time:</strong> {examContent?.time}
-  </p>
-
-
-   {/* Render Sections */}
-   {examContent?.sections?.map((section: any, sectionIndex: number) =>  (
-    <div
-      key={`section-${sectionIndex}`}
-      style={{
-        marginTop: "1rem",
-        padding: "1rem",
-        backgroundColor: "#f9f9f9",
-        borderRadius: "8px",
-        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-      }}
-    >
-      {/* Section Title */}
-      <h3 style={{ fontWeight: "bold", marginBottom: "1rem" }}>
-        Part {section.part}: {section.title} (Total Marks: {section.total_marks})
-      </h3>
-
-      {/* Feedback Text Area for Section */}
-      {isEditing && (
-        <textarea
-          placeholder={`Provide feedback for Part ${section.part}: ${section.title}`}
-          value={feedback[`section-${sectionIndex}`] || ""}
-          onChange={(e) =>
-            setFeedback((prev) => ({
-              ...prev,
-              [`section-${sectionIndex}`]: e.target.value,
-            }))
-          }
-          style={{
-            width: "100%",
-            minHeight: "60px",
-            marginTop: "10px",
-            padding: "10px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-            backgroundColor: "#ffffff",
-          }}
-        />
-      )}
-
-       {/* Render Subsections */}
-
-      {/* Subsections (Optional) */}
-      {section.subsections?.map((subsection: any, subIndex: number) => (
-        <div
-          key={`subsection-${sectionIndex}-${subIndex}`}
-          style={{
-            marginTop: "1rem",
-            padding: "1rem",
-            backgroundColor: "#ffffff",
-            borderRadius: "8px",
-            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
-          }}
-        >
-          <h4 style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>
-          {subsection.subsection}: {subsection.title} ({subsection.marks} Marks)
-          </h4>
-
-          {/* Content */}
-           {/* Content: Passage or Dialogue "listening"*/}
-          {subsection.content?.passage && (
-            <p style={{ fontStyle: "italic", marginBottom: "1rem" }}>
-              {subsection.content.passage}
+        {subject === "ENG102" && (
+          <div>
+            <p>
+              <strong>{examContent?.title}</strong>
             </p>
-          )}
-          {subsection.content?.dialogue && (
-            <pre
-              style={{
-                fontStyle: "italic",
-                marginBottom: "1rem",
-                whiteSpace: "pre-wrap",
-                backgroundColor: "#f8f8f8",
-                padding: "10px",
-                borderRadius: "4px",
-              }}
-            >
-              {subsection.content.dialogue}
-            </pre>
-          )}
+            <p>
+              <strong>Total Marks:</strong> {examContent?.total_marks}
+            </p>
+            <p>
+              <strong>Time:</strong> {examContent?.time}
+            </p>
 
-       {/* Questions */}
-       {subsection.content?.questions && Array.isArray(subsection.content.questions) && (
-            <div style={{ marginBottom: "20px" }}>
-              <h4>Questions:</h4>
-              <ul>
-                {subsection.content.questions.map((question: any, questionIndex: number) => (
-                  <li key={`question-${sectionIndex}-${subIndex}-${questionIndex}`}>
-                    <p>
-                      <strong>Q{questionIndex + 1}:</strong> {question.question || question.sentence}
-                    </p>
-                    {/* Options for Multiple-Choice Questions */}
-                    {question.options && (
-                      <ul style={{ listStyleType: "disc", marginLeft: "20px" }}>
-                        {question.options.map((option: string, optionIndex: number) => (
-                          <li key={`option-${questionIndex}-${optionIndex}`}>
-                            {String.fromCharCode(65 + optionIndex)}. {option}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    {/* Answer */}
-                    {question.answer && <p><strong>Answer:</strong> {question.answer}</p>}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+            {/* Render Sections */}
+            {examContent?.sections?.map(
+              (section: any, sectionIndex: number) => (
+                <div
+                  key={`section-${sectionIndex}`}
+                  style={{
+                    marginTop: "1rem",
+                    padding: "1rem",
+                    backgroundColor: "#f9f9f9",
+                    borderRadius: "8px",
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                  }}
+                >
+                  {/* Section Title */}
+                  <h3 style={{ fontWeight: "bold", marginBottom: "1rem" }}>
+                    Part {section.part}: {section.title} (Total Marks:{" "}
+                    {section.total_marks})
+                  </h3>
 
-          {/* True/False Questions */}
-{subsection.content?.questions?.["true-false"] && (
-  <div style={{ marginBottom: "20px" }}>
-    <h4>True/False Questions:</h4>
-    {subsection.content.questions["true-false"].map((question: any, questionIndex: number) => (
-      <p key={`true-false-${questionIndex}`} style={{ marginTop: "10px", marginBottom: "10px" }}>
-        {question.statement}________ (<span style={{ fontWeight: "bold" }}>answer: {question.answer}</span>)
-      </p>
-    ))}
-  </div>
-)}
+                  {/* Feedback Text Area for Section */}
+                  {isEditing && (
+                    <textarea
+                      placeholder={`Provide feedback for Part ${section.part}: ${section.title}`}
+                      value={feedback[`section-${sectionIndex}`] || ""}
+                      onChange={(e) =>
+                        setFeedback((prev) => ({
+                          ...prev,
+                          [`section-${sectionIndex}`]: e.target.value,
+                        }))
+                      }
+                      style={{
+                        width: "100%",
+                        minHeight: "60px",
+                        marginTop: "10px",
+                        padding: "10px",
+                        borderRadius: "4px",
+                        border: "1px solid #ccc",
+                        backgroundColor: "#ffffff",
+                      }}
+                    />
+                  )}
 
+                  {/* Render Subsections */}
 
+                  {/* Subsections (Optional) */}
+                  {section.subsections?.map(
+                    (subsection: any, subIndex: number) => (
+                      <div
+                        key={`subsection-${sectionIndex}-${subIndex}`}
+                        style={{
+                          marginTop: "1rem",
+                          padding: "1rem",
+                          backgroundColor: "#ffffff",
+                          borderRadius: "8px",
+                          boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                        }}
+                      >
+                        <h4
+                          style={{ fontWeight: "bold", marginBottom: "0.5rem" }}
+                        >
+                          {subsection.subsection}: {subsection.title} (
+                          {subsection.marks} Marks)
+                        </h4>
 
-          {/* Vocabulary Matching */}
-{subsection.content?.questions?.["vocabulary-matching"] && (
-  <div style={{ marginBottom: "20px" }}>
-    <h4>Vocabulary Matching:</h4>
-    <p style={{ fontWeight: "bold", marginBottom: "10px" }}>Words:</p>
-    <ul style={{ marginLeft: "20px" }}>
-      {subsection.content.questions["vocabulary-matching"].map(
-        (question: any, questionIndex: number) => (
-          <li key={`word-${questionIndex}`} style={{ listStyleType: "circle" }}>
-            {question.word}
-          </li>
-        )
-      )}
-    </ul>
-    {subsection.content.questions["vocabulary-matching"].map(
-      (question: any, questionIndex: number) => (
-        <p key={`definition-${questionIndex}`} style={{ marginTop: "10px" }}>
-          {question.definition}: <span style={{ fontWeight: "bold" }}>________</span>
-          <br />
-          <strong>Answer:</strong> {question.word}
-        </p>
-      )
-    )}
-  </div>
-)}
+                        {/* Content */}
+                        {/* Content: Passage or Dialogue "listening"*/}
+                        {subsection.content?.passage && (
+                          <p
+                            style={{
+                              fontStyle: "italic",
+                              marginBottom: "1rem",
+                            }}
+                          >
+                            {subsection.content.passage}
+                          </p>
+                        )}
+                        {subsection.content?.dialogue && (
+                          <pre
+                            style={{
+                              fontStyle: "italic",
+                              marginBottom: "1rem",
+                              whiteSpace: "pre-wrap",
+                              backgroundColor: "#f8f8f8",
+                              padding: "10px",
+                              borderRadius: "4px",
+                            }}
+                          >
+                            {subsection.content.dialogue}
+                          </pre>
+                        )}
 
+                        {/* Questions */}
+                        {subsection.content?.questions &&
+                          Array.isArray(subsection.content.questions) && (
+                            <div style={{ marginBottom: "20px" }}>
+                              <h4>Questions:</h4>
+                              <ul>
+                                {subsection.content.questions.map(
+                                  (question: any, questionIndex: number) => (
+                                    <li
+                                      key={`question-${sectionIndex}-${subIndex}-${questionIndex}`}
+                                    >
+                                      <p>
+                                        <strong>Q{questionIndex + 1}:</strong>{" "}
+                                        {question.question || question.sentence}
+                                      </p>
+                                      {/* Options for Multiple-Choice Questions */}
+                                      {question.options && (
+                                        <ul
+                                          style={{
+                                            listStyleType: "disc",
+                                            marginLeft: "20px",
+                                          }}
+                                        >
+                                          {question.options.map(
+                                            (
+                                              option: string,
+                                              optionIndex: number
+                                            ) => (
+                                              <li
+                                                key={`option-${questionIndex}-${optionIndex}`}
+                                              >
+                                                {String.fromCharCode(
+                                                  65 + optionIndex
+                                                )}
+                                                . {option}
+                                              </li>
+                                            )
+                                          )}
+                                        </ul>
+                                      )}
+                                      {/* Answer */}
+                                      {question.answer && (
+                                        <p>
+                                          <strong>Answer:</strong>{" "}
+                                          {question.answer}
+                                        </p>
+                                      )}
+                                    </li>
+                                  )
+                                )}
+                              </ul>
+                            </div>
+                          )}
 
+                        {/* True/False Questions */}
+                        {subsection.content?.questions?.["true-false"] && (
+                          <div style={{ marginBottom: "20px" }}>
+                            <h4>True/False Questions:</h4>
+                            {subsection.content.questions["true-false"].map(
+                              (question: any, questionIndex: number) => (
+                                <p
+                                  key={`true-false-${questionIndex}`}
+                                  style={{
+                                    marginTop: "10px",
+                                    marginBottom: "10px",
+                                  }}
+                                >
+                                  {question.statement}________ (
+                                  <span style={{ fontWeight: "bold" }}>
+                                    answer: {question.answer}
+                                  </span>
+                                  )
+                                </p>
+                              )
+                            )}
+                          </div>
+                        )}
 
+                        {/* Vocabulary Matching */}
+                        {subsection.content?.questions?.[
+                          "vocabulary-matching"
+                        ] && (
+                          <div style={{ marginBottom: "20px" }}>
+                            <h4>Vocabulary Matching:</h4>
+                            <p
+                              style={{
+                                fontWeight: "bold",
+                                marginBottom: "10px",
+                              }}
+                            >
+                              Words:
+                            </p>
+                            <ul style={{ marginLeft: "20px" }}>
+                              {subsection.content.questions[
+                                "vocabulary-matching"
+                              ].map((question: any, questionIndex: number) => (
+                                <li
+                                  key={`word-${questionIndex}`}
+                                  style={{ listStyleType: "circle" }}
+                                >
+                                  {question.word}
+                                </li>
+                              ))}
+                            </ul>
+                            {subsection.content.questions[
+                              "vocabulary-matching"
+                            ].map((question: any, questionIndex: number) => (
+                              <p
+                                key={`definition-${questionIndex}`}
+                                style={{ marginTop: "10px" }}
+                              >
+                                {question.definition}:{" "}
+                                <span style={{ fontWeight: "bold" }}>
+                                  ________
+                                </span>
+                                <br />
+                                <strong>Answer:</strong> {question.word}
+                              </p>
+                            ))}
+                          </div>
+                        )}
 
-           {/* Exercises (Specific to "Use of English") */}
-           {subsection.content?.exercises && (
-            <div style={{ marginBottom: "20px" }}>
-              <h4>Exercises:</h4>
-              <ul>
-                {subsection.content.exercises.map((exercise: any, exerciseIndex: number) => (
-                  <li key={`exercise-${sectionIndex}-${subIndex}-${exerciseIndex}`} style={{ marginBottom: "10px" }}>
-                    <p>
-                      <strong>Type:</strong> {exercise.type}
-                    </p>
-                    <p>
-                      <strong>{exercise.question}</strong> 
-                    </p>
-                    <p>
-                      <strong>Answer:</strong> {exercise.answer}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+                        {/* Exercises (Specific to "Use of English") */}
+                        {subsection.content?.exercises && (
+                          <div style={{ marginBottom: "20px" }}>
+                            <h4>Exercises:</h4>
+                            <ul>
+                              {subsection.content.exercises.map(
+                                (exercise: any, exerciseIndex: number) => (
+                                  <li
+                                    key={`exercise-${sectionIndex}-${subIndex}-${exerciseIndex}`}
+                                    style={{ marginBottom: "10px" }}
+                                  >
+                                    <p>
+                                      <strong>Type:</strong> {exercise.type}
+                                    </p>
+                                    <p>
+                                      <strong>{exercise.question}</strong>
+                                    </p>
+                                    <p>
+                                      <strong>Answer:</strong> {exercise.answer}
+                                    </p>
+                                  </li>
+                                )
+                              )}
+                            </ul>
+                          </div>
+                        )}
 
-         
+                        {/* Feedback Text Area for Subsection */}
+                        {isEditing && (
+                          <textarea
+                            placeholder={`Provide feedback for Subsection ${subsection.subsection}: ${subsection.title}`}
+                            value={
+                              feedback[
+                                `section-${sectionIndex}-subsection-${subIndex}`
+                              ] || ""
+                            }
+                            onChange={(e) =>
+                              setFeedback((prev) => ({
+                                ...prev,
+                                [`section-${sectionIndex}-subsection-${subIndex}`]:
+                                  e.target.value,
+                              }))
+                            }
+                            style={{
+                              width: "100%",
+                              minHeight: "60px",
+                              marginTop: "10px",
+                              padding: "10px",
+                              borderRadius: "4px",
+                              border: "1px solid #ccc",
+                              backgroundColor: "#ffffff",
+                            }}
+                          />
+                        )}
+                      </div>
+                    )
+                  )}
+                </div>
+              )
+            )}
 
-
-
-
-          {/* Feedback Text Area for Subsection */}
-          {isEditing && (
-            <textarea
-              placeholder={`Provide feedback for Subsection ${subsection.subsection}: ${subsection.title}`}
-              value={feedback[`section-${sectionIndex}-subsection-${subIndex}`] || ""}
-              onChange={(e) =>
-                setFeedback((prev) => ({
-                  ...prev,
-                  [`section-${sectionIndex}-subsection-${subIndex}`]: e.target.value,
-                }))
-              }
-              style={{
-                width: "100%",
-                minHeight: "60px",
-                marginTop: "10px",
-                padding: "10px",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                backgroundColor: "#ffffff",
-              }}
-            />
-          )}
-        </div>
-      ))}
-
-
-    </div>
-  ))}
-
-  {/* Writing Section */}
-{ examContent?.sections?.some((section: any) => section.part === "3") ? (
-    examContent.sections.map((section: any, sectionIndex: number) => {
-      if (section.part === "3") {
-        return (
-          <div key={`writing-${sectionIndex}`} style={{ marginTop: "20px" }}>
-            <h2>Part {section.part}: Writing (Total Marks: {section.total_marks})</h2>
-            {section.content?.questions?.map((question: any, questionIndex: number) => (
-              <div key={`writing-question-${questionIndex}`} style={{ marginLeft: "20px" }}>
-                <p>
-                  <strong>{question.type}:</strong> {question.prompt}
-                </p>
-                <p>
-                  <strong>Word Limit:</strong> {question.word_limit}
-                </p>
-              </div>
-            ))}
+            {/* Writing Section */}
+            {examContent?.sections?.some(
+              (section: any) => section.part === "3"
+            ) ? (
+              examContent.sections.map((section: any, sectionIndex: number) => {
+                if (section.part === "3") {
+                  return (
+                    <div
+                      key={`writing-${sectionIndex}`}
+                      style={{ marginTop: "20px" }}
+                    >
+                      <h2>
+                        Part {section.part}: Writing (Total Marks:{" "}
+                        {section.total_marks})
+                      </h2>
+                      {section.content?.questions?.map(
+                        (question: any, questionIndex: number) => (
+                          <div
+                            key={`writing-question-${questionIndex}`}
+                            style={{ marginLeft: "20px" }}
+                          >
+                            <p>
+                              <strong>{question.type}:</strong>{" "}
+                              {question.prompt}
+                            </p>
+                            <p>
+                              <strong>Word Limit:</strong> {question.word_limit}
+                            </p>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  );
+                }
+                return null;
+              })
+            ) : (
+              <p></p>
+            )}
           </div>
-        );
-      }
-      return null;
-    })
-  ) : (
-    <p></p>
-  )}
+        )}
 
+        {subject === "ARAB101" && (
+          <div style={{ minWidth: "100%", minHeight: "500px" }}>
+          <h3 style={{ fontWeight: "bold" }}>ARAB101 Exam</h3>
 
-
+          <textarea
+            name=""
+            id=""
+            readOnly
+            dir="rtl"
+            style={{
+              textAlign: "right",
+              width: "100%", // Adjust width as needed
+              height: "500px", // Fixed height
+              padding: "10px", // Add padding for readability
+              fontFamily: "Arial, sans-serif", // Ensure support for Arabic fonts
+              fontSize: "16px", // Adjust font size for better readability
+              lineHeight: "1.5", // Improve line spacing
+              resize: "none", // Disable resizing
+              border: "1px solid #ddd", // Subtle border
+              borderRadius: "5px", // Rounded corners
+              backgroundColor: "#f9f9f9", // Light background color
+            }}
+          >
+            {arabExamContent}
+          </textarea>
+            </div>
+        )}
 
         <div
           style={{
@@ -1162,7 +1234,6 @@ const ViewExam: React.FC = () => {
                   justifyContent: "space-between",
                 }}
               >
-
                 <button
                   onClick={approveExam}
                   disabled={loadingChangeState}
@@ -1282,7 +1353,7 @@ const ViewExam: React.FC = () => {
           {/* download PDF start here */}
           <div>
             {/* Conditionally render the "Download PDF" button if the exam is approved */}
-            {examState === "approved" && (
+            {examState === "approved" && subject === "ENG102" &&(
               <button
                 onClick={handleDownloadPDF} // This triggers the PDF download function
                 style={{
@@ -1317,7 +1388,7 @@ const ViewExam: React.FC = () => {
           {/* download Audio start here */}
           <div>
             {/* Conditionally render the "Download Audio" button if the exam is approved */}
-            {examState === "approved" && (
+            {examState === "approved" && subject === "ENG102" && (
               <button
                 onClick={handleDownloadAudio} // This triggers the Audio download function
                 style={{
