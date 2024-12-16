@@ -169,7 +169,7 @@ export function InitialForm() {
         Generate Exam
       </h2>
 
-      {/* //Buttons for selecting exam type
+      {/* Buttons for selecting exam type */}
       <div
         style={{
           display: "flex",
@@ -179,7 +179,7 @@ export function InitialForm() {
           marginBottom: "2rem",
         }}
       >
-        //Create New Exam Button 
+        {/*Create New Exam Button */}
         <div
           onClick={() => handleSelection(true)}
           style={{
@@ -196,7 +196,7 @@ export function InitialForm() {
           Create New Exam
         </div>
 
-        //Use Existing Exam Button*
+        {/*Use Existing Exam Button*/}
         <div
           onClick={() => handleSelection(false)}
           style={{
@@ -212,7 +212,7 @@ export function InitialForm() {
         >
           Use Existing Exam
         </div> 
-      </div> */}
+      </div> 
 
       <span>
         <p style={{ color: "red" }}>{errorMsg}</p>
@@ -241,7 +241,7 @@ export function InitialForm() {
               gap: "1.5rem",
             }}
           >
-            {/* <div style={{ width: "100%" }}>
+            <div style={{ width: "100%" }}>
               <label
                 style={{
                   display: "flex",
@@ -263,7 +263,7 @@ export function InitialForm() {
                 />
                 Customize
               </label> 
-            </div>*/}
+            </div>
 
             <label
               style={{
