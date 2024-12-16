@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import invokeApig from "../lib/callAPI.ts";
 import { getCurrentUserEmail } from "../lib/getToken.js";
 import { getFormattedDateTime } from "../lib/getDateTime.js";
 import { useNavigate } from "react-router-dom";
@@ -21,50 +20,50 @@ export function InitialForm() {
   const [newExam, setNewExam] = useState(true); // Track which option is selected
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [gettingExams, setGettingExams] = useState(true);
-  const [gettingExamsError, setGetExamsError] = useState("");
-  const [exams, setExams] = useState([]);
+  // const [gettingExams, setGettingExams] = useState(true);
+  // const [gettingExamsError, setGetExamsError] = useState("");
+  // const [exams, setExams] = useState([]);
   const navigate = useNavigate();
 
-  // Fetch initial data
-  const fetchInitialData = async () => {
-    try {
-        //@ts-ignore
-        const response = await invokeApig({
-          path: `/getBuildingExams`, // Adjust path as needed
-          method: "GET",
-        });
+  // // Fetch initial data
+  // const fetchInitialData = async () => {
+  //   try {
+  //       //@ts-ignore
+  //       const response = await invokeApig({
+  //         path: `/getBuildingExams`, // Adjust path as needed
+  //         method: "GET",
+  //       });
 
-      if (!response || Object.keys(response).length === 0) {
-        console.log(response);
-        setGetExamsError("No exams found!");
-        return;
-      }
+  //     if (!response || Object.keys(response).length === 0) {
+  //       console.log(response);
+  //       setGetExamsError("No exams found!");
+  //       return;
+  //     }
 
-      // Store the retrieved exams in the state
-      setExams(response);
+  //     // Store the retrieved exams in the state
+  //     setExams(response);
 
-      console.log("Initial Data Loaded:", response);
-    } catch (err: any) {
-      console.error("Error fetching initial data:", err);
-    } finally {
-      setGettingExams(false); // Mark loading as complete
-    }
-  };
+  //     console.log("Initial Data Loaded:", response);
+  //   } catch (err: any) {
+  //     console.error("Error fetching initial data:", err);
+  //   } finally {
+  //     setGettingExams(false); // Mark loading as complete
+  //   }
+  // };
 
-  useEffect(() => {
-    // Add a timeout before fetching data
-    const timer = setTimeout(() => {
-      fetchInitialData();
-    }, 2000);
+  // useEffect(() => {
+  //   // Add a timeout before fetching data
+  //   const timer = setTimeout(() => {
+  //     fetchInitialData();
+  //   }, 2000);
 
-    // Cleanup the timeout if the component unmounts
-    return () => clearTimeout(timer);
-  }, []);
+  //   // Cleanup the timeout if the component unmounts
+  //   return () => clearTimeout(timer);
+  // }, []);
 
-  const handleSelection = (isNewExam: boolean) => {
-    setNewExam(isNewExam);
-  };
+  // const handleSelection = (isNewExam: boolean) => {
+  //   setNewExam(isNewExam);
+  // };
 
   const handleInitialFormSubmition = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,50 +168,6 @@ export function InitialForm() {
         Generate Exam
       </h2>
 
-      {/* Buttons for selecting exam type */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          gap: "1rem",
-          marginTop: "2rem",
-          marginBottom: "2rem",
-        }}
-      >
-        {/*Create New Exam Button */}
-        <div
-          onClick={() => handleSelection(true)}
-          style={{
-            padding: "1rem 2rem",
-            borderRadius: "8px",
-            cursor: "pointer",
-            backgroundColor: newExam ? "#4b4b4b" : "transparent", // Green if selected
-            color: newExam ? "#fff" : "#000", // White text if selected
-            border: newExam ? "2px solid #4b4b4b" : "2px solid #ccc",
-            fontWeight: newExam ? "bold" : "normal",
-            transition: "background-color 0.3s ease, border 0.3s ease",
-          }}
-        >
-          Create New Exam
-        </div>
-
-        {/*Use Existing Exam Button*/}
-        <div
-          onClick={() => handleSelection(false)}
-          style={{
-            padding: "1rem 2rem",
-            borderRadius: "8px",
-            cursor: "pointer",
-            backgroundColor: !newExam ? "#4b4b4b" : "transparent", // Green if selected
-            color: !newExam ? "#fff" : "#000", // White text if selected
-            border: !newExam ? "2px solid #4b4b4b" : "2px solid #ccc",
-            fontWeight: !newExam ? "bold" : "normal",
-            transition: "background-color 0.3s ease, border 0.3s ease",
-          }}
-        >
-          Use Existing Exam
-        </div> 
-      </div> 
 
       <span>
         <p style={{ color: "red" }}>{errorMsg}</p>
@@ -241,30 +196,6 @@ export function InitialForm() {
               gap: "1.5rem",
             }}
           >
-            <div style={{ width: "100%" }}>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  fontSize: "16px",
-                  color: "#4b4b4b",
-                  fontWeight: "bold",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={customize}
-                  onChange={(e) => {
-                    setCustomize(e.target.checked);
-                  }}
-                  style={{
-                    marginRight: "0.5rem",
-                  }}
-                />
-                Customize
-              </label> 
-            </div>
-
             <label
               style={{
                 flex: "1",

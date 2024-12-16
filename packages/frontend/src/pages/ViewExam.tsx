@@ -1388,7 +1388,7 @@ const ViewExam: React.FC = () => {
           {/* download Audio start here */}
           <div>
             {/* Conditionally render the "Download Audio" button if the exam is approved */}
-            {examState === "approved" && (
+            {examState === "approved" && subject === "ENG102" && (
               <button
                 onClick={handleDownloadAudio} // This triggers the Audio download function
                 style={{

@@ -31,7 +31,6 @@ export async function getExams(event: APIGatewayProxyEvent) {
       };
       
     body = await dynamodb.query(params);
-    console.log(body);
   } catch (error) {
     console.error("Error querying exams:", error);
     statusCode = 400;
