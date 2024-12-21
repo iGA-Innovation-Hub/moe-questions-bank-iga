@@ -9,8 +9,10 @@ export function FunctionsStack({ stack }: StackContext) {
     memorySize: 512,
     url: {
       cors: {
+        allowMethods: ["POST"],
         allowOrigins: ["*"],
       },
+      
     },
     permissions: ["dynamodb", "bedrock", exams_table],
     environment: {

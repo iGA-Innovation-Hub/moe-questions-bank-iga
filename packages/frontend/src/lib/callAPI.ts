@@ -13,12 +13,14 @@ export default async function invokeApig({
   headers = {},
   queryParams = {},
   body,
+  isFunction = false,
 }: {
   path: string; // Correct type definition
   method?: string;
   headers?: Record<string, string>;
   queryParams?: Record<string, string | number>;
   body: any;
+  isFunction: boolean;
 }) {
   const currentUser = getCurrentUser();
   if (!currentUser) {
@@ -34,8 +36,18 @@ export default async function invokeApig({
   //@ts-ignore
   const { accessKeyId, secretAccessKey, sessionToken } = credentials;
 
+  console.log("Credentials:", { accessKeyId, secretAccessKey, sessionToken });
+
   if (!accessKeyId || !secretAccessKey || !sessionToken) {
     throw new Error("AWS credentials are not available.");
+  }
+
+  let url = import.meta.env.VITE_API_URL
+  let service = "execute-api";
+
+  if (isFunction) { 
+    url = import.meta.env.VITE_CREATE_EXAM_FUNCTION_URL;
+    service = "lambda";
   }
 
   // sigV4 is needed as our API authorizer is IAM
@@ -44,7 +56,8 @@ export default async function invokeApig({
     secretKey: secretAccessKey,
     sessionToken: sessionToken,
     region: import.meta.env.VITE_REGION,
-    endpoint: import.meta.env.VITE_API_URL,
+    endpoint: url,
+    serviceName: service,
   });
 
   // Signs the request with the appropriate data
@@ -56,18 +69,21 @@ export default async function invokeApig({
     body,
   });
 
+  console.log("Signed Request:", signedRequest);
+
   body = body ? JSON.stringify(body) : body;
 
   //Sends the signed request
 
   console.log("Request Payload:", { path, method, headers, queryParams, body });
-  
+
   const results = await fetch(signedRequest.url, {
-   method,
+    method,
     headers: signedRequest.headers,
     body,
   });
-  
+
+  // console.log("Response:", results);
 
   if (!results.ok) {
     const errorText = await results.text();
