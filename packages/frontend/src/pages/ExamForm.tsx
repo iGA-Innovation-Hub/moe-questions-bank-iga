@@ -66,7 +66,6 @@ const ExamForm: React.FC = () => {
   const [loadingApproval, setLoadingApproval] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [feedback, setFeedback] = useState<{ [section: string]: string }>({});
-  const [feedbackArab, setFeedbackArab] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
   const { id } = useParams<{ id: string }>();
