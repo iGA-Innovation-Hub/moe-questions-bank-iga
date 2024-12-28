@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../lib/contextLib";
 import { NavLink, Outlet } from "react-router-dom";
 import invokeApig from "../lib/callAPI.ts";
+import { deleteCookie } from "../lib/cookies.ts";
+import { useAlert } from "./AlertComponent";
 
 interface UserDashboardProps {}
 
@@ -31,6 +33,8 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
   const [filterValue, setFilterValue] = useState(
     userRole === "User" ? "building" : "pending"
   );
+
+  const { showAlert } = useAlert(); 
 
 
 
@@ -158,11 +162,17 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
   }, [filterValue]); // Dependency array ensures fetchExamCount is only called when `filterValue` changes
 
   async function handleSignOut() {
-    await signOut();
-    localStorage.removeItem("isAuthenticated");
-    localStorage.removeItem("userRole");
-    userHasAuthenticated(false);
-    navigate("/login");
+    showAlert({
+      type: "confirm",
+      message: "Are you sure you want to sign out?",
+      action: async () => {
+        await signOut();
+        deleteCookie("isAuthenticated");
+        deleteCookie("userRole");
+        userHasAuthenticated(false);
+        navigate("/login");
+      }
+    })
   }
 
   return (

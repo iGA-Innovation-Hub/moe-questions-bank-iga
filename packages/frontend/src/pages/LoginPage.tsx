@@ -9,6 +9,7 @@ import { useAppContext } from "../lib/contextLib";
 import { getCurrentUser } from "../lib/getToken";
 import { signOut } from "aws-amplify/auth";
 import { getUserAttributes } from "../lib/getUserAttributes";
+import { setCookie, deleteCookie, getCookie } from "../lib/cookies";
 
 export default function Login() {
   const [username, setEmail] = useState("");
@@ -25,12 +26,14 @@ export default function Login() {
   useEffect(() => {
     const handleSignOutIfAuthenticated = async () => {
       const currentUser = getCurrentUser();
-      if (currentUser && localStorage.getItem("isAuthenticated")) {
+      if (currentUser && getCookie("isAuthenticated")) {
         try {
           await signOut();
           userHasAuthenticated(false);
-          localStorage.removeItem("isAuthenticated");
-          localStorage.removeItem("userRole");
+          // localStorage.removeItem("isAuthenticated");
+          // localStorage.removeItem("userRole");
+          deleteCookie("isAuthenticated");
+          deleteCookie("userRole");
           console.log("User signed out");
         } catch (error) {
           console.error("Error during sign-out:", error);
@@ -62,8 +65,10 @@ export default function Login() {
       updateUserRole(role);
 
       // Persist state in localStorage
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userRole", role);
+      // localStorage.setItem("isAuthenticated", "true");
+      // localStorage.setItem("userRole", role);
+      setCookie("isAuthenticated", "true", 1);
+      setCookie("userRole", role, 1);
 
       navigate("/dashboard");
     } catch (error) {
