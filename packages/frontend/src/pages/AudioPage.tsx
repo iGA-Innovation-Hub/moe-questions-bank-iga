@@ -22,6 +22,7 @@ const AudioScriptForm: React.FC = () => {
 
     try {
       // Send the form data to the API
+      //@ts-ignore
       const response = await invokeApig({
         path: "/convertToAudio",
         method: "POST",

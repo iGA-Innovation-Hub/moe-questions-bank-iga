@@ -246,70 +246,6 @@ const ExamForm: React.FC = () => {
     }
   };
 
-  const handleArabicFeedback = async () => {
-    console.log("Arabic Feedback Received:", feedbackArab);
-    if (!feedbackArab) { 
-      return;
-    }
-    let currentUser = await getCurrentUserEmail();
-    let newContributers = contributers;
-    if (currentUser) {
-      if (!contributers.includes(currentUser)) {
-        newContributers += " " + currentUser;
-        console.log("Contributors: " + newContributers);
-      }
-    }
-
-    const requestBody = {
-      examID: id!, // Exam ID
-      feedback: feedbackArab, // Include all provided feedback
-      contributors: newContributers, // Current user as contributor
-    };
-
-    console.log("Submitting Feedback Request:", requestBody);
-
-    try {
-      setLoading(true);
-
-      const functionURL = import.meta.env.VITE_CREATE_EXAM_FUNCTION_URL;
-      console.log("Function URL:", functionURL);
-
-      const response = await fetch(functionURL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      console.log("API Response:", response);
-
-      const data = await response.json();
-
-      // Check if the backend returns the updated content
-      if (data.updatedExamContent) {
-        console.log("Updated Exam Content:", data.updatedExamContent);
-        setExamContent(data.updatedExamContent); // Update the entire exam content
-      }
-
-      // Provide feedback to the user
-      if (data.updatedExamContent) {
-        // Refresh the page after the success message
-        window.location.reload();
-      } else {
-        alert("Changes submitted successfully, but no updates were received.");
-      }
-
-      // Clear the feedback fields after submission
-      setFeedbackArab("");
-    } catch (error) {
-      console.error("Error submitting feedback:", error);
-      setErrorMsg("Failed to submit feedback. Please try again later.");
-    } finally {
-      setLoading(false); // Stop loading animation
-    }
-
-  }
 
   const handleFeedbackSubmission = async (sectionIndex: number) => {
     console.log(await getCurrentUserEmail())
@@ -941,9 +877,9 @@ const ExamForm: React.FC = () => {
                                     </ul>
 
                                     {question.vocabulary_matching.map(
-                                      (q: any) => (
+                                      (q: any, i:any) => (
                                         <p
-                                          key={`definition-${questionIndex}`}
+                                          key={`definition-${i}`}
                                           style={{ marginTop: "10px" }}
                                         >
                                           {q.answer}:{" "}
