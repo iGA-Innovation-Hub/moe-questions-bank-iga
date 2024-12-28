@@ -23,14 +23,15 @@ import ViewExam from "./pages/ViewExam";
 import { AlertProvider, Notification, ConfirmAction } from "./pages/AlertComponent"; // Import Alert components
 import UploadPage from "./pages/UploadPage";
 import DefaultRouting from "./pages/UserDefaultComponent";import AudioScriptForm from "./pages/AudioPage";
+import { getCookie, setCookie } from "./lib/cookies";
 
 const App: React.FC = () => {
   // Authentication state
   const [isAuthenticated, setAuthenticated] = useState<boolean>(
-    localStorage.getItem("isAuthenticated") === "true"
+    getCookie("isAuthenticated") === "true"
   );
   const [userRole, setUserRole] = useState<string>(
-    localStorage.getItem("userRole") || ""
+    getCookie("userRole") || ""
   );
  
 
@@ -38,8 +39,8 @@ const App: React.FC = () => {
   useEffect(() => {
     const currentUser = getCurrentUser();
     if (currentUser) {
-      const storedIsAuthenticated = localStorage.getItem("isAuthenticated");
-      const storedUserRole = localStorage.getItem("userRole");
+      const storedIsAuthenticated = getCookie("isAuthenticated");
+      const storedUserRole = getCookie("userRole");
 
       setAuthenticated(storedIsAuthenticated === "true");
       setUserRole(storedUserRole || "");
@@ -48,8 +49,8 @@ const App: React.FC = () => {
 
   // Persist authentication state when it changes
   useEffect(() => {
-    localStorage.setItem("isAuthenticated", String(isAuthenticated));
-    localStorage.setItem("userRole", userRole);
+    setCookie("isAuthenticated", String(isAuthenticated),1);
+    setCookie("userRole", userRole,1);
   }, [isAuthenticated, userRole]);
 
   const appContextValue: AppContextType = {

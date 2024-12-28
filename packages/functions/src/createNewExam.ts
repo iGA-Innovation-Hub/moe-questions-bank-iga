@@ -72,16 +72,13 @@ export async function createExam(event) {
       }
 
       let existingExam;
-      if (result.Item.examSubjet === "ENG102") {
+     
         existingExam = JSON.parse(result.Item.examContent);
-      } else {
-        existingExam = result.Item.examContent;
-      }
+     
 
 
        // Build prompt to update exam content
       if (data.feedback) {
-        if (result.Item.examSubject === "ENG102") { 
           prompt = `
           Update the following exam based on the feedback provided.
           Ensure that all related information is recalculated to maintain consistency.
@@ -92,26 +89,6 @@ export async function createExam(event) {
           
           The type of your response must be a JSON object containing the updated exam only. Ensure all changes are reflected accurately
           `;
-        } else{
-          prompt = `
-            اضف التغيرات التي ستحصل عليها على الامتحان. غير فقط ما يطلب منك.
-             تاكد من انه التغيرات تكون مطابقة للامتحان و الاسئلة و ان كان التغيير يتضمن تغيرا في الدرجات فعليك تغيير باقي الدرجات لتطابق التغيير.
-
-             و ان كان التغيير في احد النصوص فعليك تغيير الاسئلة لتطابق التغيير.
-
-            هذا هو الامتحان:
-            ${existingExam}
-
-
-
-            هذه هي التغيرات التي عليك عملها:
-            ${data.feedback}
-
-            تاكد من هيكلة الامتحان بطريقة صحيحة.
-
-            ارجع الامتحان كاملا مع التغيرات الجديدة ولا شيئ اخر.
-          `
-          }
       } else {
         //for normal regenerating without feedback
         prompt = `
@@ -202,22 +179,6 @@ export async function createExam(event) {
             ENG102PROMPT +
             " Refer to the following relevant information from past exams:" +
             relevant_info;
-        } else {
-          prompt = `
-        Create an exam for grade ${data.class} ${data.subject} students. 
-        Include ${data.duration} hours, total ${
-            data.total_mark
-          } marks, and the following question types:
-        ${Object.entries(data.question_types)
-          .map(([type, count]) => `${count} ${type} question(s)`)
-          .join(", ")}.
-    
-
-        Use the following relevant past exam data:
-        ${JSON.stringify(retrieveCommand.input.retrievalQuery, null, 2)}
-
-        Your response must be a JSON object containing the new exam.
-        `;
         }
       }
       

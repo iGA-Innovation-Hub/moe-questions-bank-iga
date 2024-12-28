@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { getCurrentUserEmail } from "../lib/getToken.js";
 import { getFormattedDateTime } from "../lib/getDateTime.js";
 import { useNavigate } from "react-router-dom";
+import invokeLambda from "../lib/invokeLambda.ts";
 
 export function InitialForm() {
   const [grade, setGrade] = useState("Grade 10");
@@ -9,62 +10,18 @@ export function InitialForm() {
   const [semester, setSemester] = useState("Second 2024/2025");
   const duration = "2";
   const totalMark = "50";
-  const questionCounts ={
+  const questionCounts = {
     MCQ: 0,
     Essay: 0,
     TrueFalse: 0,
     FillInTheBlank: 0,
     ShortAnswer: 0,
   };
-  // const [customize, setCustomize] = useState(false);
-  // const [newExam, setNewExam] = useState(true); // Track which option is selected
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  // const [gettingExams, setGettingExams] = useState(true);
-  // const [gettingExamsError, setGetExamsError] = useState("");
-  // const [exams, setExams] = useState([]);
   const newExam = true;
   const navigate = useNavigate();
 
-  // // Fetch initial data
-  // const fetchInitialData = async () => {
-  //   try {
-  //       //@ts-ignore
-  //       const response = await invokeApig({
-  //         path: `/getBuildingExams`, // Adjust path as needed
-  //         method: "GET",
-  //       });
-
-  //     if (!response || Object.keys(response).length === 0) {
-  //       console.log(response);
-  //       setGetExamsError("No exams found!");
-  //       return;
-  //     }
-
-  //     // Store the retrieved exams in the state
-  //     setExams(response);
-
-  //     console.log("Initial Data Loaded:", response);
-  //   } catch (err: any) {
-  //     console.error("Error fetching initial data:", err);
-  //   } finally {
-  //     setGettingExams(false); // Mark loading as complete
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   // Add a timeout before fetching data
-  //   const timer = setTimeout(() => {
-  //     fetchInitialData();
-  //   }, 2000);
-
-  //   // Cleanup the timeout if the component unmounts
-  //   return () => clearTimeout(timer);
-  // }, []);
-
-  // const handleSelection = (isNewExam: boolean) => {
-  //   setNewExam(isNewExam);
-  // };
 
   const handleInitialFormSubmition = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,11 +33,7 @@ export function InitialForm() {
 
       const createDate = getFormattedDateTime();
 
-      if (
-        !grade ||
-        !subject ||
-        !semester
-      ) {
+      if (!grade || !subject || !semester) {
         console.log(grade, subject, semester, duration, totalMark);
         setErrorMsg("Please fill the form!");
         setLoading(false);
@@ -110,26 +63,30 @@ export function InitialForm() {
       console.log("Function URL:", functionURL);
 
       //@ts-ignore
-      // const response = await invokeApig({
+      const response = await invokeLambda({
+        method: "POST",
+        body: payload,
+        url: functionURL,
+      });
+
+      // const response = await fetch(functionURL, {
       //   method: "POST",
-      //   body: payload,
-      //   functionRequest: true,
-      //   functionURL: functionURL,
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify(payload),
       // });
 
-
-      const response = await fetch(functionURL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      })
+      if (!response.ok) {
+        setErrorMsg("An error occurred. Please try again.");
+        setLoading(false);
+        return;
+      }
 
       console.log("API Response:", response);
       console.log("Type of response content:", typeof response);
 
-      console.log(response.body)
+      console.log(response.body);
 
       const data = await response.json();
 
@@ -167,7 +124,6 @@ export function InitialForm() {
       >
         Generate Exam
       </h2>
-
 
       <span>
         <p style={{ color: "red" }}>{errorMsg}</p>
@@ -278,7 +234,6 @@ export function InitialForm() {
               </select>
             </label>
           </div>
-
 
           <button
             type="submit"

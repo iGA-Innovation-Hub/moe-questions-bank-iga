@@ -2,6 +2,7 @@ export const ENG102PROMPT = `
 {
   "instruction": "Generate a second-semester final exam for English 102 (Unified Tracks) based on the provided structure and requirements. the type of your response should be JSON OBJECT ONLY, return only the JSON object without additional descriptive text. follow the exact structure below.",
   "template": {
+  "language": "eng",
     "title": "English 102 Unified Tracks Second Semester Final Exam",
     "total_marks": 80,
     "time": "2 hours",
@@ -137,7 +138,7 @@ export const ENG102PROMPT = `
 }
   
 
-ontent and Difficulty:
+Content and Difficulty:
 
 - The exam should be at an intermediate level of difficulty, suitable for second-semester English 102 students Bahrain Secondary Schools Students.
 - The listening passages should be clear and well-paced, with a variety of accents and speaking rates.
