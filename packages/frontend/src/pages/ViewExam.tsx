@@ -6,7 +6,6 @@ import { useAppContext } from "../lib/contextLib.ts";
 import { generateExamPDF } from "./generatePDF"; // Make sure to import the function
 import { useAlert } from "./AlertComponent";
 import { generateModelPDF } from "./generateModelAnswerPDF.tsx";
-//import { getCurrentUserEmail } from "../lib/getToken.ts";
 
 interface Part {
   part: string; // Part number or identifier
@@ -54,7 +53,6 @@ const ViewExam: React.FC = () => {
   const [loadingApprove, setLoadingApprove] = useState(false);
   const [LoadingDisapprove, setLoadingDisapprove] = useState(false);
   const [examContent, setExamContent] = useState<ExamContent | null>(null);
-  const [arabExamContent, setArabExamContent] = useState("");
   const [_editMode, _setEditMode] = useState(false); // Toggle edit mode
   const [_editedContent, _setEditedContent] = useState<Record<string, any>>({});
   const [isEditing, _setIsEditing] = useState(false);
@@ -67,30 +65,6 @@ const ViewExam: React.FC = () => {
   const [loading, setLoading] = useState(false);
   var content: string;
 
-  // !Examples to be used in the component (To be deleted later)
-  // const handleSuccess = () => {
-  //   showAlert({
-  //     type: "success", // Alert type: "success", "failure", or "confirm"
-  //     message: "This is a success message!",
-  //   });
-  // };
-
-  // const handleFailure = () => {
-  //   showAlert({
-  //     type: "failure", // Alert type: "failure"
-  //     message: "Oops, something went wrong!",
-  //   });
-  // };
-
-  // const handleConfirm = () => {
-  //   showAlert({
-  //     type: "confirm", // Alert type: "confirm"
-  //     message: "Are you sure?",
-  //     action: () => {
-  //       alert("Action confirmed!");
-  //     },
-  //   });
-  // };
 
   // Fetch initial data
   const fetchInitialData = async () => {
@@ -165,8 +139,6 @@ const ViewExam: React.FC = () => {
         ) ||
         0;
       setMark(newTotalMarks); // Update the Total Marks at the top
-    } else if (arabExamContent) {
-      setMark("60")
     }
   }, [examContent]);
 
@@ -261,6 +233,7 @@ const ViewExam: React.FC = () => {
     };
 
     try {
+      //@ts-ignore
       const response = await invokeApig({
         path: "/changeExamToBuild",
         method: "POST",
@@ -292,6 +265,7 @@ const ViewExam: React.FC = () => {
     };
 
     try {
+      //@ts-ignore
       const response = await invokeApig({
         path: "/approveExam",
         method: "POST",
@@ -324,6 +298,7 @@ const ViewExam: React.FC = () => {
     };
 
     try {
+      //@ts-ignore
       const response = await invokeApig({
         path: "/disapproveExam",
         method: "POST",
@@ -373,7 +348,8 @@ const ViewExam: React.FC = () => {
         examID: id,
       };
   
-      try {
+    try {
+        //@ts-ignore
         const response = await invokeApig({
           path: "/getAudio",
           method: "POST",
@@ -963,35 +939,39 @@ const ViewExam: React.FC = () => {
 
                                 {question.paragraph_matching && (
                                   <div>
-                                    {question.paragraph_matching.map((q, i) => (
-                                      <p
-                                        key={`definition-${i}`}
-                                        style={{ marginTop: "10px" }}
-                                      >
-                                        {q.question}:{" "}
-                                        <span style={{ fontWeight: "bold" }}>
-                                          ________
-                                        </span>
-                                        <br />
-                                        <strong>Answer:</strong> {q.answer}
-                                      </p>
-                                    ))}
+                                    {question.paragraph_matching.map(
+                                      (q: any, i: any) => (
+                                        <p
+                                          key={`definition-${i}`}
+                                          style={{ marginTop: "10px" }}
+                                        >
+                                          {q.question}:{" "}
+                                          <span style={{ fontWeight: "bold" }}>
+                                            ________
+                                          </span>
+                                          <br />
+                                          <strong>Answer:</strong> {q.answer}
+                                        </p>
+                                      )
+                                    )}
                                   </div>
                                 )}
 
                                 {question.short_answer && (
                                   <div>
-                                    {question.short_answer.map((q, i) => (
-                                      <div
-                                        key={i}
-                                        style={{ marginBottom: "10px" }}
-                                      >
-                                        <strong>{i + 1}.</strong>
-                                        {q.question} <br />
-                                        <strong>Answer: </strong>
-                                        {q.answer}
-                                      </div>
-                                    ))}
+                                    {question.short_answer.map(
+                                      (q: any, i: any) => (
+                                        <div
+                                          key={i}
+                                          style={{ marginBottom: "10px" }}
+                                        >
+                                          <strong>{i + 1}.</strong>
+                                          {q.question} <br />
+                                          <strong>Answer: </strong>
+                                          {q.answer}
+                                        </div>
+                                      )
+                                    )}
                                   </div>
                                 )}
 
@@ -1002,36 +982,40 @@ const ViewExam: React.FC = () => {
                                       marginBottom: "10px",
                                     }}
                                   >
-                                    {question.true_false.map((q, i) => (
-                                      <div
-                                        key={i}
-                                        style={{ marginBottom: "10px" }}
-                                      >
-                                        {q.question}________ <br />(
-                                        <span style={{ fontWeight: "bold" }}>
-                                          answer: {q.answer}
-                                        </span>
-                                        )
-                                      </div>
-                                    ))}
+                                    {question.true_false.map(
+                                      (q: any, i: any) => (
+                                        <div
+                                          key={i}
+                                          style={{ marginBottom: "10px" }}
+                                        >
+                                          {q.question}________ <br />(
+                                          <span style={{ fontWeight: "bold" }}>
+                                            answer: {q.answer}
+                                          </span>
+                                          )
+                                        </div>
+                                      )
+                                    )}
                                   </div>
                                 )}
 
                                 {question.syntax_analysis && (
                                   <div>
-                                    {question.syntax_analysis.map((q, i) => (
-                                      <div
-                                        key={i}
-                                        style={{ marginBottom: "10px" }}
-                                      >
-                                        <strong>
-                                          {i + 1}. {q.question}{" "}
-                                        </strong>
-                                        <br />
-                                        <strong>Answer: </strong>
-                                        {q.answer}
-                                      </div>
-                                    ))}
+                                    {question.syntax_analysis.map(
+                                      (q: any, i: any) => (
+                                        <div
+                                          key={i}
+                                          style={{ marginBottom: "10px" }}
+                                        >
+                                          <strong>
+                                            {i + 1}. {q.question}{" "}
+                                          </strong>
+                                          <br />
+                                          <strong>Answer: </strong>
+                                          {q.answer}
+                                        </div>
+                                      )
+                                    )}
                                   </div>
                                 )}
 
@@ -1062,9 +1046,9 @@ const ViewExam: React.FC = () => {
                                     </ul>
 
                                     {question.vocabulary_matching.map(
-                                      (q, i) => (
+                                      (q: any, i:any) => (
                                         <p
-                                          key={`definition-${questionIndex}`}
+                                          key={`definition-${i}`}
                                           style={{ marginTop: "10px" }}
                                         >
                                           {q.answer}:{" "}

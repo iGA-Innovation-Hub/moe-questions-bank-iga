@@ -769,7 +769,6 @@ const ExamForm: React.FC = () => {
                       }}
                     >
                       {subsection.content.passage}
-                      
                     </p>
                   )}
                   {subsection.content?.dialogue && (
@@ -835,35 +834,39 @@ const ExamForm: React.FC = () => {
 
                                 {question.paragraph_matching && (
                                   <div>
-                                    {question.paragraph_matching.map((q, i) => (
-                                      <p
-                                        key={`definition-${i}`}
-                                        style={{ marginTop: "10px" }}
-                                      >
-                                        {q.question}:{" "}
-                                        <span style={{ fontWeight: "bold" }}>
-                                          ________
-                                        </span>
-                                        <br />
-                                        <strong>Answer:</strong> {q.answer}
-                                      </p>
-                                    ))}
+                                    {question.paragraph_matching.map(
+                                      (q: any, i: any) => (
+                                        <p
+                                          key={`definition-${i}`}
+                                          style={{ marginTop: "10px" }}
+                                        >
+                                          {q.question}:{" "}
+                                          <span style={{ fontWeight: "bold" }}>
+                                            ________
+                                          </span>
+                                          <br />
+                                          <strong>Answer:</strong> {q.answer}
+                                        </p>
+                                      )
+                                    )}
                                   </div>
                                 )}
 
                                 {question.short_answer && (
                                   <div>
-                                    {question.short_answer.map((q, i) => (
-                                      <div
-                                        key={i}
-                                        style={{ marginBottom: "10px" }}
-                                      >
-                                        <strong>{i + 1}.</strong>
-                                        {q.question} <br />
-                                        <strong>Answer: </strong>
-                                        {q.answer}
-                                      </div>
-                                    ))}
+                                    {question.short_answer.map(
+                                      (q: any, i: any) => (
+                                        <div
+                                          key={i}
+                                          style={{ marginBottom: "10px" }}
+                                        >
+                                          <strong>{i + 1}.</strong>
+                                          {q.question} <br />
+                                          <strong>Answer: </strong>
+                                          {q.answer}
+                                        </div>
+                                      )
+                                    )}
                                   </div>
                                 )}
 
@@ -874,36 +877,40 @@ const ExamForm: React.FC = () => {
                                       marginBottom: "10px",
                                     }}
                                   >
-                                    {question.true_false.map((q, i) => (
-                                      <div
-                                        key={i}
-                                        style={{ marginBottom: "10px" }}
-                                      >
-                                        {q.question}________ <br />(
-                                        <span style={{ fontWeight: "bold" }}>
-                                          answer: {q.answer}
-                                        </span>
-                                        )
-                                      </div>
-                                    ))}
+                                    {question.true_false.map(
+                                      (q: any, i: any) => (
+                                        <div
+                                          key={i}
+                                          style={{ marginBottom: "10px" }}
+                                        >
+                                          {q.question}________ <br />(
+                                          <span style={{ fontWeight: "bold" }}>
+                                            answer: {q.answer}
+                                          </span>
+                                          )
+                                        </div>
+                                      )
+                                    )}
                                   </div>
                                 )}
 
                                 {question.syntax_analysis && (
                                   <div>
-                                    {question.syntax_analysis.map((q, i) => (
-                                      <div
-                                        key={i}
-                                        style={{ marginBottom: "10px" }}
-                                      >
-                                        <strong>
-                                          {i + 1}. {q.question}{" "}
-                                        </strong>
-                                        <br />
-                                        <strong>Answer: </strong>
-                                        {q.answer}
-                                      </div>
-                                    ))}
+                                    {question.syntax_analysis.map(
+                                      (q: any, i: any) => (
+                                        <div
+                                          key={i}
+                                          style={{ marginBottom: "10px" }}
+                                        >
+                                          <strong>
+                                            {i + 1}. {q.question}{" "}
+                                          </strong>
+                                          <br />
+                                          <strong>Answer: </strong>
+                                          {q.answer}
+                                        </div>
+                                      )
+                                    )}
                                   </div>
                                 )}
 
@@ -934,7 +941,7 @@ const ExamForm: React.FC = () => {
                                     </ul>
 
                                     {question.vocabulary_matching.map(
-                                      (q, i) => (
+                                      (q: any) => (
                                         <p
                                           key={`definition-${questionIndex}`}
                                           style={{ marginTop: "10px" }}
