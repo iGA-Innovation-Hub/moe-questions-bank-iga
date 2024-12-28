@@ -1,38 +1,190 @@
 export const ARAB101PROMPT = `
- تصرف كمولّد امتحانات دراسي وأنشئ امتحانًا لطلاب الصف الاول ثانوي لمادة اللغة العربية ARAB101.
- يجب ألا تتجاوز مدة الامتحان ساعتين
- تأكد من أن الامتحان يقيم مهارات الطلاب في مختلف الجوانب بشكل كافٍ، بما يشمل القراءة، المفرداتو القواعد، والكتابة. يجب أن يتضمن الامتحان التالي:
- 
- اطبع ---------- لفصل الاقسام
+{
+  "instruction": "Generate a second-semester final exam for ARAB 101 (Arabic) based on the provided structure and requirements. The type of your response should be JSON OBJECT ONLY. Return only the JSON object without additional descriptive text. Ensure that the keys are in English and the values are in Arabic. Follow the exact structure below.",
+  "template": {
+  "language": "arb",
+    "title": "امتحان الفصل الدراسي الثاني لمادة اللغة العربية ARAB101",
+    "total_marks": "60",
+    "time": "2 hours",
+    "sections": [
+      {
+        "part": "1",
+        "title": "القراءة",
+        "total_marks": 28,
+        "subsections": [
+          {
+            "subsection": "أ",
+            "title": "النص الخارجي",
+            "marks": 18,
+            "content":{
+                "passage": "<انشئ نص قراءة مكون من 200 كلمة>",
+                "questions": [
+                  {
+                    "description": "اختر العنوان المناسب لكل الفقرات",
+                    "instruction": "Mix and match the paragraphs with the titles",
+                    "paragraph_matching": [
+                      { "question": "<فقرة 2>", "answer": "<عنوان 1>" },
+                      { "question": "<فقرة 3>", "answer": "<عنوان 2>" },
+                      { "question": "<فقرة 1>", "answer": "<عنوان 3>" },
+                      { "question": "<فقرة 4>", "answer": "<عنوان 4>" }
+                     
+                    ]
+                  },
+                  {
+                    "description": "أجب عن الأسئلة التالية بإجابات قصيرة",
+                    "short_answer": [
+                      { "question": "<سؤال 1>", "answer": "<إجابة قصيرة>" },
+                      { "question": "<سؤال 2>", "answer": "<إجابة قصيرة>" },
+                      { "question": "<سؤال 3>", "answer": "<إجابة قصيرة>" },
+                      { "question": "<سؤال 4>", "answer": "<إجابة قصيرة>" } 
+                    ]
+                  },
+                  {
+                    "question": "اكتب تلخيصًا للفقرة التالية في أقل من 80 كلمة",
+                    "marks": 5
+                  },
+                  {
+                    "description": "أعرب الافعال التالية",
+                    "syntax_analysis": [
+                      { "question": "<فعل 1>", "answer": "<إعراب>" },
+                      { "question": "<فعل 2>", "answer": "<إعراب>" },
+                      { "question": "<فعل 3>", "answer": "<إعراب>" }
+                    ]
+                  }
+                ]
+            }
+          },
+          {
+            "subsection": "ب",
+            "title": "النص الشعري",
+            "marks": 10,
+            "content": {
+              "passage": "<قصيدة شعرية عن حب الوطن مكونة من 80 كلمة>",
+              "questions": [
+                {
+                  "description": "أجب عن الأسئلة التالية بصح او خطأ",
+                  "true_false": [
+                    { "question": "<بيان 1>", "answer": "صح/خطأ" },
+                    { "question": "<بيان 2>", "answer": "صح/خطأ" },
+                    { "question": "<بيان 3>", "answer": "صح/خطأ" },
+                    { "question": "<بيان 4>", "answer": "صح/خطأ" },
+                    { "question": "<بيان 5>", "answer": "صح/خطأ" }
+                  ]
+                },
+                {
+                  "description": "اختر معاني الكلمات التالية",
+                  "vocabulary_matching": [
+                    { "question": "<كلمة 1>", "answer": "<معنى>" },
+                    { "question": "<كلمة 2>", "answer": "<معنى>" },
+                     { "question": "<كلمة 3>", "answer": "<معنى>" }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "part": "2",
+        "title": "القواعد",
+        "total_marks": 10,
+        "subsections": [
+          {
+            "subsection": "أ",
+            "title": "القواعد النحوية",
+            "marks": 10,
+            "description": "اختر الإجابة الصحيحة",
+            "content": {
 
-**قسم القراءة (المجموع: 28 درجة)**  
-  الجزء الأول (الفهم):  
-    - انشى نص قراءة من (300 كلمة).  
-    -قم بإنشاء الأسئلة التالية عليها:  
-    أ. مطابقة الفقرات مع عناوينها. تاكد من ان تغير ترتيب الاسئلة لكي لا تتطابق مباشرة مع ترتيب النص (5 درجات).  
-      ب. أسئلة قصيرة وإجابات مختصرة (5 درجات).
-      ج.تلخيص الفقرة في اقل من 80 كلمة (5 درجات)
-د. اعرب ثلاثة من الافعال المستخدمة في النص (3 درجات)
+                "questions": [
+                  {
+                    "type": "multiple-choice",
+                    "question": "<سؤال 1>",
+                    "options": [
+                      "<اختيار أ>",
+                      "<اختيار ب>",
+                      "<اختيار ج>",
+                      "<اختيار د>"
+                    ],
+                    "answer": "<الإجابة الصحيحة>"
+                  },
+                  {
+                    "type": "multiple-choice",
+                    "question": "<سؤال 2>",
+                    "options": [
+                      "<اختيار أ>",
+                      "<اختيار ب>",
+                      "<اختيار ج>",
+                      "<اختيار د>"
+                    ],
+                    "answer": "<الإجابة الصحيحة>"
+                  },
+                  {
+                    "type": "multiple-choice",
+                    "question": "<سؤال 3>",
+                    "options": [
+                      "<اختيار أ>",
+                      "<اختيار ب>",
+                      "<اختيار ج>",
+                      "<اختيار د>"
+                    ],
+                    "answer": "<الإجابة الصحيحة>"
+                  },
+                  {
+                    "type": "multiple-choice",
+                    "question": "<سؤال 4>",
+                    "options": [
+                      "<اختيار أ>",
+                      "<اختيار ب>",
+                      "<اختيار ج>",
+                      "<اختيار د>"
+                    ],
+                    "answer": "<الإجابة الصحيحة>"
+                  },
+                  {
+                    "type": "multiple-choice",
+                    "question": "<سؤال 5>",
+                    "options": [
+                      "<اختيار أ>",
+                      "<اختيار ب>",
+                      "<اختيار ج>",
+                      "<اختيار د>"
+                    ],
+                    "answer": "<الإجابة الصحيحة>"
+                  }
+                ]
+            }
+          }
+        ]
+      },
+      {
+        "part": "3",
+        "title": "التعبير",
+        "total_marks": 22,
+            "content": {
+              "questions": [
+                {
+                  "type": "opinion-essay",
+                  "prompt": "اكتب موضوعًا تعبيريًا حول رأي شخصي في موضوع مستوحى من المقال (100-150 كلمة)",
+                  "marks": 12
+                },
+                {
+                  "type": "formal-letter",
+                  "prompt": "اكتب رسالة رسمية أو تأملًا في موضوع ذي صلة (100-150 كلمة)",
+                  "marks": 10
+                }
+              ]
+            }
+      }
+    ]
+  },
 
-اطبع ---------- لفصل الاقسام
-  الجزء الثاني (المفردات):
-  - انشى قصيدة شعرية تتحدث عن حب الوطن من 100 كلمة  
-      أ. أسئلة صواب أو خطأ على اسلوب الشاعر و الاحقال المعجمية للكلمات و اوجد التشبيه (5 درجات).  
-      ب. مطابقة الكلمات الواردة في القصيدة مع معانيها (5 درجات).
+  "notes": {
+    "general": "Ensure the JSON response adheres strictly to this format, with placeholders where content needs to be generated dynamically. Do not include any additional text outside the JSON object. The exam should test the students well, it should not be very direct.",
+    "القراءة": "The reading passage should test the students well.",
+    "القواعد": "The questions should be challenging and test the students well. انشئ اس~لة عن الافعال اللازمة و المتعدية و المضاف و المضاف اليه و المبتدأ و الخبر",
+    "النعبير": "The topics should be challenging and test the students well."
+  }
+}
 
-اطبع ---------- لفصل الاقسام
-
-       
-**قسم القواعد (المجموع: 10 درجة)**
-أ. 10 اسآلة خيار من متعدد عن الافعال اللازمة و المتعدية و المضاف و المضاف اليه و المبتدأ و الخبر (10 درجات)
-
-اطبع ---------- لفصل الاقسام
-
-**قسم الكتابة (المجموع: 22 درجة)**  
-  1. اكتب موضوعًا تعبيريًا حول رأي شخصي في موضوع مستوحى من المقال (100-150 كلمة) بقيمة 12 درجات.  
-  2. اكتب رسالة رسمية أو تأملًا في موضوع ذي صلة (100-150 كلمة) بقيمة 10 درجات.  
-
-تأكد من أن جميع الأسئلة تحمل الدرجات الخاصة بها. استخدم الهيكل التالي للإجابة:
-
- السؤال 1: وصف السؤال و المطلوب (درجة السؤال)
 `;
