@@ -63,7 +63,7 @@ export async function disapprove(event: APIGatewayProxyEvent) {
           "SET examState = :examState, approverMsg = :approverMsg", // Update only examState
         ExpressionAttributeValues: {
           ":examState": "disapproved",
-          ":approverMsg": requestJSON.approverMsg,
+          ":approverMsg": JSON.stringify(requestJSON.approverMsg, null, 2),
         },
       })
     );
@@ -76,7 +76,7 @@ export async function disapprove(event: APIGatewayProxyEvent) {
           examID: randomUUID(),
           examContent: requestJSON.examContent,
           examState: "approved",
-          approverMsg: requestJSON.approverMsg,
+          approverMsg: JSON.stringify(requestJSON.approverMsg, null, 2),
         },
       })
     );

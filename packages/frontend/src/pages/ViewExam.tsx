@@ -6,6 +6,7 @@ import { useAppContext } from "../lib/contextLib.ts";
 import { generateExamPDF } from "./generatePDF"; // Make sure to import the function
 import { useAlert } from "./AlertComponent";
 import { generateModelPDF } from "./generateModelAnswerPDF.tsx";
+import invokeLambda from "../lib/invokeLambda.ts";
 
 interface Part {
   part: string; // Part number or identifier
@@ -45,7 +46,9 @@ const ViewExam: React.FC = () => {
   const [creationDate, setDate] = useState("");
   const [contributers, setContributers] = useState("");
   const [examState, setExamState] = useState("");
-  const [approverMsg, setApproverMsg] = useState("");
+  const [approverMsg, setApproverMsg] = useState<{
+    [partName: string]: string;
+  }>({});
   const [_responseResult, _setResponseResult] = useState<string>("");
   const [loadingPage, setLoadingPage] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
@@ -57,7 +60,7 @@ const ViewExam: React.FC = () => {
   const [_editedContent, _setEditedContent] = useState<Record<string, any>>({});
   const [isEditing, _setIsEditing] = useState(false);
   const [_loading, _setLoading] = useState(false);
-  const [feedback, setFeedback] = useState<Record<string, string>>({}); // Store feedback
+  const [feedback, setFeedback] = useState<{ [partName: string]: string }>({});
   const { id } = useParams<{ id: string }>();
   const { userRole } = useAppContext();
   const navigate = useNavigate();
@@ -65,6 +68,64 @@ const ViewExam: React.FC = () => {
   const [loading, setLoading] = useState(false);
   var content: string;
 
+  // Handler to update feedback for a specific section
+  const handleFeedbackChange = (partName: string, value: string) => {
+    setFeedback((prevFeedback) => ({
+      ...prevFeedback,
+      [partName]: value, // Use `partName` as the key
+    }));
+    console.log(feedback)
+  };
+
+  const handleFeedbackSubmission = async () => { 
+    const requestBody = {
+      examID: id!, // Exam ID
+      feedback: approverMsg, // Include all provided feedback
+      contributors: contributers, // Include contributors
+    };
+
+
+    try {
+      setLoadingChangeState(true);
+
+      const functionURL = import.meta.env.VITE_CREATE_EXAM_FUNCTION_URL;
+      console.log("Function URL:", functionURL);
+
+      const response = await invokeLambda({
+        method: "POST",
+        body: requestBody,
+        url: functionURL,
+      });
+
+      const data = await response.json();
+
+      // Check if the backend returns the updated content
+      if (data.updatedExamContent) {
+        setExamContent(data.updatedExamContent); // Update the entire exam content
+      }
+
+      if (data.totalMarks) {
+        setMark(data.totalMarks); // Update the total marks
+      }
+
+
+      if (data.updatedExamContent || data.totalMarks) {
+        // Refresh the page after the success message
+        window.location.reload();
+      } else {
+        showAlert({
+          type: "failure",
+          message: "Data received. No changes made.",
+        })
+      }
+    } catch (error) {
+      console.error("Error sending feedback:", error);
+      setErrorMsg("Failed to apply changes. Please try again later.");
+    } finally {
+      setLoadingChangeState(false)
+    }
+  
+  }
 
   // Fetch initial data
   const fetchInitialData = async () => {
@@ -91,25 +152,23 @@ const ViewExam: React.FC = () => {
 
       console.log(content);
 
-    
-        if (typeof content === "string") {
-          try {
-            const parsedContent = JSON.parse(content);
-            setExamContent(parsedContent);
-          } catch (parseError) {
-            console.error("Failed to parse exam content as JSON:", content);
-            setErrorMsg("Invalid exam data format.");
-            return;
-          }
-        } else if (typeof content === "object") {
-          console.log("is object");
-          setExamContent(content); // Set directly if already an object
-        } else {
-          console.error("Unexpected examContent format:", typeof content);
-          setErrorMsg("Exam data format is invalid!");
+      if (typeof content === "string") {
+        try {
+          const parsedContent = JSON.parse(content);
+          setExamContent(parsedContent);
+        } catch (parseError) {
+          console.error("Failed to parse exam content as JSON:", content);
+          setErrorMsg("Invalid exam data format.");
           return;
         }
-      
+      } else if (typeof content === "object") {
+        console.log("is object");
+        setExamContent(content); // Set directly if already an object
+      } else {
+        console.error("Unexpected examContent format:", typeof content);
+        setErrorMsg("Exam data format is invalid!");
+        return;
+      }
 
       setGrade(response.examClass || "");
       setSubject(response.examSubject || "");
@@ -120,7 +179,12 @@ const ViewExam: React.FC = () => {
       setDuration(response.examDuration || "");
       setMark(response.examMark || "");
       setExamState(response.examState || "");
-      setApproverMsg(response.approverMsg || "");
+      
+      if (response.approverMsg) {
+        if (typeof response.approverMsg === "string") {
+          setApproverMsg(JSON.parse(response.approverMsg) || {});
+        }
+      }
     } catch (err: any) {
       console.error("Error fetching initial data:", err);
       setErrorMsg("Failed to load exam data. Please try again later.");
@@ -157,34 +221,34 @@ const ViewExam: React.FC = () => {
         return;
       }
 
-        let parsedContent;
-        try {
-          // Extract the JSON portion from the descriptive text
-          const jsonStartIndex = response.examContent.indexOf("{");
-          const jsonEndIndex = response.examContent.lastIndexOf("}");
-          if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
-            const jsonString = response.examContent
+      let parsedContent;
+      try {
+        // Extract the JSON portion from the descriptive text
+        const jsonStartIndex = response.examContent.indexOf("{");
+        const jsonEndIndex = response.examContent.lastIndexOf("}");
+        if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+          const jsonString = response.examContent
             .substring(jsonStartIndex, jsonEndIndex + 1)
             .trim();
-            console.log("Extracted JSON String:", jsonString);
-            parsedContent = JSON.parse(jsonString); // Parse the JSON object
-          } else {
-            throw new Error("No valid JSON found in examContent string.");
-          }
-        } catch (error) {
-          console.error(
-            "Failed to parse exam content as JSON:",
-            response.examContent
-          );
-          setErrorMsg("Invalid exam content format!");
-          return;
+          console.log("Extracted JSON String:", jsonString);
+          parsedContent = JSON.parse(jsonString); // Parse the JSON object
+        } else {
+          throw new Error("No valid JSON found in examContent string.");
         }
-        
-        setExamContent(parsedContent);
-        console.log(
-          "Parsed Exam Content Successfully Set in State:",
-          parsedContent
+      } catch (error) {
+        console.error(
+          "Failed to parse exam content as JSON:",
+          response.examContent
         );
+        setErrorMsg("Invalid exam content format!");
+        return;
+      }
+
+      setExamContent(parsedContent);
+      console.log(
+        "Parsed Exam Content Successfully Set in State:",
+        parsedContent
+      );
     } catch (error) {
       console.error("Error fetching exam content:", error);
       setErrorMsg("Failed to load exam content. Please try again later.");
@@ -253,15 +317,10 @@ const ViewExam: React.FC = () => {
     setLoadingChangeState(true);
     setLoadingApprove(true);
 
-    if (!approverMsg) {
-      alert("Please add feedback!");
-      setLoadingChangeState(false);
-      setLoadingApprove(false);
-      return;
-    }
+    
     const payload = {
       examID: id,
-      approverMsg: approverMsg,
+      approverMsg: feedback,
     };
 
     try {
@@ -286,15 +345,21 @@ const ViewExam: React.FC = () => {
   const disapproveExam = async () => {
     setLoadingChangeState(true);
     setLoadingDisapprove(true);
-    if (!approverMsg) {
-      alert("Please add feedback!");
-      setLoadingChangeState(false);
-      setLoadingDisapprove(false);
-      return;
-    }
+
+   if (!feedback || Object.keys(feedback).length === 0) {
+     showAlert({
+       type: "failure",
+       message: "Please add feedback!",
+     });
+     setLoadingChangeState(false);
+     setLoadingDisapprove(false);
+     return;
+   }
+    
+    
     const payload = {
       examID: id,
-      approverMsg: approverMsg,
+      approverMsg: feedback,
     };
 
     try {
@@ -315,8 +380,6 @@ const ViewExam: React.FC = () => {
       setLoadingDisapprove(false);
     }
   };
-
-
 
   // Show loading state
   if (loadingPage) {
@@ -341,48 +404,46 @@ const ViewExam: React.FC = () => {
   };
 
   const handleDownloadAudio = async () => {
-
     setLoading(true);
 
-      const payload = {
-        examID: id,
-      };
-  
+    const payload = {
+      examID: id,
+    };
+
     try {
-        //@ts-ignore
-        const response = await invokeApig({
-          path: "/getAudio",
-          method: "POST",
-          body: payload,
-        });
+      //@ts-ignore
+      const response = await invokeApig({
+        path: "/getAudio",
+        method: "POST",
+        body: payload,
+      });
 
-        if (!response) {
-          throw new Error("Failed to get audio content from the server");
-        }
+      if (!response) {
+        throw new Error("Failed to get audio content from the server");
+      }
 
-        const { audioContent } = await response; 
+      const { audioContent } = await response;
 
-        const audioBlob = new Blob(
-          [Uint8Array.from(atob(audioContent), (c) => c.charCodeAt(0))],
-          { type: "audio/mpeg" }
-        );
+      const audioBlob = new Blob(
+        [Uint8Array.from(atob(audioContent), (c) => c.charCodeAt(0))],
+        { type: "audio/mpeg" }
+      );
 
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(audioBlob);
-        link.download = `${subject}-${creationDate}.mp3`; // Download file as examID.mp3
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(audioBlob);
+      link.download = `${subject}-${creationDate}.mp3`; // Download file as examID.mp3
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
 
-        console.log("Audio downloaded successfully");
+      console.log("Audio downloaded successfully");
     } catch (error) {
-        console.error('Error downloading audio:', error);
-        alert('Could not download the audio. Please try again later.');
-    }finally{
+      console.error("Error downloading audio:", error);
+      alert("Could not download the audio. Please try again later.");
+    } finally {
       setLoading(false);
     }
-
-};
+  };
 
   return (
     <div
@@ -439,67 +500,134 @@ const ViewExam: React.FC = () => {
         )}
 
         {examState === "approved" && (
-          <div
-            style={{
-              backgroundColor: "rgba(34, 139, 34, 0.5)", // Dark green with transparency
-              color: "#4f4f4f", // Grey text color
-              padding: "0.25rem 0.75rem", // Reduced padding to make it more compact
-              borderRadius: "8px", // Rounded corners
-              border: "1px solid rgba(34, 139, 34, 0.5)", // Slightly darker border
-              display: "block", // Block-level to align properly
-              fontSize: "12px", // Smaller font size to reduce height
-              fontWeight: "bold", // Bold text for emphasis
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
-              textAlign: "left", // Align text to the left
-              marginBottom: "0.5rem",
-            }}
-          >
-            ✅ {examState.toUpperCase()}
+          <>
             <div
               style={{
-                textAlign: "left",
+                backgroundColor: "rgba(34, 139, 34, 0.5)", // Dark green with transparency
+                color: "#4f4f4f", // Grey text color
+                padding: "0.25rem 0.75rem", // Reduced padding to make it more compact
+                borderRadius: "8px", // Rounded corners
+                border: "1px solid rgba(34, 139, 34, 0.5)", // Slightly darker border
+                display: "block", // Block-level to align properly
+                fontSize: "12px", // Smaller font size to reduce height
+                fontWeight: "bold", // Bold text for emphasis
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
+                textAlign: "left", // Align text to the left
+                marginBottom: "0.5rem",
               }}
             >
-              <p>{approverMsg}</p>
+              ✅ {examState.toUpperCase()}
+              <div
+                style={{
+                  textAlign: "left",
+                }}
+              ></div>
             </div>
-          </div>
+
+            {/* Button outside the red box */}
+            {userRole === "User" && Object.keys(approverMsg).length !== 0 && (
+              <div
+                style={{
+                  marginTop: "0.5rem", // Space above the button
+                }}
+              >
+                <button
+                  onClick={handleFeedbackSubmission}
+                  style={{
+                    padding: "0.3rem 0.75rem", // Smaller padding for a smaller button
+                    backgroundColor: "#2196F3", // Blue color for 'Send For Approval'
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "12px", // Smaller font size
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    transition:
+                      "background-color 0.3s ease, transform 0.3s ease",
+                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
+                    width: "auto", // Auto width to fit text
+                  }}
+                  onMouseOver={(e) =>
+                    //@ts-ignore
+                    (e.target.style.backgroundColor = "#1976D2")
+                  }
+                  onMouseOut={(e) =>
+                    //@ts-ignore
+                    (e.target.style.backgroundColor = "#2196F3")
+                  }
+                  onMouseDown={(e) =>
+                    //@ts-ignore
+                    (e.target.style.transform = "scale(0.98)")
+                  }
+                  //@ts-ignore
+                  onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+                >
+                  {loadingChangeState ? (
+                    <span
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: "1rem",
+                          height: "1rem",
+                          border: "2px solid #fff",
+                          borderRadius: "50%",
+                          borderTop: "2px solid transparent",
+                          animation: "spin 1s linear infinite",
+                        }}
+                      />
+                      Applying Changes...
+                    </span>
+                  ) : (
+                    "Apply Approver Changes"
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {examState === "disapproved" && (
-          <div
-            style={{
-              backgroundColor: "rgba(220, 20, 60, 0.5)", // Dark red with transparency
-              color: "#4f4f4f", // Grey text color
-              padding: "0.25rem 0.75rem", // Reduced padding to make it more compact
-              borderRadius: "8px", // Rounded corners
-              border: "1px solid rgba(220, 20, 60, 0.7)", // Slightly darker border
-              display: "block", // Block-level to align properly
-              fontSize: "12px", // Smaller font size to reduce height
-              fontWeight: "bold", // Bold text for emphasis
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
-              textAlign: "left", // Align text to the left
-              marginBottom: "0.5rem", // Reduced space below
-            }}
-          >
-            ❌ {examState.toUpperCase()}
+          <>
+            {/* Red box for the exam state */}
             <div
               style={{
-                textAlign: "left",
-                marginTop: "0.5rem", // Reduced top margin for compactness
+                backgroundColor: "rgba(220, 20, 60, 0.5)", // Dark red with transparency
+                color: "#4f4f4f", // Grey text color
+                padding: "0.25rem 0.75rem", // Reduced padding to make it more compact
+                borderRadius: "8px", // Rounded corners
+                border: "1px solid rgba(220, 20, 60, 0.7)", // Slightly darker border
+                display: "block", // Block-level to align properly
+                fontSize: "12px", // Smaller font size to reduce height
+                fontWeight: "bold", // Bold text for emphasis
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
+                textAlign: "left", // Align text to the left
+                marginBottom: "0.5rem", // Reduced space below
               }}
             >
-              <p>{approverMsg}</p>
+              ❌ {examState.toUpperCase()}
+              <div
+                style={{
+                  textAlign: "left",
+                }}
+              ></div>
             </div>
+
+            {/* Button outside the red box */}
             {userRole === "User" && (
               <div
                 style={{
-                  marginTop: "0.5rem", // Reduced margin for button space
+                  marginTop: "0.5rem", // Space above the button
                 }}
               >
                 <button
                   onClick={changeExamStateToBuild}
                   style={{
-                    padding: "0.25rem 0.75rem", // Smaller padding for a smaller button
+                    padding: "0.3rem 0.75rem", // Smaller padding for a smaller button
                     backgroundColor: "#2196F3", // Blue color for 'Send For Approval'
                     color: "#fff",
                     border: "none",
@@ -553,7 +681,7 @@ const ViewExam: React.FC = () => {
                 </button>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
 
@@ -821,6 +949,63 @@ const ViewExam: React.FC = () => {
                 {section.total_marks})
               </h3>
 
+              {userRole === "Admin" && examState === "pending" && (
+                <textarea
+                  style={{
+                    width: "100%", // Adjust this width as needed
+                    height: "80px", // Fixed height
+                    padding: "0.5rem",
+                    borderRadius: "4px",
+                    border: "1px solid #ccc",
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+                    marginTop: "0.5rem",
+                    resize: "none", // Disable resizing
+                  }}
+                  maxLength={350}
+                  placeholder="Enter your feedback"
+                  value={feedback[section.title] || ""}
+                  onChange={(e) =>
+                    handleFeedbackChange(section.title, e.target.value)
+                  }
+                ></textarea>
+              )}
+
+              {examState === "approved" && approverMsg[section.title] && (
+                <div>
+                  <div
+                    style={{
+                      padding: "10px",
+                      borderRadius: "8px",
+                      border: "1px solid #ccc",
+                      backgroundColor: "rgba(34, 139, 34, 0.5)",
+                      color: "#4f4f4f",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {approverMsg[section.title]}
+                  </div>
+                </div>
+              )}
+
+              {examState === "disapproved" && approverMsg[section.title] && (
+                <div>
+                  <div
+                    style={{
+                      padding: "10px",
+                      borderRadius: "8px",
+                      border: "1px solid #ccc",
+                      backgroundColor: "rgba(220, 20, 60, 0.5)",
+                      color: "#4f4f4f",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {approverMsg[section.title]}
+                  </div>
+                </div>
+              )}
+
               {/* Feedback Text Area for Section */}
               {isEditing && (
                 <textarea
@@ -1046,7 +1231,7 @@ const ViewExam: React.FC = () => {
                                     </ul>
 
                                     {question.vocabulary_matching.map(
-                                      (q: any, i:any) => (
+                                      (q: any, i: any) => (
                                         <p
                                           key={`definition-${i}`}
                                           style={{ marginTop: "10px" }}
@@ -1256,32 +1441,6 @@ const ViewExam: React.FC = () => {
                 margin: "0 auto",
               }}
             >
-              <h3
-                style={{
-                  marginBottom: "1rem",
-                  fontSize: "1.2rem",
-                  color: "#333",
-                  textAlign: "center",
-                }}
-              >
-                Provide Feedback and Update Exam Status
-              </h3>
-              <textarea
-                placeholder="Enter your feedback here..."
-                onChange={(e) => setApproverMsg(e.target.value)}
-                maxLength={150}
-                required
-                style={{
-                  width: "100%",
-                  minHeight: "80px",
-                  padding: "0.8rem",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  fontSize: "14px",
-                  resize: "none",
-                  marginBottom: "1rem",
-                }}
-              />
               <div
                 style={{
                   display: "flex",
