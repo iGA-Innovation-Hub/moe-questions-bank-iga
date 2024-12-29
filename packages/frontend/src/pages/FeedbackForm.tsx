@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import invokeApig from "../lib/callAPI.ts";
+import SpeechRecorder from "../components/SpeechRecorder.tsx"
 
 const FeedbackForm: React.FC = () => {
   //storing the input
@@ -88,37 +89,50 @@ const FeedbackForm: React.FC = () => {
           >
             Message:
           </label>
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Write your feedback here..."
-            style={{
-              width: "100%",
-              height: "120px",
-              padding: "0.75rem",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              fontSize: "14px",
-              resize: "none",
-            }}
-          ></textarea>
+          <div style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "8px"
+          }}>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Write your feedback here..."
+              style={{
+                width: "100%",
+                height: "120px",
+                padding: "0.75rem",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+                resize: "none",
+              }}
+            />
+            <SpeechRecorder
+              onTranscriptChange={setMessage}
+              size={20}
+              color="#4F46E5"
+            />
+          </div>
         </div>
 
         <button
           type="submit"
           disabled={loading}
           style={{
-            color: "#fff",
-            cursor: loading ? "not-allowed" : "pointer",
             display: "block",
             width: "100%",
-            backgroundColor: loading ? "#ccc" : "#4b4b4b",
             padding: "1rem",
             marginTop: "2rem",
+            backgroundColor: loading ? "#ccc" : "#4b4b4b",
+            color: "#fff",
             border: "none",
             borderRadius: "4px",
             fontSize: "16px",
             fontWeight: "bold",
+            cursor: loading ? "not-allowed" : "pointer",
           }}
         >
           {loading ? (
@@ -127,6 +141,7 @@ const FeedbackForm: React.FC = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                gap: "8px"
               }}
             >
               <span
@@ -135,8 +150,9 @@ const FeedbackForm: React.FC = () => {
                   height: "1rem",
                   border: "2px solid #fff",
                   borderRadius: "50%",
-                  borderTop: "2px solid transparent",
+                  borderTopColor: "transparent",
                   animation: "spin 1s linear infinite",
+                  display: "inline-block"
                 }}
               />
               Loading...
@@ -152,10 +168,16 @@ const FeedbackForm: React.FC = () => {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
+          
+          .speech-recorder-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+          }
         `}
       </style>
     </div>
   );
+
 };
 
 export default FeedbackForm;
