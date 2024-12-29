@@ -8,6 +8,9 @@ import { AuthStack } from "./stacks/AuthStack";
 import { KnowledgeBaseStack } from "./stacks/KnowledgeStack";  
 import { MyStack } from "./stacks/OpenSearchStack";       
 import { BedrockKbLambdaStack } from "./stacks/bedrockstack";
+import { StorageStack } from "./stacks/StorageStack";
+import { FunctionsStack } from "./stacks/FunctionsStack";
+
 export default {
   config(_input) {
     return {
@@ -28,8 +31,16 @@ export default {
       app.stack(OIDCForGitHubCI)
     }
     else {
-      // app.stack(DBStack).stack(MyStack).stack(KnowledgeBaseStack).stack(ApiStack).stack(AuthStack).stack(FrontendStack)
-      app.stack(MyStack).stack(KnowledgeBaseStack).stack(BedrockKbLambdaStack);
+      app
+        .stack(DBStack)
+        .stack(MyStack)
+        // .stack(KnowledgeBaseStack)
+        .stack(StorageStack)
+        .stack(BedrockKbLambdaStack)
+        .stack(FunctionsStack)
+        .stack(ApiStack)
+        .stack(AuthStack)
+        .stack(FrontendStack);
     }
   }
 } satisfies SSTConfig;

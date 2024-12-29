@@ -3,34 +3,37 @@ import { useNavigate } from "react-router-dom";
 import Form from "react-bootstrap/Form";
 import Stack from "react-bootstrap/Stack";
 import Button from "react-bootstrap/Button";
-import "../styles/Login.css"
+import "../styles/Login.css";
 import { signIn } from "aws-amplify/auth";
 import { useAppContext } from "../lib/contextLib";
-import getCurrentUser from "../lib/getToken";
+import { getCurrentUser } from "../lib/getToken";
 import { signOut } from "aws-amplify/auth";
-
-
-
+import { getUserAttributes } from "../lib/getUserAttributes";
+import { setCookie, deleteCookie, getCookie } from "../lib/cookies";
 
 export default function Login() {
   const [username, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { userHasAuthenticated } = useAppContext();
+  const { userHasAuthenticated, updateUserRole } = useAppContext();
 
   function validateForm() {
     return username.length > 0 && password.length > 0;
   }
 
-
   // Automatically sign out the user if they are already authenticated
   useEffect(() => {
     const handleSignOutIfAuthenticated = async () => {
       const currentUser = getCurrentUser();
-      if (currentUser) {
+      if (currentUser && getCookie("isAuthenticated")) {
         try {
           await signOut();
           userHasAuthenticated(false);
+          // localStorage.removeItem("isAuthenticated");
+          // localStorage.removeItem("userRole");
+          deleteCookie("isAuthenticated");
+          deleteCookie("userRole");
           console.log("User signed out");
         } catch (error) {
           console.error("Error during sign-out:", error);
@@ -43,10 +46,30 @@ export default function Login() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setLoading(true);
 
     try {
       await signIn({ username, password });
+
+
+     const attributes: any = await getUserAttributes();
+     console.log("User attributes: ", attributes);
+
+     const role = attributes["nickname"]; // Fetch the nickname attribute
+     console.log(`User nickname: ${role}`);
+
+      // const role = userRole.role;
+      // console.log(role);
+
       userHasAuthenticated(true);
+      updateUserRole(role);
+
+      // Persist state in localStorage
+      // localStorage.setItem("isAuthenticated", "true");
+      // localStorage.setItem("userRole", role);
+      setCookie("isAuthenticated", "true", 1);
+      setCookie("userRole", role, 1);
+
       navigate("/dashboard");
     } catch (error) {
       // Prints the full error
@@ -83,8 +106,20 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </Form.Group>
-          <Button size="lg" type="submit" disabled={!validateForm()}>
-            Login
+          <Button
+            size="lg"
+            type="submit"
+            disabled={!validateForm() || isLoading}
+            className="login-button"
+          >
+            {isLoading ? (
+              <>
+                <span className="spinner"></span>
+                Authenticating...
+              </>
+            ) : (
+              "Login"
+            )}
           </Button>
         </Stack>
       </Form>

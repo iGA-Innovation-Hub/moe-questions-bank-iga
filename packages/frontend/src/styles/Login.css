@@ -56,7 +56,7 @@ body {
 
 /* Button */
 .Login form .btn {
-  background: #007bff;
+  background: #e44c4c;
   color: white;
   padding: 10px 15px;
   border: none;
@@ -73,10 +73,35 @@ body {
 }
 
 .Login form .btn:hover:not(:disabled) {
-  background: #0056b3; /* Darker blue on hover */
+  background: #d32f2f; /* Darker blue on hover */
   transform: translateY(-2px); /* Subtle hover effect */
 }
 
 .Login form .btn:active {
   transform: translateY(1px); /* Pressed button effect */
+}
+
+
+/* Spinner animation */
+.spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid #fff; /* Spinner color */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 10px; /* Space between spinner and text */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Flex styling for button */
+.login-button {
+  display: flex;
+  align-items: center; /* Align spinner and text vertically */
+  justify-content: center; /* Center content horizontally */
 }

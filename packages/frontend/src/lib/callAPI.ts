@@ -1,12 +1,10 @@
 // @ts-ignore
 import sigV4Client from "./sigV4Client.js";
-import getCurrentUser from "./getToken.ts";
+import { getCurrentUser } from "./getToken.ts";
 import { getUserToken } from "./getToken.ts";
-import AWS from "aws-sdk";
 import getAwsCredentials from "./getIAMCred.ts";
 
-//Invokes the our API Gateway using the retreived IAM credentials
-
+// Invokes the API Gateway using the retrieved IAM credentials
 const sigClient: any = sigV4Client;
 
 export default async function invokeApig({
@@ -15,39 +13,53 @@ export default async function invokeApig({
   headers = {},
   queryParams = {},
   body,
+  isFunction = false,
 }: {
   path: string; // Correct type definition
   method?: string;
   headers?: Record<string, string>;
   queryParams?: Record<string, string | number>;
   body: any;
+  isFunction: boolean;
 }) {
   const currentUser = getCurrentUser();
   if (!currentUser) {
     throw new Error("User is not authenticated");
   }
 
-  const userToken = await getUserToken(currentUser); //User token from the cognito user pool
-  await getAwsCredentials(userToken); //IAM cred based on the cognito token
+  const userToken = await getUserToken(currentUser); // User token from the Cognito user pool
 
-  const accessKey = AWS.config.credentials?.accessKeyId ?? "";
-  const secretKey = AWS.config.credentials?.secretAccessKey ?? "";
-  const sessionToken = AWS.config.credentials?.sessionToken ?? "";
+  // Retrieve IAM credentials based on the Cognito token
+  //@ts-ignore
+  const credentials = await getAwsCredentials(userToken);
 
-  if (!accessKey || !secretKey || !sessionToken) {
+  //@ts-ignore
+  const { accessKeyId, secretAccessKey, sessionToken } = credentials;
+
+
+  if (!accessKeyId || !secretAccessKey || !sessionToken) {
     throw new Error("AWS credentials are not available.");
   }
 
-  //sigV4 is needed as our API authorizer is IAM
+  let url = import.meta.env.VITE_API_URL
+  let service = "execute-api";
+
+  if (isFunction) { 
+    url = import.meta.env.VITE_CREATE_EXAM_FUNCTION_URL;
+    service = "lambda";
+  }
+
+  // sigV4 is needed as our API authorizer is IAM
   const client = sigClient.newClient({
-    accessKey: accessKey,
-    secretKey: secretKey,
+    accessKey: accessKeyId,
+    secretKey: secretAccessKey,
     sessionToken: sessionToken,
     region: import.meta.env.VITE_REGION,
-    endpoint: import.meta.env.VITE_API_URL,
+    endpoint: url,
+    serviceName: service,
   });
 
-  //Signs the request with the appropriate data
+  // Signs the request with the appropriate data
   const signedRequest = client.signRequest({
     method,
     path,
@@ -56,18 +68,32 @@ export default async function invokeApig({
     body,
   });
 
+
   body = body ? JSON.stringify(body) : body;
 
   //Sends the signed request
+
+
   const results = await fetch(signedRequest.url, {
     method,
     headers: signedRequest.headers,
     body,
   });
 
+  // console.log("Response:", results);
+
   if (!results.ok) {
-    throw new Error(await results.text());
+    const errorText = await results.text();
+    console.error("Error response body:", errorText);
+    throw new Error(`API call failed: ${errorText}`);
   }
 
-  return results.json();
+  const textResponse = await results.text();
+  try {
+    return textResponse ? JSON.parse(textResponse) : null;
+  } catch (error) {
+    throw new Error(
+      `Failed to parse response as JSON: ${(error as Error).message}`
+    );
+  }
 }

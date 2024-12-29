@@ -1,17 +1,18 @@
 import { StackContext, Function, use, Stack } from "sst/constructs";
 import { BedrockKnowledgeBase } from "bedrock-agents-cdk";
 import * as iam from "aws-cdk-lib/aws-iam";
-import { KnowledgeBaseStack } from "./KnowledgeStack";
+// import { KnowledgeBaseStack } from "./KnowledgeStack";
 import { MyStack } from "./OpenSearchStack";
-import { S3EventSource } from "aws-cdk-lib/aws-lambda-event-sources"; // Import EventSource for S3 trigger
-import { EventType } from "aws-cdk-lib/aws-s3"; // Import Bucket from AWS CDK
-import { Token } from "aws-cdk-lib";
+// import { S3EventSource } from "aws-cdk-lib/aws-lambda-event-sources"; // Import EventSource for S3 trigger
+// import { EventType } from "aws-cdk-lib/aws-s3"; // Import Bucket from AWS CDK
+// import { Token } from "aws-cdk-lib";
 // import * as sst from "@serverless-stack/resources";
+import { StorageStack } from "./StorageStack";
 
 
  
 export function BedrockKbLambdaStack({ stack }: StackContext) {
-  const { bucket } = use(KnowledgeBaseStack);
+  const { materialsBucket: bucket } = use(StorageStack);
 
 
   const s3BucketArn = bucket.bucketArn;
@@ -125,6 +126,7 @@ export function BedrockKbLambdaStack({ stack }: StackContext) {
   ],
 });
 
+// Add an S3 trigger to the Lambda function (currently gives cyclic dependency error)
 // syncKnowledgeBaseFunction.addEventSource(new S3EventSource(bucket, {
 //   events: [EventType.OBJECT_CREATED]
 // }) as any);
