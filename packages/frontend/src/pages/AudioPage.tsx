@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import invokeApig from "../lib/callAPI.ts";
+import { useAlert } from "./AlertComponent.tsx";
 
 const AudioScriptForm: React.FC = () => {
   // Storing the inputs
@@ -7,6 +8,7 @@ const AudioScriptForm: React.FC = () => {
   const [script, setScript] = useState("");
   const [loading, setLoading] = useState(false);
   const [audioData, setAudioData] = useState<string | null>(null);
+  const {showAlert }= useAlert();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevents page refresh
@@ -34,13 +36,22 @@ const AudioScriptForm: React.FC = () => {
 
       if (response && response.audioData) {
         setAudioData(response.audioData);
-        alert("Audio generated successfully!");
+        
+        showAlert({
+          type: "success",
+          message: "Audio generated successfully.",
+        });
+
+
       } else {
         throw new Error("Failed to retrieve audio data.");
       }      
     } catch (error) {
       console.error("Error", error);
-      alert("Failed to generate the audio.");
+      showAlert({
+        type: "failure",
+        message: "Error generating audio. Please try again.",
+      });
     } finally {
       setLoading(false);
     }

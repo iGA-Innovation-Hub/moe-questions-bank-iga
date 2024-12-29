@@ -36,7 +36,6 @@ export default async function invokeApig({
   //@ts-ignore
   const { accessKeyId, secretAccessKey, sessionToken } = credentials;
 
-  console.log("Credentials:", { accessKeyId, secretAccessKey, sessionToken });
 
   if (!accessKeyId || !secretAccessKey || !sessionToken) {
     throw new Error("AWS credentials are not available.");
@@ -69,13 +68,11 @@ export default async function invokeApig({
     body,
   });
 
-  console.log("Signed Request:", signedRequest);
 
   body = body ? JSON.stringify(body) : body;
 
   //Sends the signed request
 
-  console.log("Request Payload:", { path, method, headers, queryParams, body });
 
   const results = await fetch(signedRequest.url, {
     method,

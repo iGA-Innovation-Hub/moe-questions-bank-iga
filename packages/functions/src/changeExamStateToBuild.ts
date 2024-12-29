@@ -25,9 +25,10 @@ export async function changeToBuild(event: APIGatewayProxyEvent) {
         Key: {
           examID: requestJSON.examID, // Primary key to find the item
         },
-        UpdateExpression: "SET examState = :examState", // Update only examState
+        UpdateExpression: "SET examState = :examState, approverMsg = :approverMsg", // Update only examState
         ExpressionAttributeValues: {
           ":examState": "building", // New value for examState
+          ":approverMsg": "", // New value for approverMsg
         },
       })
     );

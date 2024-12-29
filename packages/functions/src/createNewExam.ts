@@ -82,13 +82,15 @@ export async function createExam(event) {
           prompt = `
           Update the following exam based on the feedback provided.
           Ensure that all related information is recalculated to maintain consistency.
-          Feedback: ${JSON.stringify(data.feedback, null, 2)}
+          Feedback: ${JSON.stringify(data.feedback, null , 2)}
           
           Current Exam Content:
           ${JSON.stringify(existingExam, null, 2)}
           
           The type of your response must be a JSON object containing the updated exam only. Ensure all changes are reflected accurately
           `;
+        
+        console.log("Prompt for Regeneration with Feedback:", prompt);
       } else {
         //for normal regenerating without feedback
         prompt = `
