@@ -32,6 +32,7 @@ export async function createExam(event) {
     console.log("Error with DynamoDB client");
   }
   const tableName = process.env.TABLE_NAME;
+  const knowledgeBaseId = process.env.KNOWLEDGE_BASE_ID;
   console.log("Table Name:", process.env.TABLE_NAME);
 
   // Handle empty body
@@ -159,7 +160,7 @@ export async function createExam(event) {
           region: "us-east-1",
         });
         let retrieveCommand = new RetrieveCommand({
-          knowledgeBaseId: "EU3Z7J6SG6",
+          knowledgeBaseId: knowledgeBaseId ?? "EU3Z7J6SG6",
           retrievalConfiguration: {
             vectorSearchConfiguration: {
               numberOfResults: 10,
