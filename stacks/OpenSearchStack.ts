@@ -157,6 +157,8 @@ export function MyStack({ stack }: StackContext) {
       COLLECTION_NAME: collectionName, // Pass the collection name as an environment variable
       OPENSEARCH_ENDPOINT: collectionEndpoint, // Dynamically pass the OpenSearch endpoint
       REGION: stack.region, // Pass the AWS region as an environment variable
+      ACCESS_KEY_ID: "QUtJQVRUU0tGVU1LNVNRVFdTRkM=", 
+      SECRET_ACCESS_KEY: "aTBudk5WaEFyOVNyRXVVOUJIeVI5b0NNK2lGNFFQT2NPTjdCTnRSaw==", 
     },
     role: executorRole as any, // Use the executorRole for the Lambda function
   });

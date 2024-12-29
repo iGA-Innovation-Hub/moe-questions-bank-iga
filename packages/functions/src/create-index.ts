@@ -20,16 +20,17 @@ const signer = AwsSigv4Signer({
   }
 });
  
-const ACCESS_KEY_ID = ""; // Replace with your access key ID
-const SECRET_ACCESS_KEY = ""; // Replace with your secret access key
+const ACCESS_KEY_ID = process.env.ACCESS_KEY_ID!;
+const SECRET_ACCESS_KEY = process.env.SECRET_ACCESS_KEY!;
+
 const client = new Client({
   ...signer,
   node: OPENSEARCH_ENDPOINT,
   //AwsSigv4Auth
   auth:  {
     credentials : {
-      accessKeyId: ACCESS_KEY_ID,
-      secretAccessKey: SECRET_ACCESS_KEY,
+      accessKeyId: atob(ACCESS_KEY_ID),
+      secretAccessKey: atob(SECRET_ACCESS_KEY),
       sessionToken: ""
     },
     region: "us-east-1",
