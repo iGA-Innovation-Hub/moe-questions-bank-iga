@@ -136,5 +136,5 @@ export function BedrockKbLambdaStack({ stack }: StackContext) {
     DATA_SOURCE_ID: bedrockKb.dataSourceId,
   });
 
-  return { bedrockKbRole, syncKnowledgeBaseFunction };
+  return { bedrockKbRole, syncKnowledgeBaseFunction, bedrockKb }
 }
