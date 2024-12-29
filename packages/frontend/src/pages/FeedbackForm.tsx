@@ -17,7 +17,7 @@ const FeedbackForm: React.FC = () => {
     };
 
     try {
-      //send the form data to a server="lambda" and wait for lambda to respond
+      //send the form data to a server="lambda" and wait for lambda to respondz
       //@ts-ignore
       const response = await invokeApig({
         path: "/feedback",
