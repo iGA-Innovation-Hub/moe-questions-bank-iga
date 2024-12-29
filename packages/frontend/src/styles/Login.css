@@ -1,85 +1,167 @@
-/* General styles */
+/* LoginPage.css */
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f7f9fc; /* Light background for a modern feel */
   margin: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh; /* Full height to center vertically */
+  font-family: Arial, sans-serif;
 }
 
-/* Center the login container */
-.Login {
-  background: #ffffff; /* White background for contrast */
-  padding: 30px 40px;
-  border-radius: 10px; /* Rounded corners */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-  max-width: 400px;
-  width: 100%; /* Ensure responsiveness */
+.login-container {
+  display: flex;
+  height: 100vh;
+  background: #f5f5f5;
+}
+
+.login-left {
+  flex: 1;
+  background: #1e475d;
+  color: white;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  max-width: 700px;
+}
+
+
+
+.login-form {
+  margin: 0 auto;
+  margin-top: 8rem;
+  min-width: 450px;
+  max-width: 500px;
+}
+
+h2 {
+  margin-bottom: 1rem;
+  color: rgb(180 160 141);
+  font-weight: 500;
+}
+
+.input-group {
+  margin-bottom: 1rem;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+input::placeholder {
+  color: rgba(255, 255, 255, 0.7); /* Slightly faded white for the placeholder */
+  font-size: 12px;
+}
+
+input {
+  font-size: 12px;
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid white;
+  border-radius: 10px;
+  background-color: transparent; /* Makes the background transparent */
+  color: white; /* Ensures the text color inherits from the parent or is visible */
+}
+
+input:focus {
+  border: 1px solid white; /* White border on focus */
+  outline: none; /* Removes default outline */
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.5); /* Optional glow effect */
+  color: white;
+  font-size: 14px;
+}
+
+
+.password-field {
+  display: flex;
+  align-items: center;
+}
+
+
+
+.links {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+  font-size: 12px;
+  color: white;
+}
+
+.links a {
+  color: white;
+  text-decoration: none;
+}
+
+.login-button {
+  background: rgb(180 160 141);
+  border: none;
+  color: white;
+  padding: 0.3rem;
+  width: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.login-button:hover {
+  background: rgb(154, 129, 105);
+  transition: 0.2s;
+}
+
+.student-teacher-login {
   text-align: center;
 }
 
-/* Style the heading */
-.Login h1 {
-  margin-bottom: 20px;
-  font-size: 2rem;
-  color: #333;
-}
-
-/* Form labels */
-.Login form label {
-  font-weight: bold;
-  color: #555;
-  display: block;
-  margin-bottom: 5px;
-}
-
-/* Input fields */
-.Login form .form-control {
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 10px;
-  font-size: 1rem;
-  width: 100%;
-  box-sizing: border-box; /* Ensure padding doesn't affect width */
-  margin-bottom: 15px;
-  transition: border-color 0.3s;
-}
-
-.Login form .form-control:focus {
-  border-color: #007bff; /* Highlight with primary color on focus */
-  outline: none;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-}
-
-/* Button */
-.Login form .btn {
-  background: #e44c4c;
-  color: white;
-  padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
-  font-size: 1.2rem;
+.school-login {
+  margin-top: 1rem;
+  background: white;
+  color: #003b5c;
+  padding: 0.3rem;
+  border: 1px solid #003b5c;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
-  width: 100%; /* Full-width button */
+  width: 100%;
 }
 
-.Login form .btn:disabled {
-  background: #aaa; /* Gray out when disabled */
-  cursor: not-allowed;
+.school-login:hover{
+  background-color: rgb(184, 180, 180);
+  transition: 0.2;
 }
 
-.Login form .btn:hover:not(:disabled) {
-  background: #d32f2f; /* Darker blue on hover */
-  transform: translateY(-2px); /* Subtle hover effect */
+footer {
+  text-align: center;
+  font-size: 0.7rem;
+  margin-top: 1rem;
+  margin-bottom: 10rem;
 }
 
-.Login form .btn:active {
-  transform: translateY(1px); /* Pressed button effect */
+.login-right {
+  flex: 1;
+  background: url('../assets/DALLE2024-12-2913.15.14-AvectorillustrationofanArabmansittingatadeskinamodernwell-litofficeworkingonacomputer.Thecomputerscreendisplaysaschoolexam-ezgif.com-webp-to-jpg-converter.jpg') no-repeat center center;
+  background-size: cover;
+  background-position: center;
+  
 }
+
+
+.login-right-content{
+  background-color: rgba(3, 40, 61, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+  padding: 2rem;
+  height: 100%;
+}
+
+.welcome-text h1 {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.welcome-text p {
+  font-size: 1.2rem;
+}
+
 
 
 /* Spinner animation */
@@ -99,9 +181,4 @@ body {
   100% { transform: rotate(360deg); }
 }
 
-/* Flex styling for button */
-.login-button {
-  display: flex;
-  align-items: center; /* Align spinner and text vertically */
-  justify-content: center; /* Center content horizontally */
-}
+
