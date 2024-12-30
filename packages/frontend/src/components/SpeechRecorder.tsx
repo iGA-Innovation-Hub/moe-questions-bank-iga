@@ -116,9 +116,9 @@ const SpeechRecorder: React.FC<SpeechRecorderProps> = ({
       onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
     >
       {isRecording ? (
-        <MicOff size={size} color={color} />
-      ) : (
         <Mic size={size} color={color} />
+      ) : (
+        <MicOff size={size} color={color} />
       )}
     </button>
   );
