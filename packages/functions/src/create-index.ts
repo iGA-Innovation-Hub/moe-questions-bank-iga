@@ -29,8 +29,8 @@ const client = new Client({
   //AwsSigv4Auth
   auth:  {
     credentials : {
-      accessKeyId: atob(ACCESS_KEY_ID),
-      secretAccessKey: atob(SECRET_ACCESS_KEY),
+      accessKeyId: ACCESS_KEY_ID,
+      secretAccessKey: SECRET_ACCESS_KEY,
       sessionToken: ""
     },
     region: "us-east-1",

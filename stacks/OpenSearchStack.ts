@@ -1,4 +1,4 @@
-import { StackContext, Function } from "sst/constructs"; // Import necessary constructs from SST
+import { Config, StackContext, Function } from "sst/constructs"; // Import necessary constructs from SST
 import { CfnAccessPolicy, CfnCollection, CfnSecurityPolicy } from "aws-cdk-lib/aws-opensearchserverless";
 import { ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Aws, Token } from "aws-cdk-lib"; // Import AWS class to access account and region info
@@ -25,7 +25,7 @@ export function OpenSearchConstruct(scope: Construct, executorRole: Role, stage:
   const dataAccessPolicyName = getResourceName("my-data-access-policy", stage);
   const collectionResourceName = `collection/${collectionName}`;
   const indexResourceName = `index/${collectionName}/*`;
-
+  
   
 
   // Create the OpenSearch Serverless Collection
@@ -122,6 +122,9 @@ export function OpenSearchConstruct(scope: Construct, executorRole: Role, stage:
 export function MyStack({ stack }: StackContext) {
   const stage = stack.stage; // Get the stage from the stack
 
+  const accessKeyId = new Config.Secret(stack, "ACCESS_KEY_ID");
+  const secretAccessKey = new Config.Secret(stack, "SECRET_ACCESS_KEY");
+
   // Create the IAM role for Lambda execution
   const executorRole = new Role(stack, "ExecutorRole", {
     assumedBy: new ServicePrincipal("lambda.amazonaws.com"),
@@ -157,9 +160,8 @@ export function MyStack({ stack }: StackContext) {
       COLLECTION_NAME: collectionName, // Pass the collection name as an environment variable
       OPENSEARCH_ENDPOINT: collectionEndpoint, // Dynamically pass the OpenSearch endpoint
       REGION: stack.region, // Pass the AWS region as an environment variable
-      ACCESS_KEY_ID: "QUtJQVRUU0tGVU1LNVNRVFdTRkM=", 
-      SECRET_ACCESS_KEY: "aTBudk5WaEFyOVNyRXVVOUJIeVI5b0NNK2lGNFFQT2NPTjdCTnRSaw==", 
     },
+    bind: [accessKeyId, secretAccessKey], // Bind the secrets to the Lambda function
     role: executorRole as any, // Use the executorRole for the Lambda function
   });
   
