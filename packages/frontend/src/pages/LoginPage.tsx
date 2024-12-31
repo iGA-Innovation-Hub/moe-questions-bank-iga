@@ -17,7 +17,6 @@ export default function Login() {
   const [isLoading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { userHasAuthenticated, updateUserRole } = useAppContext();
-  const loader  = LoginLoader;
 
   function validateForm() {
     return username.length > 0 && password.length > 0;

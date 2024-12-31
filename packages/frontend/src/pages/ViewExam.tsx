@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../lib/contextLib.ts";
 import { generateExamPDF } from "./generatePDF"; // Make sure to import the function
-import { useAlert } from "./AlertComponent";
+import { useAlert } from "../components/AlertComponent.tsx";
 import { generateModelPDF } from "./generateModelAnswerPDF.tsx";
 import invokeLambda from "../lib/invokeLambda.ts";
 
@@ -74,16 +74,15 @@ const ViewExam: React.FC = () => {
       ...prevFeedback,
       [partName]: value, // Use `partName` as the key
     }));
-    console.log(feedback)
+    console.log(feedback);
   };
 
-  const handleFeedbackSubmission = async () => { 
+  const handleFeedbackSubmission = async () => {
     const requestBody = {
       examID: id!, // Exam ID
       feedback: approverMsg, // Include all provided feedback
       contributors: contributers, // Include contributors
     };
-
 
     try {
       setLoadingChangeState(true);
@@ -108,7 +107,6 @@ const ViewExam: React.FC = () => {
         setMark(data.totalMarks); // Update the total marks
       }
 
-
       if (data.updatedExamContent || data.totalMarks) {
         // Refresh the page after the success message
         window.location.reload();
@@ -116,16 +114,15 @@ const ViewExam: React.FC = () => {
         showAlert({
           type: "failure",
           message: "Data received. No changes made.",
-        })
+        });
       }
     } catch (error) {
       console.error("Error sending feedback:", error);
       setErrorMsg("Failed to apply changes. Please try again later.");
     } finally {
-      setLoadingChangeState(false)
+      setLoadingChangeState(false);
     }
-  
-  }
+  };
 
   // Fetch initial data
   const fetchInitialData = async () => {
@@ -179,7 +176,7 @@ const ViewExam: React.FC = () => {
       setDuration(response.examDuration || "");
       setMark(response.examMark || "");
       setExamState(response.examState || "");
-      
+
       if (response.approverMsg) {
         if (typeof response.approverMsg === "string") {
           setApproverMsg(JSON.parse(response.approverMsg) || {});
@@ -317,7 +314,6 @@ const ViewExam: React.FC = () => {
     setLoadingChangeState(true);
     setLoadingApprove(true);
 
-    
     const payload = {
       examID: id,
       approverMsg: feedback,
@@ -346,17 +342,16 @@ const ViewExam: React.FC = () => {
     setLoadingChangeState(true);
     setLoadingDisapprove(true);
 
-   if (!feedback || Object.keys(feedback).length === 0) {
-     showAlert({
-       type: "failure",
-       message: "Please add feedback!",
-     });
-     setLoadingChangeState(false);
-     setLoadingDisapprove(false);
-     return;
-   }
-    
-    
+    if (!feedback || Object.keys(feedback).length === 0) {
+      showAlert({
+        type: "failure",
+        message: "Please add feedback!",
+      });
+      setLoadingChangeState(false);
+      setLoadingDisapprove(false);
+      return;
+    }
+
     const payload = {
       examID: id,
       approverMsg: feedback,

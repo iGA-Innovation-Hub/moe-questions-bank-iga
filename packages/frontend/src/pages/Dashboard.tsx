@@ -8,12 +8,12 @@ import { useAppContext } from "../lib/contextLib";
 import { NavLink, Outlet } from "react-router-dom";
 import invokeApig from "../lib/callAPI.ts";
 import { deleteCookie } from "../lib/cookies.ts";
-import { useAlert } from "./AlertComponent";
+import { useAlert } from "../components/AlertComponent.tsx";
+import Report from "../components/Report.tsx";
 
 interface UserDashboardProps {}
 
 const Dashboard: React.FC<UserDashboardProps> = () => {
-  
   const navigate = useNavigate();
   const { userHasAuthenticated } = useAppContext();
   const { userRole } = useAppContext();
@@ -34,103 +34,104 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
     userRole === "User" ? "building" : "pending"
   );
 
-  const { showAlert } = useAlert(); 
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
+  const openReport = () => setIsReportOpen(true);
+  const closeReport = () => setIsReportOpen(false);
 
+  const { showAlert } = useAlert();
 
   // Fetch initial data
-    const fetchInitialData = async () => {
-      try {
-        //@ts-ignore
-        const response = await invokeApig({
-          path: `/getExamHistory`, 
-          method: "GET",
-          queryParams: {
-            state: filterValue,
-          },
-        });
-  
-        if (!response || Object.keys(response).length === 0) {
-          console.log(response);
-          setGetExamsError("No exams found!");
-          return;
-        }
-  
-        // Store the retrieved exams in the state
-        setExams(response);
-  
-        console.log("Initial Data Loaded:", response);
-      } catch (err: any) {
-        console.error("Error fetching initial data:", err);
-      } finally {
-        setGettingExams(false); // Mark loading as complete
+  const fetchInitialData = async () => {
+    try {
+      //@ts-ignore
+      const response = await invokeApig({
+        path: `/getExamHistory`,
+        method: "GET",
+        queryParams: {
+          state: filterValue,
+        },
+      });
+
+      if (!response || Object.keys(response).length === 0) {
+        console.log(response);
+        setGetExamsError("No exams found!");
+        return;
       }
+
+      // Store the retrieved exams in the state
+      setExams(response);
+
+      console.log("Initial Data Loaded:", response);
+    } catch (err: any) {
+      console.error("Error fetching initial data:", err);
+    } finally {
+      setGettingExams(false); // Mark loading as complete
+    }
+  };
+
+  async function getExams() {
+    setExams([]);
+    setGettingExams(true);
+    console.log(filterValue);
+    try {
+      //@ts-ignore
+      const response = await invokeApig({
+        path: `/getExamHistory`, // Adjust path as needed
+        method: "GET",
+        queryParams: {
+          state: filterValue,
+        },
+      });
+
+      if (!response || Object.keys(response).length === 0) {
+        console.log(response);
+        setGetExamsError("No exams found!");
+        return;
+      }
+
+      setGetExamsError("");
+
+      // Store the retrieved exams in the state
+      setExams(response);
+      setExamsType(filterValue);
+
+      console.log("Initial Data Loaded:", response);
+    } catch (err: any) {
+      console.error("Error fetching initial data:", err);
+    } finally {
+      setGettingExams(false); // Mark loading as complete
+    }
+  }
+
+  // Function to determine the color based on the examState
+  function getColorForState(state: any) {
+    const stateColors = {
+      pending: "rgba(255, 140, 0, 0.9)", // Orange
+      approved: "rgba(34, 139, 34, 0.9)", // Green
+      disapproved: "rgba(255, 0, 0, 0.9)", // Red
+      default: "rgba(105, 105, 105, 0.9)", // Gray for unknown states
     };
 
-    async function getExams() {
-        setExams([]);
-        setGettingExams(true);
-        console.log(filterValue);
-        try {
-          //@ts-ignore
-          const response = await invokeApig({
-            path: `/getExamHistory`, // Adjust path as needed
-            method: "GET",
-            queryParams: {
-              state: filterValue,
-            },
-          });
-    
-          if (!response || Object.keys(response).length === 0) {
-            console.log(response);
-            setGetExamsError("No exams found!");
-            return;
-          }
-    
-          setGetExamsError("");
-    
-          // Store the retrieved exams in the state
-          setExams(response);
-          setExamsType(filterValue)
-    
-          console.log("Initial Data Loaded:", response);
-        } catch (err: any) {
-          console.error("Error fetching initial data:", err);
-        } finally {
-          setGettingExams(false); // Mark loading as complete
-        }
-      }
-    
-      // Function to determine the color based on the examState
-      function getColorForState(state:any) {
-        const stateColors = {
-          pending: "rgba(255, 140, 0, 0.9)", // Orange
-          approved: "rgba(34, 139, 34, 0.9)", // Green
-          disapproved: "rgba(255, 0, 0, 0.9)", // Red
-          default: "rgba(105, 105, 105, 0.9)", // Gray for unknown states
-        };
-    
-        //@ts-ignore
-        return stateColors[state.toLowerCase()] || stateColors.default;
-      }
-  
-    useEffect(() => {
-      // Add a timeout before fetching data
-      const timer = setTimeout(() => {
-        fetchInitialData();
-      }, 2000);
-  
-      // Cleanup the timeout if the component unmounts
-      return () => clearTimeout(timer);
-    }, []);
+    //@ts-ignore
+    return stateColors[state.toLowerCase()] || stateColors.default;
+  }
+
+  useEffect(() => {
+    // Add a timeout before fetching data
+    const timer = setTimeout(() => {
+      fetchInitialData();
+    }, 2000);
+
+    // Cleanup the timeout if the component unmounts
+    return () => clearTimeout(timer);
+  }, []);
 
   setTimeout(() => {
     setActivePage(window.location.pathname);
   }, 500);
 
-  
   useEffect(() => {
-    
     async function fetchExamCount() {
       try {
         // @ts-ignore
@@ -146,19 +147,17 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
         setDisapproved(response ? response.disapproved : 0);
         setBuilding(response ? response.building : 0);
         setPending(response ? response.pending : 0);
-
       } catch (err) {
-
         setApproved(0);
         setDisapproved(0);
         setBuilding(0);
         setPending(0);
 
-        console.error("Error fetching exam count:", err); 
+        console.error("Error fetching exam count:", err);
       }
     }
-   
-      fetchExamCount();
+
+    fetchExamCount();
   }, [filterValue]); // Dependency array ensures fetchExamCount is only called when `filterValue` changes
 
   async function handleSignOut() {
@@ -171,8 +170,8 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
         deleteCookie("userRole");
         userHasAuthenticated(false);
         navigate("/login");
-      }
-    })
+      },
+    });
   }
 
   return (
@@ -214,9 +213,9 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
           </NavLink>
 
           <NavLink
-            to="/dashboard/feedback-form"
-            onClick={() => setActivePage("feedback")}
-            style={() => ({
+            to="#"
+            onClick={openReport}
+            style={{
               backgroundColor: "#d32f2f",
               color: "white",
               padding: "0.5rem 1rem",
@@ -227,10 +226,12 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
               textDecoration: "none",
               transition: "transform 0.3s, box-shadow 0.3s",
               border: "none",
-            })}
+            }}
           >
             Report Problem
           </NavLink>
+          {isReportOpen && <Report onClose={closeReport} />}
+
           <button
             onClick={handleSignOut}
             style={{

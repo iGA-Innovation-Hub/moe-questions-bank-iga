@@ -2,6 +2,7 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
+  
 }
 
 .login-container {
@@ -12,7 +13,7 @@ body {
 
 .login-left {
   flex: 1;
-  background: #1e475d;
+  background: rgba(3, 40, 61, 1);
   color: white;
   padding: 2rem;
   display: flex;
@@ -51,22 +52,23 @@ input::placeholder {
 }
 
 input {
-  font-size: 12px;
+  font-size: 12px; /* Ensure consistency */
   width: 100%;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
   border: 1px solid white;
   border-radius: 10px;
-  background-color: transparent; /* Makes the background transparent */
-  color: white; /* Ensures the text color inherits from the parent or is visible */
+  background-color: transparent; /* Transparent background */
+  color: white; /* Text color */
+  box-sizing: border-box; /* Prevent padding from affecting width */
 }
 
 input:focus {
-  border: 1px solid white; /* White border on focus */
-  outline: none; /* Removes default outline */
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.5); /* Optional glow effect */
+  font-size: 12px; /* Ensure no change on focus */
+  border: 1px solid white;
+  outline: none;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.5); /* Optional glow */
   color: white;
-  font-size: 14px;
 }
 
 

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
-import "./AlertPopup.css";
+import "../styles/AlertPopup.css";
 
 // Define the AlertConfig interface with action as a function that returns void or null
 interface AlertConfig {
@@ -79,8 +79,8 @@ export const ConfirmAction = () => {
             <div className="alert-popup alert-confirm">
                 <p>{alertConfig.message}</p>
                 <div className="alert-buttons">
-                    <button onClick={handleConfirm}>Yes</button>
-                    <button className="alert-failure-btn" onClick={closeAlert}>No</button>
+                    <button className="alert-confirm-btn" onClick={handleConfirm}>Continue</button> <br />
+                    <button className="alert-failure-btn" onClick={closeAlert}>Cancel</button>
                 </div>
             </div>
         </div>
@@ -89,22 +89,26 @@ export const ConfirmAction = () => {
 
 // Notification Component
 export const Notification = () => {
-    const { alertConfig, closeAlert } = useAlert();
+  const { alertConfig, closeAlert } = useAlert();
 
-    // Render notification only if alert type is not "confirm"
-    if (!alertConfig.isOpen || alertConfig.type === "confirm") return null;
+  // Render notification only if alert type is not "confirm"
+  if (!alertConfig.isOpen || alertConfig.type === "confirm") return null;
 
-    // Determine style for the notification based on type
-    const getNotificationStyle = () => {
-        return alertConfig.type === "success" ? "alert-success" : "alert-failure";
-    };
+  // Dynamically set the style class based on type
+  const notificationClass =
+        alertConfig.type === "success" ? "alert-success" : "alert-failure";
+    
+    const icon = alertConfig.type === "success" ? "✅" : "❌";
 
-    return (
-        <div className="alert-overlay">
-            <div className={`alert-popup ${getNotificationStyle()}`}>
-                <p>{alertConfig.message}</p>
-                <button onClick={closeAlert}>Close</button>
-            </div>
-        </div>
-    );
+  return (
+    <div className="alert-overlay">
+      <div className={`alert-popup ${notificationClass}`}>
+        <p>
+          {icon} {" "}
+          {alertConfig.message}
+        </p>
+        <button className="close-btn" onClick={closeAlert}>Close</button>
+      </div>
+    </div>
+  );
 };

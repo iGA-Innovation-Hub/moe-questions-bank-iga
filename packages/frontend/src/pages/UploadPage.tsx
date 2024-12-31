@@ -1,6 +1,7 @@
 import React, { useState, ChangeEvent } from "react";
 import invokeApig from "../lib/callAPI.ts";
 import "../styles/UploadPage.css";
+import { FiUploadCloud } from "react-icons/fi";
 
 const UploadPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -64,31 +65,34 @@ const UploadPage: React.FC = () => {
       <h1 className="title">Upload Course Material</h1>
       <p className="subtitle">Select files or folder to upload</p>
       <form onSubmit={handleSubmit} className="upload-form">
-        <label htmlFor="singleFileInput" className="file-label">
-          <input
-            type="file"
-            id="singleFileInput"
-            name="singleFile"
-            accept=".pdf, .doc, .docx, .ppt, .pptx, .txt"
-            className="file-input"
-            multiple
-            onChange={handleSingleFileChange}
-          />
-          Choose a file
-        </label>
-        <label htmlFor="folderInput" className="file-label">
-          <input
-            type="file"
-            id="folderInput"
-            name="folder"
-            className="file-input"
-            onChange={handleFolderChange}
-            multiple
-            //@ts-ignore
-            webkitdirectory="true"
-          />
-          Choose a folder
-        </label>
+        <div className="input-div">
+          <label htmlFor="singleFileInput" className="file-label">
+            <input
+              type="file"
+              id="singleFileInput"
+              name="singleFile"
+              accept=".pdf, .doc, .docx, .ppt, .pptx, .txt"
+              className="file-input"
+              multiple
+              onChange={handleSingleFileChange}
+            />
+            Choose a file
+          </label>
+          <label htmlFor="folderInput" className="file-label">
+            <input
+              type="file"
+              id="folderInput"
+              name="folder"
+              className="file-input"
+              onChange={handleFolderChange}
+              multiple
+              //@ts-ignore
+              webkitdirectory="true"
+            />
+            Choose a folder
+          </label>
+        </div>
+
         {selectedFiles.length > 0 && (
           <div className="file-list-container">
             <div className="file-list">
@@ -102,7 +106,7 @@ const UploadPage: React.FC = () => {
                     className="remove-file-button"
                     onClick={() => removeFile(index)}
                   >
-                    Remove
+                    ❌
                   </button>
                 </div>
               ))}
@@ -114,7 +118,19 @@ const UploadPage: React.FC = () => {
           className={`upload-button ${isLoading ? "loading" : ""}`}
           disabled={selectedFiles.length === 0 || isLoading}
         >
-          {isLoading ? "Uploading..." : "Upload"}
+          {isLoading && "Uploading"}
+          {!isLoading && (
+            <>
+              Upload
+              <FiUploadCloud
+                style={{
+                  fontSize: "1rem",
+                  marginLeft: "0.5rem",
+                  marginBottom: "-0.15rem",
+                }}
+              />
+            </>
+          )}
         </button>
       </form>
       {isLoading && <div className="loading-spinner"></div>}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import invokeApig from "../lib/callAPI.ts";
-import { useAlert } from "./AlertComponent.tsx";
+import { useAlert } from "../components/AlertComponent.tsx";
 
 const AudioScriptForm: React.FC = () => {
   // Storing the inputs
@@ -8,7 +8,7 @@ const AudioScriptForm: React.FC = () => {
   const [script, setScript] = useState("");
   const [loading, setLoading] = useState(false);
   const [audioData, setAudioData] = useState<string | null>(null);
-  const {showAlert }= useAlert();
+  const { showAlert } = useAlert();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevents page refresh
@@ -36,16 +36,14 @@ const AudioScriptForm: React.FC = () => {
 
       if (response && response.audioData) {
         setAudioData(response.audioData);
-        
+
         showAlert({
           type: "success",
           message: "Audio generated successfully.",
         });
-
-
       } else {
         throw new Error("Failed to retrieve audio data.");
-      }      
+      }
     } catch (error) {
       console.error("Error", error);
       showAlert({
@@ -59,7 +57,10 @@ const AudioScriptForm: React.FC = () => {
   const downloadAudio = () => {
     if (!audioData) return;
 
-    const blob = new Blob([Uint8Array.from(atob(audioData), c => c.charCodeAt(0))], { type: "audio/mpeg" });
+    const blob = new Blob(
+      [Uint8Array.from(atob(audioData), (c) => c.charCodeAt(0))],
+      { type: "audio/mpeg" }
+    );
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -199,9 +200,9 @@ const AudioScriptForm: React.FC = () => {
             "Submit Audio and Script"
           )}
         </button>
-        </form>
+      </form>
 
-        {audioData && (
+      {audioData && (
         <div style={{ marginTop: "2rem", textAlign: "center" }}>
           <p>Audio generated successfully! You can download it below:</p>
           <button
@@ -228,7 +229,7 @@ const AudioScriptForm: React.FC = () => {
         </div>
       )}
     </div>
-);
+  );
 };
 
 export default AudioScriptForm;
