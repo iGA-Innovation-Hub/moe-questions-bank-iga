@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import invokeApig from "../lib/callAPI.ts";
 import { useAlert } from "../components/AlertComponent.tsx";
+import { LuAudioLines } from "react-icons/lu";
+import AudioLoader from "../components/AudioLoader.tsx";
+import { FiDownloadCloud } from "react-icons/fi";
 
 const AudioScriptForm: React.FC = () => {
   // Storing the inputs
@@ -39,16 +42,20 @@ const AudioScriptForm: React.FC = () => {
 
         showAlert({
           type: "success",
-          message: "Audio generated successfully.",
+          message: "Audio generated successfully",
         });
+
+        setAudioName("")
+        setScript("")
       } else {
+        
         throw new Error("Failed to retrieve audio data.");
       }
     } catch (error) {
       console.error("Error", error);
       showAlert({
         type: "failure",
-        message: "Error generating audio. Please try again.",
+        message: "Error generating audio",
       });
     } finally {
       setLoading(false);
@@ -67,52 +74,58 @@ const AudioScriptForm: React.FC = () => {
     link.download = `${audioName || "audio"}.mp3`;
     link.click();
     URL.revokeObjectURL(url);
+
   };
   return (
     <div
+      className="container"
       style={{
         flex: 1,
-        backgroundColor: "#f9f9f9",
         padding: "2rem",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
+        width: "100%",
       }}
     >
-      <h2
-        style={{
-          fontFamily: "Georgia, serif",
-          color: "#333",
-          marginBottom: "2rem",
-          fontSize: "28px",
-        }}
-      >
-        Submit Audio and Script
-      </h2>
       <form
         onSubmit={handleSubmit}
         style={{
           width: "100%",
-          maxWidth: "600px",
+          maxWidth: "700px",
           backgroundColor: "#fff",
           padding: "2rem",
-          borderRadius: "8px",
-          boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+          borderRadius: "12px",
+          boxShadow: "0 8px 20px rgba(0, 0, 0, 0.1)",
           fontFamily: "Arial, sans-serif",
         }}
       >
+        <h2
+          className="title"
+          style={{
+            fontFamily: "Arial, sans-serif",
+            marginBottom: "0",
+            marginTop: "0",
+            fontSize: "24px",
+            textAlign: "center",
+            color: "rgb(12, 84, 125)",
+          }}
+        >
+          Generate Audio
+        </h2>
         {/* Input for Audio Name */}
-        <div style={{ marginBottom: "1.5rem" }}>
+        <div className="form-group" style={{ marginBottom: "0.5rem" }}>
           <label
             style={{
               fontSize: "16px",
               fontWeight: "bold",
-              color: "#4b4b4b",
+              color: "rgb(12, 84, 125)",
               marginBottom: "0.5rem",
               display: "block",
+              paddingLeft: "5px",
             }}
           >
-            Audio Name:
+            Audio name
           </label>
           <input
             type="text"
@@ -122,25 +135,29 @@ const AudioScriptForm: React.FC = () => {
             style={{
               width: "100%",
               padding: "0.75rem",
-              borderRadius: "4px",
+              borderRadius: "12px",
               border: "1px solid #ccc",
               fontSize: "14px",
+              color: "#000",
+              height: "35px",
             }}
           />
         </div>
 
         {/* Input for Script */}
-        <div style={{ marginBottom: "1.5rem" }}>
+        <div style={{ marginBottom: "1.5rem" }} className="form-group">
           <label
             style={{
+              paddingLeft: "5px",
               fontSize: "16px",
               fontWeight: "bold",
-              color: "#4b4b4b",
+              color: "rgb(12, 84, 125)",
               marginBottom: "0.5rem",
               display: "block",
+              
             }}
           >
-            Script:
+            Audio script
           </label>
           <textarea
             value={script}
@@ -148,9 +165,9 @@ const AudioScriptForm: React.FC = () => {
             placeholder="Enter the script content"
             style={{
               width: "100%",
-              height: "120px",
+              height: "100px",
               padding: "0.75rem",
-              borderRadius: "4px",
+              borderRadius: "12px",
               border: "1px solid #ccc",
               fontSize: "14px",
               resize: "none",
@@ -159,75 +176,89 @@ const AudioScriptForm: React.FC = () => {
         </div>
 
         {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            color: "#fff",
-            cursor: loading ? "not-allowed" : "pointer",
-            display: "block",
-            width: "100%",
-            backgroundColor: loading ? "#ccc" : "#4b4b4b",
-            padding: "1rem",
-            marginTop: "2rem",
-            border: "none",
-            borderRadius: "4px",
-            fontSize: "16px",
-            fontWeight: "bold",
-          }}
-        >
-          {loading ? (
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <span
-                style={{
-                  width: "1rem",
-                  height: "1rem",
-                  border: "2px solid #fff",
-                  borderRadius: "50%",
-                  borderTop: "2px solid transparent",
-                  animation: "spin 1s linear infinite",
-                }}
-              />
-              Loading...
-            </span>
-          ) : (
-            "Submit Audio and Script"
-          )}
-        </button>
-      </form>
 
-      {audioData && (
-        <div style={{ marginTop: "2rem", textAlign: "center" }}>
-          <p>Audio generated successfully! You can download it below:</p>
+        {!loading && (
           <button
-            onClick={downloadAudio}
+            type="submit"
+            disabled={!audioName || !script || loading}
             style={{
-              color: "#fff",
-              backgroundColor: "#007bff",
+              background: "rgb(12, 84, 125)",
+              color: "white",
+              cursor:
+                !audioName || !script || loading ? "not-allowed" : "pointer",
+              display: "block",
+              backgroundColor:
+                !audioName || !script || loading
+                  ? "#bdbdbd"
+                  : "rgb(12, 84, 125)",
+              padding: "5px 35px",
+              marginTop: "2rem",
               border: "none",
-              borderRadius: "4px",
-              padding: "0.75rem 1.5rem",
-              fontSize: "14px",
-              fontWeight: "bold",
-              cursor: "pointer",
+              borderRadius: "20px",
+              fontSize: "16px",
+              fontWeight: "600",
+              transition: "background 0.3s ease",
+              margin: "0 auto",
             }}
           >
-            Download {audioName}.mp3
+            Generate
+            <LuAudioLines
+              style={{
+                fontSize: "1rem",
+                marginLeft: "0.5rem",
+                marginBottom: "-0.15rem",
+              }}
+            />
           </button>
-          <p style={{ marginTop: "1rem" }}>Or play it directly:</p>
-          <audio
-            controls
-            src={`data:audio/mpeg;base64,${audioData}`}
-            style={{ width: "100%", maxWidth: "600px" }}
-          />
-        </div>
-      )}
+        )}
+        {loading && <AudioLoader />}
+        {audioData && (
+          <div
+            className="audio-player"
+            style={{
+              marginTop: "2rem",
+              textAlign: "center",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "end",
+              height: "35px",
+            }}
+          >
+            <button
+              type="button"
+              onClick={downloadAudio}
+              style={{
+                display: "block",
+                background: "rgb(12, 84, 125)",
+                color: "white",
+                cursor: "pointer",
+                padding: "5px 35px",
+                marginTop: "2rem",
+                border: "none",
+                borderRadius: "20px",
+                fontSize: "16px",
+                fontWeight: "600",
+                transition: "background 0.3s ease",
+                height: "35",
+              }}
+            >
+              Download
+              <FiDownloadCloud
+                style={{
+                  fontSize: "1rem",
+                  marginLeft: "0.5rem",
+                  marginBottom: "-0.15rem",
+                }}
+              />
+            </button>
+            <audio
+              controls
+              src={`data:audio/mpeg;base64,${audioData}`}
+              style={{ width: "450px", height: "35px" }}
+            />
+          </div>
+        )}
+      </form>
     </div>
   );
 };

@@ -10,6 +10,7 @@ import invokeApig from "../lib/callAPI.ts";
 import { deleteCookie } from "../lib/cookies.ts";
 import { useAlert } from "../components/AlertComponent.tsx";
 import Report from "../components/Report.tsx";
+import ExamsListLoader from "../components/ExamsListLoader.tsx";
 
 interface UserDashboardProps {}
 
@@ -65,6 +66,10 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
       console.log("Initial Data Loaded:", response);
     } catch (err: any) {
       console.error("Error fetching initial data:", err);
+      showAlert({
+        type: "failure",
+        message: "Error Fetching Data",
+      });
     } finally {
       setGettingExams(false); // Mark loading as complete
     }
@@ -86,7 +91,10 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
 
       if (!response || Object.keys(response).length === 0) {
         console.log(response);
-        setGetExamsError("No exams found!");
+        showAlert({
+          type: "failure",
+          message: "No exams found",
+        })
         return;
       }
 
@@ -98,7 +106,11 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
 
       console.log("Initial Data Loaded:", response);
     } catch (err: any) {
-      console.error("Error fetching initial data:", err);
+      console.error("Error fetching exams:", err);
+      showAlert({
+        type: "failure",
+        message: "Error Fetching Exams",
+      });
     } finally {
       setGettingExams(false); // Mark loading as complete
     }
@@ -121,7 +133,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
     // Add a timeout before fetching data
     const timer = setTimeout(() => {
       fetchInitialData();
-    }, 2000);
+    }, 1000);
 
     // Cleanup the timeout if the component unmounts
     return () => clearTimeout(timer);
@@ -257,7 +269,6 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
           backgroundColor: "rgba(255, 255, 255, 0.8)",
           borderRadius: "16px",
           margin: "1rem auto",
-          maxWidth: "1200px",
           width: "100%",
           boxShadow: "none",
           outline: "none",
@@ -598,7 +609,13 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                   </label>
                   <select
                     value={filterValue}
-                    onChange={(e) => setFilterValue(e.target.value)}
+                    onChange={(e) => {
+                      setFilterValue(e.target.value)
+                      setTimeout(() => {
+                        
+                        getExams()
+                      }, 100)
+                    }}
                     style={{
                       display: "block",
                       width: "200px",
@@ -617,47 +634,9 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                     )}
                   </select>
                 </div>
-                <button
-                  onClick={getExams}
-                  style={{
-                    backgroundColor: "#4b4b4b",
-                    color: "white",
-                    padding: "0.4rem 1rem",
-                    borderRadius: "4px",
-                    fontSize: "16px",
-                    border: "none",
-                    cursor: "pointer",
-                    marginTop: "1.5rem",
-                  }}
-                >
-                  {gettingExams ? (
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "0.5rem",
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: "1rem",
-                          height: "1rem",
-                          border: "2px solid #fff",
-                          borderRadius: "50%",
-                          borderTop: "2px solid transparent",
-                          animation: "spin 1s linear infinite",
-                        }}
-                      ></span>
-                      Fetching..
-                    </span>
-                  ) : (
-                    "Apply Filter"
-                  )}
-                </button>
               </div>
 
-              {gettingExams && <div>Loading exams...</div>}
+              {gettingExams && <ExamsListLoader />}
 
               {!gettingExams && !gettingExamsError && exams.length > 0 && (
                 <div
