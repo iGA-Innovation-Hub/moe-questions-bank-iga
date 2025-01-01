@@ -4,7 +4,11 @@ import styled from "styled-components";
 import invokeApig from "../lib/callAPI";
 import { useAlert } from "./AlertComponent";
 
-const Report = ({ onClose }) => {
+type ReportProps = {
+  onClose: () => void; // Type for the onClose prop
+};
+
+const Report: React.FC<ReportProps> = ({ onClose }) => {
   //storing the input
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);

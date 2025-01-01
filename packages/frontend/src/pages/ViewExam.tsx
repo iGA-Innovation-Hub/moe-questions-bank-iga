@@ -3,10 +3,14 @@ import invokeApig from "../lib/callAPI.ts";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../lib/contextLib.ts";
-import { generateExamPDF } from "./generatePDF"; // Make sure to import the function
+import { generateExamPDF } from "../lib/Generators/generatePDF.tsx";
 import { useAlert } from "../components/AlertComponent.tsx";
-import { generateModelPDF } from "./generateModelAnswerPDF.tsx";
+import { generateModelPDF } from "../lib/Generators/generateModelAnswerPDF.tsx";
 import invokeLambda from "../lib/invokeLambda.ts";
+import { generateExamPDFQ } from "../lib/Generators/generateArabicPDFQ.tsx";
+import { generateExamPDFA } from "../lib/Generators/generateArabicPDFQA.tsx";
+// ! THIS WILL BE REMOVED LATER
+import { responseContent } from "../../../functions/src/prompts/sampleResponse.ts";
 
 interface Part {
   part: string; // Part number or identifier
@@ -128,10 +132,12 @@ const ViewExam: React.FC = () => {
   const fetchInitialData = async () => {
     try {
       //@ts-ignore
-      const response = await invokeApig({
-        path: `/examForm/${id}`, // Adjust path as needed
-        method: "GET",
-      });
+      // const response = await invokeApig({
+      //   path: `/examForm/${id}`, // Adjust path as needed
+      //   method: "GET",
+      // });
+
+      const response = responseContent;
 
       if (!response || Object.keys(response).length === 0) {
         console.error("Response is empty or undefined:", response);
@@ -206,10 +212,12 @@ const ViewExam: React.FC = () => {
   const fetchExamContent = async () => {
     try {
       //@ts-ignore
-      const response = await invokeApig({
-        path: `/examForm/${id}`,
-        method: "GET",
-      });
+      // const response = await invokeApig({
+      //   path: `/examForm/${id}`,
+      //   method: "GET",
+      // });
+
+      const response = responseContent;
 
       console.log("Raw Exam Content from Backend:", response.examContent);
 
@@ -376,15 +384,6 @@ const ViewExam: React.FC = () => {
     }
   };
 
-  // Show loading state
-  if (loadingPage) {
-    return <div>Loading...</div>;
-  }
-
-  if (errorMsg) {
-    return <div>{errorMsg}</div>;
-  }
-
   // For handling download (when clicking button)
   const handleDownloadPDF = async () => {
     showAlert({
@@ -394,6 +393,21 @@ const ViewExam: React.FC = () => {
         console.log(examContent);
         generateExamPDF(examContent);
         generateModelPDF(examContent);
+      },
+    });
+  };
+
+  // For handling download (when clicking button) Arabic
+  const handleArabicDownloadPDF = async () => {
+    showAlert({
+      type: "confirm",
+      message: "Are you sure you want to download the Exam in Arabic as a PDF?",
+      action: () => {
+        console.log("Passing examContent to generateArabicPDF:", examContent);
+        // generateExamPDFA(examContent);
+        // generateExamPDFQ(examContent);
+        generateExamPDFQ(responseContent.examContent);
+        generateExamPDFA(responseContent.examContent);
       },
     });
   };
@@ -439,6 +453,15 @@ const ViewExam: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Show loading state
+  if (loadingPage) {
+    return <div>Loading...</div>;
+  }
+
+  if (errorMsg) {
+    return <div>{errorMsg}</div>;
+  }
 
   return (
     <div
@@ -1561,9 +1584,13 @@ const ViewExam: React.FC = () => {
           {/* download PDF start here */}
           <div>
             {/* Conditionally render the "Download PDF" button if the exam is approved */}
-            {examState === "approved" && subject === "ENG102" && (
+            {examState === "approved" && (
               <button
-                onClick={handleDownloadPDF} // This triggers the PDF download function
+                onClick={
+                  subject == "ENG102"
+                    ? handleDownloadPDF
+                    : handleArabicDownloadPDF
+                } // This triggers the PDF download function
                 style={{
                   padding: "0.6rem 1rem",
                   backgroundColor: "#007bff", // Blue color for the download button
