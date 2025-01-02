@@ -114,18 +114,6 @@ export function InitialForm() {
         height: "100vh", // Ensures the form fits the viewport
       }}
     >
-      <h2
-        style={{
-          fontFamily: "Arial, sans-serif",
-          color: "rgb(12, 84, 125)",
-          marginBottom: "1rem",
-          fontSize: "24px",
-          fontWeight: "700",
-        }}
-      >
-        Generate Exam
-      </h2>
-
       <div>
         {loading && (
           <div
@@ -157,6 +145,19 @@ export function InitialForm() {
             gap: "1.5rem", // Consistent spacing between elements
           }}
         >
+          <h2
+            style={{
+              fontFamily: "Arial, sans-serif",
+              color: "rgb(12, 84, 125)",
+              marginBottom: "2rem",
+              marginTop:"0rem",
+              fontSize: "24px",
+              fontWeight: "700",
+              textAlign:"center"
+            }}
+          >
+            Generate Exam
+          </h2>
           <div
             style={{
               width: "100%",

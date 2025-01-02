@@ -149,10 +149,10 @@
 .file-list-container {
   max-height: 150px;
   overflow-y: auto;
-  border: 1px solid #ccc;
+  border: 1px solid rgb(185, 184, 184);
   padding: 5px;
   margin-top: 10px;
-  border-radius: 16px;
+  border-radius: 12px;
   width: 400px;
 }
 
@@ -162,7 +162,7 @@
   align-items: center;
   margin-bottom: 5px;
   border: 0.5px solid rgba(3, 40, 61, 1);
-  border-radius: 20px;
+  border-radius: 8px;
   color: rgba(3, 40, 61, 1);
 }
 

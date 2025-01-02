@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import MOELogo from "../assets/moe_LOGO.png"; // Ministry of Education logo
 import HomeIcon from "../assets/home icon (1).png"; // Home icon
-import BackgroundImage from "../assets/BG.jpg"; // Background image
+import BackgroundImage from "../assets/DALLE2024-12-2913.15.14-AvectorillustrationofanArabmansittingatadeskinamodernwell-litofficeworkingonacomputer.Thecomputerscreendisplaysaschoolexam-ezgif.com-webp-to-jpg-converter.jpg"; // Background image
 import { signOut } from "aws-amplify/auth";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../lib/contextLib";
@@ -11,6 +11,11 @@ import { deleteCookie } from "../lib/cookies.ts";
 import { useAlert } from "../components/AlertComponent.tsx";
 import Report from "../components/Report.tsx";
 import ExamsListLoader from "../components/ExamsListLoader.tsx";
+import { GrHomeRounded } from "react-icons/gr";
+import { MdOutlineReport } from "react-icons/md";
+import { IoMdLogOut } from "react-icons/io";
+import { RiHomeLine } from "react-icons/ri";
+import PieChart from "../components/PieChart.tsx";
 
 interface UserDashboardProps {}
 
@@ -25,6 +30,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
   const [disapproved, setDisapproved] = useState(0);
   const [building, setBuilding] = useState(0);
   const [pending, setPending] = useState(0);
+  const [totalExams, setTotalExams] = useState(0);
   const [gettingExams, setGettingExams] = useState(true);
   const [gettingExamsError, setGetExamsError] = useState("");
   const [exams, setExams] = useState([]);
@@ -94,7 +100,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
         showAlert({
           type: "failure",
           message: "No exams found",
-        })
+        });
         return;
       }
 
@@ -159,11 +165,20 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
         setDisapproved(response ? response.disapproved : 0);
         setBuilding(response ? response.building : 0);
         setPending(response ? response.pending : 0);
+        setTotalExams(
+          response
+            ? response.approved +
+                response.disapproved +
+                response.building +
+                response.pending
+            : 0
+        );
       } catch (err) {
         setApproved(0);
         setDisapproved(0);
         setBuilding(0);
         setPending(0);
+        setTotalExams(0);
 
         console.error("Error fetching exam count:", err);
       }
@@ -186,6 +201,53 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
     });
   }
 
+  const examData = [
+    {
+      label: "Building",
+      value: building,
+      color: "#007aff",
+      details: "Currently being worked on",
+    },
+    {
+      label: "Pending",
+      value: pending,
+      color: "rgba(255, 140, 0, 0.9)",
+      details: "Pending review and approval",
+    },
+    {
+      label: "Approved",
+      value: approved,
+      color: "#34c759",
+      details: "Reviewed and approved",
+    },
+    {
+      label: "Rejected",
+      value: disapproved,
+      color: "#ff2d55",
+      details: "Reviewed and rejected",
+    },
+  ];
+
+  const dashButtons = [
+    {
+      label: "Generate Exam",
+      link: "/dashboard/examForm",
+      page: "generateExam",
+    },
+    {
+      label: "Upload Material",
+      link: "/dashboard/upload",
+      page: "uploadMaterial",
+    },
+    { label: "Generate Audio", link: "/dashboard/audiopPage", page: "audio" },
+  ];
+
+  const pieData = [{ value: 7, color: "#007aff" },
+    { value: 12, color: "rgba(255, 140, 0, 0.9)" },
+    { value: 2, color: "#34c759" },
+    { value: 5, color: "#ff2d55" },
+  ];
+
   return (
     <div
       style={{
@@ -198,6 +260,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
         overflowY: "auto",
         margin: 0,
         padding: 0,
+        fontFamily: "Arial, sans-serif",
       }}
     >
       <div
@@ -205,379 +268,260 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "1rem 2rem",
-          backgroundColor: "white",
+          padding: "0.5rem 2rem",
+          backgroundColor: "rgba(3, 40, 61, 1)",
         }}
       >
-        <img
-          src={MOELogo}
-          alt="MOE Logo"
-          style={{ height: "80px", marginRight: "1rem" }}
-        />
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <NavLink to="/dashboard">
-            <img
-              src={HomeIcon}
-              alt="Home Icon"
-              style={{ height: "50px", cursor: "pointer" }}
-              onClick={() => setActivePage("/dashboard")}
+          <NavLink
+            to="/dashboard"
+            style={{
+              color: "white",
+              padding: "0.5rem 1rem",
+              borderRadius: "20px",
+              fontSize: "16px",
+              cursor: "pointer",
+              textDecoration: "none",
+              transition: "transform 0.3s, box-shadow 0.3s",
+              border: "none",
+            }}
+            onClick={() => setActivePage("/dashboard")}
+          >
+            Home
+            <RiHomeLine
+              style={{
+                fontSize: "16px",
+                marginLeft: "0.5rem",
+                marginBottom: "-0.15rem",
+              }}
             />
           </NavLink>
+        </div>
 
+        <div>
           <NavLink
             to="#"
             onClick={openReport}
             style={{
-              backgroundColor: "#d32f2f",
               color: "white",
               padding: "0.5rem 1rem",
-              borderRadius: "16px",
+              borderRadius: "20px",
               fontSize: "16px",
-              fontWeight: "bold",
+
               cursor: "pointer",
               textDecoration: "none",
               transition: "transform 0.3s, box-shadow 0.3s",
               border: "none",
             }}
           >
-            Report Problem
+            Report
+            <MdOutlineReport
+              style={{
+                fontSize: "16px",
+                marginLeft: "0.5rem",
+                marginBottom: "-0.15rem",
+              }}
+            />
           </NavLink>
           {isReportOpen && <Report onClose={closeReport} />}
 
-          <button
+          <NavLink
+            to="#"
             onClick={handleSignOut}
             style={{
-              backgroundColor: "#d32f2f",
               color: "white",
               padding: "0.5rem 1rem",
-              borderRadius: "16px",
+              borderRadius: "20px",
               fontSize: "16px",
-              fontWeight: "bold",
+
               cursor: "pointer",
-              border: "none",
+              textDecoration: "none",
               transition: "transform 0.3s, box-shadow 0.3s",
+              border: "none",
             }}
           >
             Sign-out
-          </button>
+            <IoMdLogOut
+              style={{
+                fontSize: "16px",
+                marginLeft: "0.5rem",
+                marginBottom: "-0.15rem",
+              }}
+            />
+          </NavLink>
         </div>
       </div>
 
       <div
         style={{
           padding: "2rem",
-          backgroundColor: "rgba(255, 255, 255, 0.8)",
-          borderRadius: "16px",
-          margin: "1rem auto",
+          backgroundColor: "#ffffff",
+          margin: "0 auto",
           width: "100%",
           boxShadow: "none",
           outline: "none",
-          minHeight: "400px",
+          height: "100%",
         }}
       >
         {activePage === "/dashboard" && (
           <div
             style={{
-              display: "flex",
-              gap: "2rem",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              alignItems: "center",
               padding: "2rem",
-              maxWidth: "100%",
+              maxWidth: "70%",
+              minWidth: "70%",
+              margin: "0 auto",
             }}
           >
-            <div
+            <h2
               style={{
-                width: "200px",
-                height: "200px",
-                backgroundColor: "white",
-                color: "rgba(255, 140, 0, 0.9)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: "16px",
-                fontSize: "20px",
-                fontWeight: "bold",
-                textAlign: "center",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                transition: "transform 0.3s, box-shadow 0.3s",
-                position: "relative",
+                fontFamily: "Arial, sans-serif",
+                color: "rgb(12, 84, 125)",
+                fontSize: "24px",
+                fontWeight: "700",
+                marginTop: "0rem",
               }}
             >
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Pending Exams
-              </span>
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                {pending}
-              </span>
-            </div>
+              Dashboard
+            </h2>
             <div
               style={{
-                width: "200px",
-                height: "200px",
-                backgroundColor: "white",
-                color: "rgba(34, 139, 34, 0.9)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: "16px",
-                fontSize: "20px",
-                fontWeight: "bold",
-                textAlign: "center",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                transition: "transform 0.3s, box-shadow 0.3s",
-                position: "relative",
+                marginBottom: "2rem",
+                borderWidth: "1px",
+                borderColor: "rgb(185, 184, 184)",
+                borderStyle: "solid",
+                borderRadius: "20px",
+                padding: "1rem 1rem",
               }}
             >
-              <span
+              <PieChart data={pieData} size={100} />
+              <div
                 style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
+                  display: "flex",
+                  gap: "2rem",
+                  flexWrap: "nowrap",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                Approved Exams
-              </span>
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                {approved}
-              </span>
-            </div>
-            <div
-              style={{
-                width: "200px",
-                height: "200px",
-                backgroundColor: "white",
-                color: "rgba(255, 0, 0, 0.9)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: "16px",
-                fontSize: "20px",
-                fontWeight: "bold",
-                textAlign: "center",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                transition: "transform 0.3s, box-shadow 0.3s",
-                position: "relative",
-              }}
-            >
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Disapproved Exams
-              </span>
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                {disapproved}
-              </span>
-            </div>
-            <div
-              style={{
-                width: "200px",
-                height: "200px",
-                backgroundColor: "white",
-                color: "rgba(105, 105, 105, 0.9)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: "16px",
-                fontSize: "20px",
-                fontWeight: "bold",
-                textAlign: "center",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                transition: "transform 0.3s, box-shadow 0.3s",
-                position: "relative",
-              }}
-            >
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Building Exams
-              </span>
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                {building}
-              </span>
+                {examData.map((item, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      color: item.color,
+                      display: "flex",
+                      flexDirection: "column",
+                      fontSize: "12px",
+                      fontWeight: "500",
+                      marginTop: "0.5rem",
+                      marginBottom: "0.5rem",
+                      width: "25%",
+                      borderRight:
+                        index === examData.length - 1
+                          ? "none"
+                          : "1px solid #ccc",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        color: "rgba(3, 40, 61, 1)",
+                        fontFamily: "Arial, sans-serif",
+                        letterSpacing: "0.8px",
+                      }}
+                    >
+                      {item.label} <br />
+                      <p
+                      style={{fontSize:"12px", color:"gray", marginTop:"0"}}
+                      >{ item.details}</p>
+                    </span>
+                    <span
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "38px",
+                        paddingBottom: "1px",
+                        borderBottomColor: item.color,
+                        borderBottomStyle: "solid",
+                        borderBottomWidth: "2px",
+                        width: "50px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <span
+                  style={{fontSize:"20px", color:"gray", marginTop:"0", fontWeight:"600"}}
+                >
+                  Total Exams <br />
+                {totalExams}
+                </span>
+              </div>
             </div>
 
             {userRole === "User" && (
-              <>
-                <NavLink
-                  to="/dashboard/examForm"
-                  onClick={() => setActivePage("generateExam")}
-                  style={{ textDecoration: "none" }}
-                >
-                  <div
-                    style={{
-                      width: "250px",
-                      height: "200px",
-                      backgroundColor: "white",
-                      color: "#d32f2f",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      borderRadius: "16px",
-                      fontSize: "18px",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                      transition: "transform 0.3s, box-shadow 0.3s",
-                    }}
-                    onMouseEnter={(e) => {
-                      const card = e.currentTarget;
-                      card.style.transform = "scale(1.05)";
-                      card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
-                    }}
-                    onMouseLeave={(e) => {
-                      const card = e.currentTarget;
-                      card.style.transform = "scale(1)";
-                      card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                    }}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "2rem",
+                  flexWrap: "nowrap",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginBottom: "2rem",
+                }}
+              >
+                {dashButtons.map((item, index) => (
+                  <NavLink
+                    to={item.link}
+                    onClick={() => setActivePage(item.page)}
+                    style={{ textDecoration: "none" }}
                   >
-                    <span
+                    <div
+                      key={index}
                       style={{
+                        width: "250px",
+                        height: "200px",
+                        backgroundColor: "white",
+                        color: "#d32f2f",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        borderRadius: "16px",
+                        fontSize: "18px",
                         fontWeight: "bold",
-                        fontSize: "28px",
-                        marginBottom: "0.5rem",
+                        textAlign: "center",
+                        cursor: "pointer",
+                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                        transition: "transform 0.3s, box-shadow 0.3s",
+                      }}
+                      onMouseEnter={(e) => {
+                        const card = e.currentTarget;
+                        card.style.transform = "scale(1.05)";
+                        card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
+                      }}
+                      onMouseLeave={(e) => {
+                        const card = e.currentTarget;
+                        card.style.transform = "scale(1)";
+                        card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
                       }}
                     >
-                      Generate Exam
-                    </span>
-                  </div>
-                </NavLink>
-                <NavLink
-                  to="/dashboard/upload"
-                  onClick={() => setActivePage("uploadMaterial")}
-                  style={{ textDecoration: "none" }}
-                >
-                  <div
-                    style={{
-                      width: "250px",
-                      height: "200px",
-                      backgroundColor: "white",
-                      color: "#d32f2f",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      borderRadius: "16px",
-                      fontSize: "18px",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                      transition: "transform 0.3s, box-shadow 0.3s",
-                    }}
-                    onMouseEnter={(e) => {
-                      const card = e.currentTarget;
-                      card.style.transform = "scale(1.05)";
-                      card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
-                    }}
-                    onMouseLeave={(e) => {
-                      const card = e.currentTarget;
-                      card.style.transform = "scale(1)";
-                      card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "28px",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      Upload Material
-                    </span>
-                  </div>
-                </NavLink>
-                <NavLink
-                  to="/dashboard/audiopPage"
-                  onClick={() => setActivePage("audio")}
-                  style={{ textDecoration: "none" }}
-                >
-                  <div
-                    style={{
-                      width: "250px",
-                      height: "200px",
-                      backgroundColor: "white",
-                      color: "#d32f2f",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      borderRadius: "16px",
-                      fontSize: "18px",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                      transition: "transform 0.3s, box-shadow 0.3s",
-                    }}
-                    onMouseEnter={(e) => {
-                      const card = e.currentTarget;
-                      card.style.transform = "scale(1.05)";
-                      card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
-                    }}
-                    onMouseLeave={(e) => {
-                      const card = e.currentTarget;
-                      card.style.transform = "scale(1)";
-                      card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "28px",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      Generate Audio
-                    </span>
-                  </div>
-                </NavLink>
-              </>
+                      <span
+                        style={{
+                          fontWeight: "bold",
+                          fontSize: "28px",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        {item.label}
+                      </span>
+                    </div>
+                  </NavLink>
+                ))}
+              </div>
             )}
 
             <div>
@@ -610,11 +554,10 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                   <select
                     value={filterValue}
                     onChange={(e) => {
-                      setFilterValue(e.target.value)
+                      setFilterValue(e.target.value);
                       setTimeout(() => {
-                        
-                        getExams()
-                      }, 100)
+                        getExams();
+                      }, 100);
                     }}
                     style={{
                       display: "block",

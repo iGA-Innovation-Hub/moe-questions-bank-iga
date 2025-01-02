@@ -44,9 +44,6 @@ const AudioScriptForm: React.FC = () => {
           type: "success",
           message: "Audio generated successfully",
         });
-
-        setAudioName("")
-        setScript("")
       } else {
         
         throw new Error("Failed to retrieve audio data.");
@@ -71,6 +68,7 @@ const AudioScriptForm: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
+    console.log("hhh" + audioName)
     link.download = `${audioName || "audio"}.mp3`;
     link.click();
     URL.revokeObjectURL(url);
@@ -131,7 +129,6 @@ const AudioScriptForm: React.FC = () => {
             type="text"
             value={audioName}
             onChange={(e) => setAudioName(e.target.value)}
-            placeholder="Enter the audio file name"
             style={{
               width: "100%",
               padding: "0.75rem",
@@ -162,7 +159,6 @@ const AudioScriptForm: React.FC = () => {
           <textarea
             value={script}
             onChange={(e) => setScript(e.target.value)}
-            placeholder="Enter the script content"
             style={{
               width: "100%",
               height: "100px",

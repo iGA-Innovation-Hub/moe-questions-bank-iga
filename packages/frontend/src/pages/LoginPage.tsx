@@ -156,10 +156,6 @@ export default function Login() {
             </button>
           </div>
         </div>
-        <footer>
-          <p>Ministry of Education © All Rights Reserved.</p>
-          <p>Kingdom of Bahrain</p>
-        </footer>
       </div>
       <div className="login-right">
         <div className="login-right-content">

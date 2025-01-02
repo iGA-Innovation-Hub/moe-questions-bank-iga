@@ -42,17 +42,11 @@ const Report: React.FC<ReportProps> = ({ onClose }) => {
         body: payload,
       });
 
-      if (!response.ok) {
-        showAlert({
-          type: "failure",
-          message: "Error Reporting Problem.",
-        });
-      } else {
         showAlert({
           type: "success",
           message: "Problem Reported Successfully",
         });
-      }
+      
 
       setMessage("");
     } catch (error) {
@@ -100,7 +94,8 @@ const Report: React.FC<ReportProps> = ({ onClose }) => {
             <button
               className="form-submit-btn"
               type="submit"
-              disabled={loading}
+              disabled={loading || !message}
+              style={{cursor: !message || loading ? "not-allowed" : "pointer"}}
             >
               {loading ? (
                 <span

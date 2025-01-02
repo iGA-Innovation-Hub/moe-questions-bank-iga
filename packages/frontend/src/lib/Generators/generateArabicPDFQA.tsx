@@ -9,7 +9,7 @@ export const generateExamPDFA = (examContent: any) => {
     format: "a4",
   });
 
-  examContent = JSON.parse(examContent);
+  // examContent = JSON.parse(examContent);
 
   // Load Arabic font
   doc.addFileToVFS("../../fonts/Arabic-Regular.ttf", arabicFontBase64);

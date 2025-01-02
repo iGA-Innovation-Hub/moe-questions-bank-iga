@@ -9,8 +9,6 @@ import { generateModelPDF } from "../lib/Generators/generateModelAnswerPDF.tsx";
 import invokeLambda from "../lib/invokeLambda.ts";
 import { generateExamPDFQ } from "../lib/Generators/generateArabicPDFQ.tsx";
 import { generateExamPDFA } from "../lib/Generators/generateArabicPDFQA.tsx";
-// ! THIS WILL BE REMOVED LATER
-import { responseContent } from "../../../functions/src/prompts/sampleResponse.ts";
 
 interface Part {
   part: string; // Part number or identifier
@@ -132,12 +130,11 @@ const ViewExam: React.FC = () => {
   const fetchInitialData = async () => {
     try {
       //@ts-ignore
-      // const response = await invokeApig({
-      //   path: `/examForm/${id}`, // Adjust path as needed
-      //   method: "GET",
-      // });
+      const response = await invokeApig({
+        path: `/examForm/${id}`, // Adjust path as needed
+        method: "GET",
+      });
 
-      const response = responseContent;
 
       if (!response || Object.keys(response).length === 0) {
         console.error("Response is empty or undefined:", response);
@@ -212,12 +209,11 @@ const ViewExam: React.FC = () => {
   const fetchExamContent = async () => {
     try {
       //@ts-ignore
-      // const response = await invokeApig({
-      //   path: `/examForm/${id}`,
-      //   method: "GET",
-      // });
+      const response = await invokeApig({
+        path: `/examForm/${id}`,
+        method: "GET",
+      });
 
-      const response = responseContent;
 
       console.log("Raw Exam Content from Backend:", response.examContent);
 
@@ -404,10 +400,8 @@ const ViewExam: React.FC = () => {
       message: "Are you sure you want to download the Exam in Arabic as a PDF?",
       action: () => {
         console.log("Passing examContent to generateArabicPDF:", examContent);
-        // generateExamPDFA(examContent);
-        // generateExamPDFQ(examContent);
-        generateExamPDFQ(responseContent.examContent);
-        generateExamPDFA(responseContent.examContent);
+        generateExamPDFA(examContent);
+        generateExamPDFQ(examContent);
       },
     });
   };

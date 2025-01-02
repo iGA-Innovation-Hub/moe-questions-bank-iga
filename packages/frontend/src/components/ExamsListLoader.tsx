@@ -1,157 +1,65 @@
-import React from "react";
 import styled from "styled-components";
 
 const ExamsListLoader = () => {
   return (
     <StyledWrapper>
-      <div>
-        <div className="container">
-          <div className="dot dot-1" />
-          <div className="dot dot-2" />
-          <div className="dot dot-3" />
-          <div
-            className="dot dot-4"
-            style={{ backgroundColor: "rgba(35, 139, 34, 1)" }}
-          />
-        </div>
-        <svg version="1.1" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <filter id="goo">
-              <feGaussianBlur
-                result="blur"
-                stdDeviation={10}
-                in="SourceGraphic"
-              />
-              <feColorMatrix
-                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 21 -7"
-                mode="matrix"
-                in="blur"
-              />
-            </filter>
-          </defs>
-        </svg>
+      <div className="loader">
+        <div className="loader__circle" />
+        <div className="loader__circle" />
+        <div className="loader__circle" />
+        <div className="loader__circle" />
       </div>
     </StyledWrapper>
   );
 };
 
 const StyledWrapper = styled.div`
-  .container {
-    width: 200px;
-    height: 200px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    margin: auto;
-    filter: url("#goo");
-    animation: rotate-move 2s ease-in-out infinite;
+  .loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
   }
 
-  .dot {
-    width: 70px;
-    height: 70px;
+  .loader__circle {
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
-    background-color: #000;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: auto;
+    margin: 0 4px;
+    animation: loader_901 1s ease-in-out infinite;
   }
 
-  .dot-3 {
-    background-color: #ff1717;
-    animation: dot-3-move 2s ease infinite, index 6s ease infinite;
+  .loader__circle:nth-of-type(1) {
+    background-color: #007aff;
+    animation-delay: 0;
   }
 
-  .dot-2 {
-    background-color: #0051ff;
-    animation: dot-2-move 2s ease infinite, index 6s -4s ease infinite;
+  .loader__circle:nth-of-type(2) {
+    background-color: #ff2d55;
+    animation-delay: 0.25s;
   }
 
-  .dot-1 {
-    background-color: #ffc400;
-    animation: dot-1-move 2s ease infinite, index 6s -2s ease infinite;
+  .loader__circle:nth-of-type(3) {
+    background-color: #34c759;
+    animation-delay: 0.5s;
   }
 
-  @keyframes dot-3-move {
-    20% {
+  .loader__circle:nth-of-type(4) {
+    background-color: rgba(255, 140, 0, 0.9);
+    animation-delay: 0.75s;
+  }
+
+  @keyframes loader_901 {
+    0% {
       transform: scale(1);
     }
-    45% {
-      transform: translateY(-18px) scale(0.45);
-    }
-    60% {
-      transform: translateY(-90px) scale(0.45);
-    }
-    80% {
-      transform: translateY(-90px) scale(0.45);
-    }
-    100% {
-      transform: translateY(0px) scale(1);
-    }
-  }
 
-  @keyframes dot-2-move {
     20% {
+      transform: scale(1.2);
+    }
+
+    40% {
       transform: scale(1);
-    }
-    45% {
-      transform: translate(-16px, 12px) scale(0.45);
-    }
-    60% {
-      transform: translate(-80px, 60px) scale(0.45);
-    }
-    80% {
-      transform: translate(-80px, 60px) scale(0.45);
-    }
-    100% {
-      transform: translateY(0px) scale(1);
-    }
-  }
-
-  @keyframes dot-1-move {
-    20% {
-      transform: scale(1);
-    }
-    45% {
-      transform: translate(16px, 12px) scale(0.45);
-    }
-    60% {
-      transform: translate(80px, 60px) scale(0.45);
-    }
-    80% {
-      transform: translate(80px, 60px) scale(0.45);
-    }
-    100% {
-      transform: translateY(0px) scale(1);
-    }
-  }
-
-  @keyframes rotate-move {
-    55% {
-      transform: translate(-50%, -50%) rotate(0deg);
-    }
-    80% {
-      transform: translate(-50%, -50%) rotate(360deg);
-    }
-    100% {
-      transform: translate(-50%, -50%) rotate(360deg);
-    }
-  }
-
-  @keyframes index {
-    0%,
-    100% {
-      z-index: 3;
-    }
-    33.3% {
-      z-index: 2;
-    }
-    66.6% {
-      z-index: 1;
     }
   }
 `;
