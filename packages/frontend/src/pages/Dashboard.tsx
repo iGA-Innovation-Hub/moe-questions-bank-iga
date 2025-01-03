@@ -16,6 +16,10 @@ import { MdOutlineReport } from "react-icons/md";
 import { IoMdLogOut } from "react-icons/io";
 import { RiHomeLine } from "react-icons/ri";
 import PieChart from "../components/PieChart.tsx";
+import { ImArrowUp } from "react-icons/im";
+import "../styles/dashButtons.css"
+import DashLoader from "../components/DashLoader.tsx";
+import ExamSelector from "../components/ExamSelector.tsx";
 
 interface UserDashboardProps {}
 
@@ -31,8 +35,10 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
   const [building, setBuilding] = useState(0);
   const [pending, setPending] = useState(0);
   const [totalExams, setTotalExams] = useState(0);
+  const [approvalRate, setApprovalRate] = useState(0);
   const [gettingExams, setGettingExams] = useState(true);
   const [gettingExamsError, setGetExamsError] = useState("");
+  const [loadingExamCount, setLoadingExamCount] = useState(true);
   const [exams, setExams] = useState([]);
   const [examsType, setExamsType] = useState(
     userRole === "User" ? "building" : "pending"
@@ -62,7 +68,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
 
       if (!response || Object.keys(response).length === 0) {
         console.log(response);
-        setGetExamsError("No exams found!");
+        setGetExamsError("No exams found");
         return;
       }
 
@@ -81,41 +87,48 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
     }
   };
 
-  async function getExams() {
+  async function getExams(value:string) {
     setExams([]);
     setGettingExams(true);
-    console.log(filterValue);
+    if (value === "disapproved") { 
+      setExamsType("Rejected");
+    } else {
+
+      setExamsType(value);
+    }
+    console.log(value);
     try {
       //@ts-ignore
       const response = await invokeApig({
         path: `/getExamHistory`, // Adjust path as needed
         method: "GET",
         queryParams: {
-          state: filterValue,
+          state: value,
         },
       });
 
       if (!response || Object.keys(response).length === 0) {
         console.log(response);
-        showAlert({
-          type: "failure",
-          message: "No exams found",
-        });
         return;
       }
 
       setGetExamsError("");
 
       // Store the retrieved exams in the state
-      setExams(response);
-      setExamsType(filterValue);
+      if (response.length === 0) { 
+        setGetExamsError("No exams found")
+        setExams([]);
+      } else {
+        setExams(response);
+      }
+      
 
       console.log("Initial Data Loaded:", response);
     } catch (err: any) {
       console.error("Error fetching exams:", err);
       showAlert({
         type: "failure",
-        message: "Error Fetching Exams",
+        message: "Error fetching exams",
       });
     } finally {
       setGettingExams(false); // Mark loading as complete
@@ -151,6 +164,9 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
 
   useEffect(() => {
     async function fetchExamCount() {
+      if (!approved && !pending && !disapproved && !building) {
+        setLoadingExamCount(true);
+      }
       try {
         // @ts-ignore
         const response = await invokeApig({
@@ -173,6 +189,19 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                 response.pending
             : 0
         );
+
+        setApprovalRate(
+          response
+            ? Math.round(
+                (response.approved /
+                  (response.approved +
+                    response.disapproved +
+                    response.building +
+                    response.pending)) *
+                  100
+              )
+            : 0
+        );
       } catch (err) {
         setApproved(0);
         setDisapproved(0);
@@ -181,6 +210,12 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
         setTotalExams(0);
 
         console.error("Error fetching exam count:", err);
+        showAlert({
+          type: "failure",
+          message: "Error fetching data",
+        })
+      } finally {
+        setLoadingExamCount(false);
       }
     }
 
@@ -251,13 +286,8 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
   return (
     <div
       style={{
-        backgroundImage: `url(${BackgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-        height: "100vh",
-        width: "100vw",
-        overflowY: "auto",
+        height: "auto",
+        width: "100%",
         margin: 0,
         padding: 0,
         fontFamily: "Arial, sans-serif",
@@ -265,11 +295,15 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
     >
       <div
         style={{
+          position: "fixed", // Makes the header fixed
+          top: 0, // Positions the header at the top of the viewport
+          left: 0, // Aligns the header to the left of the viewport
+          width: "100%", // Spans the full width of the viewport
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           padding: "0.5rem 2rem",
-          backgroundColor: "rgba(3, 40, 61, 1)",
+          backgroundColor: "rgb(12, 84, 125)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -279,7 +313,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
               color: "white",
               padding: "0.5rem 1rem",
               borderRadius: "20px",
-              fontSize: "16px",
+              fontSize: "20px",
               cursor: "pointer",
               textDecoration: "none",
               transition: "transform 0.3s, box-shadow 0.3s",
@@ -306,7 +340,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
               color: "white",
               padding: "0.5rem 1rem",
               borderRadius: "20px",
-              fontSize: "16px",
+              fontSize: "20px",
 
               cursor: "pointer",
               textDecoration: "none",
@@ -332,7 +366,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
               color: "white",
               padding: "0.5rem 1rem",
               borderRadius: "20px",
-              fontSize: "16px",
+              fontSize: "20px",
 
               cursor: "pointer",
               textDecoration: "none",
@@ -361,6 +395,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
           boxShadow: "none",
           outline: "none",
           height: "100%",
+          marginTop: "2rem",
         }}
       >
         {activePage === "/dashboard" && (
@@ -393,7 +428,47 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                 padding: "1rem 1rem",
               }}
             >
-              <PieChart data={pieData} size={100} />
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <div style={{ width: "25%" }}>
+                  <PieChart data={pieData} size={100} />
+                </div>
+                <div
+                  style={{
+                    fontSize: "20px",
+                    color: "gray",
+                    marginTop: "0",
+                    fontWeight: "600",
+                    width: "25%",
+                  }}
+                >
+                  Total exams <br />
+                  {totalExams}
+                </div>
+                <div
+                  style={{
+                    fontSize: "20px",
+                    color: "gray",
+                    marginTop: "0",
+                    fontWeight: "600",
+                  }}
+                >
+                  Approval rate{" "}
+                  <ImArrowUp
+                    style={{
+                      fontSize: "20px",
+                      marginLeft: "0.1rem",
+                      marginBottom: "-0.15rem",
+                    }}
+                  />
+                  <br />
+                  {approvalRate}%
+                </div>
+
+                <div style={{ marginLeft: "auto", marginRight: "1rem" }}>
+                  {loadingExamCount && <DashLoader />}
+                </div>
+              </div>
+
               <div
                 style={{
                   display: "flex",
@@ -432,8 +507,14 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                     >
                       {item.label} <br />
                       <p
-                      style={{fontSize:"12px", color:"gray", marginTop:"0"}}
-                      >{ item.details}</p>
+                        style={{
+                          fontSize: "12px",
+                          color: "gray",
+                          marginTop: "0",
+                        }}
+                      >
+                        {item.details}
+                      </p>
                     </span>
                     <span
                       style={{
@@ -452,70 +533,51 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                   </div>
                 ))}
               </div>
-              <div>
-                <span
-                  style={{fontSize:"20px", color:"gray", marginTop:"0", fontWeight:"600"}}
-                >
-                  Total Exams <br />
-                {totalExams}
-                </span>
-              </div>
             </div>
 
             {userRole === "User" && (
               <div
                 style={{
                   display: "flex",
-                  gap: "2rem",
-                  flexWrap: "nowrap",
-                  justifyContent: "center",
+                  width: "100%",
+                  justifyContent: "space-between",
                   alignItems: "center",
                   marginBottom: "2rem",
                 }}
               >
                 {dashButtons.map((item, index) => (
                   <NavLink
+                    className={"dashButton"}
                     to={item.link}
                     onClick={() => setActivePage(item.page)}
-                    style={{ textDecoration: "none" }}
+                    style={{
+                      textDecoration: "none",
+                      width: "30%",
+                      borderRadius: "20px",
+                    }}
+                    key={index}
                   >
                     <div
-                      key={index}
                       style={{
-                        width: "250px",
-                        height: "200px",
-                        backgroundColor: "white",
-                        color: "#d32f2f",
                         display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
                         alignItems: "center",
-                        borderRadius: "16px",
-                        fontSize: "18px",
-                        fontWeight: "bold",
+                        width: "100%",
+                        height: "80px",
+                        backgroundColor: "#ffffff",
+                        color: "rgb(12, 84, 125)",
+                        borderRadius: "20px",
+                        fontSize: "20px",
+                        fontWeight: "600",
                         textAlign: "center",
                         cursor: "pointer",
-                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                        transition: "transform 0.3s, box-shadow 0.3s",
-                      }}
-                      onMouseEnter={(e) => {
-                        const card = e.currentTarget;
-                        card.style.transform = "scale(1.05)";
-                        card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
-                      }}
-                      onMouseLeave={(e) => {
-                        const card = e.currentTarget;
-                        card.style.transform = "scale(1)";
-                        card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                        borderWidth: "1px",
+                        borderColor: "rgb(185, 184, 184)",
+                        borderStyle: "solid",
                       }}
                     >
-                      <span
-                        style={{
-                          fontWeight: "bold",
-                          fontSize: "28px",
-                          marginBottom: "0.5rem",
-                        }}
-                      >
+                      <span style={{ textAlign: "center", width: "100%" }}>
                         {item.label}
                       </span>
                     </div>
@@ -524,77 +586,45 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
               </div>
             )}
 
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: "1rem",
-                  marginBottom: "2rem",
-                  backgroundColor: "#fff",
-                  padding: "1rem",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                  width: "100%",
-                  maxWidth: "800px",
-                }}
-              >
-                <div>
-                  <label
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                      color: "#555",
-                    }}
-                  >
-                    State:
-                  </label>
-                  <select
-                    value={filterValue}
-                    onChange={(e) => {
-                      setFilterValue(e.target.value);
-                      setTimeout(() => {
-                        getExams();
-                      }, 100);
-                    }}
-                    style={{
-                      display: "block",
-                      width: "200px",
-                      padding: "0.6rem",
-                      borderRadius: "4px",
-                      border: "1px solid #ccc",
-                      marginTop: "0.5rem",
-                      fontSize: "14px",
-                    }}
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="disapproved">Disapproved</option>
-                    {userRole === "User" && (
-                      <option value="building">Building</option>
-                    )}
-                  </select>
-                </div>
-              </div>
+            <div
+              style={{
+                marginTop: "2rem",
+                width: "100%",
+                padding: "1rem",
+                backgroundColor: "#ffffff",
+                borderRadius: "20px",
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                borderWidth: "1px",
+                borderColor: "rgb(185, 184, 184)",
+                borderStyle: "solid",
+              }}
+            >
+              <ExamSelector
+                filterValue={filterValue}
+                setFilterValue={setFilterValue}
+                getExams={getExams}
+                userRole={userRole}
+              />
+
+              <h3 style={{ marginBottom: "1.5rem", color: "rgb(12, 84, 125)" }}>
+                {examsType.toUpperCase()} EXAMS
+              </h3>
 
               {gettingExams && <ExamsListLoader />}
 
-              {!gettingExams && !gettingExamsError && exams.length > 0 && (
+              {!gettingExams && !gettingExamsError && (
                 <div
                   style={{
-                    marginTop: "2rem",
+                    marginTop: "0.2rem",
                     width: "100%",
                     padding: "1rem",
                     backgroundColor: "#fafafa",
-                    borderRadius: "8px",
+                    borderRadius: "20px",
                     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                    maxHeight: "500px",
+                    overflowY: "auto",
                   }}
                 >
-                  <h3 style={{ marginBottom: "1.5rem", color: "#333" }}>
-                    {examsType.toUpperCase()} EXAMS:
-                  </h3>
                   {exams.map((exam) => (
                     <div
                       //@ts-ignore
@@ -608,7 +638,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                         marginBottom: "1rem",
                         padding: "1rem",
                         backgroundColor: "#fff",
-                        borderRadius: "8px",
+                        borderRadius: "20px",
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "flex-start",
@@ -624,6 +654,8 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                         (e.currentTarget.style.backgroundColor = "#fff")
                       }
                     >
+                     
+
                       {/* Creator */}
                       <div style={{ flex: 1, marginRight: "1rem" }}>
                         <p
@@ -743,29 +775,6 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                           {exam.examSemester}
                         </p>
                       </div>
-
-                      {/* State */}
-                      <div
-                        style={{
-                          flex: 1,
-                          textAlign: "right",
-                        }}
-                      >
-                        <p
-                          style={{
-                            marginTop: "14px",
-                            textAlign: "center",
-                            margin: 0,
-                            fontSize: "14px",
-                            fontWeight: "bold",
-                            //@ts-ignore
-                            color: getColorForState(exam.examState), // Dynamic color based on exam state
-                          }}
-                        >
-                          {/*@ts-ignore*/}
-                          {exam.examState.toUpperCase()}
-                        </p>
-                      </div>
                     </div>
                   ))}
                 </div>
@@ -777,7 +786,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                     marginTop: "2rem",
                     padding: "1rem",
                     backgroundColor: "#fff",
-                    borderRadius: "8px",
+                    borderRadius: "20px",
                     boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
                     color: "red",
                   }}
