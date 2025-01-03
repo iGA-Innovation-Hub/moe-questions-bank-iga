@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { getCurrentUserEmail } from "../lib/getToken.ts";
 import ExamCreationLoader from "../components/ExamCreationLoader.tsx";
 import { useAlert } from "../components/AlertComponent.tsx";
+import SpeechRecorder from "../components/SpeechRecorder.tsx";
 
 
 interface Part {
@@ -414,7 +415,7 @@ const ExamForm: React.FC = () => {
                 fontFamily: "Arial, sans-serif",
               }}
             >
-             Loading
+              Loading
             </h3>
             <ExamCreationLoader /> <br />
           </div>
@@ -561,9 +562,7 @@ const ExamForm: React.FC = () => {
             </div>
           </div>
 
-          <div
-          style={{borderRadius:"20px"}}
-          >
+          <div style={{ borderRadius: "20px" }}>
             {examContent?.parts?.map((part: any, partIndex: number) => (
               <div key={`part-${partIndex}`} style={{ marginTop: "1rem" }}>
                 <h3 style={{ fontWeight: "bold" }}>
@@ -703,26 +702,47 @@ const ExamForm: React.FC = () => {
 
                     {/* Feedback Text Area for Section */}
                     {isEditing && (
-                      <textarea
-                        placeholder={`Provide feedback for Part ${section.part}: ${section.title}`}
-                        value={feedback[`section-${sectionIndex}`] || ""}
-                        onChange={(e) =>
-                          setFeedback((prev) => ({
-                            ...prev,
-                            [`section-${sectionIndex}`]: e.target.value,
-                          }))
-                        }
+                      <div
                         style={{
-                          width: "100%",
-                          minHeight: "60px",
-                          marginTop: "10px",
-                          padding: "10px",
-                          borderRadius: "4px",
-                          border: "1px solid #ccc",
-                          backgroundColor: "#ffffff",
-                          resize: "none",
+                          display: "flex",
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: "8px",
                         }}
-                      />
+                      >
+                        <textarea
+                          placeholder={`Provide feedback for Part ${section.part}: ${section.title}`}
+                          value={feedback[`section-${sectionIndex}`] || ""}
+                          onChange={(e) =>
+                            setFeedback((prev) => ({
+                              ...prev,
+                              [`section-${sectionIndex}`]: e.target.value,
+                            }))
+                          }
+                          style={{
+                            width: "100%",
+                            minHeight: "60px",
+                            marginTop: "10px",
+                            padding: "10px",
+                            borderRadius: "4px",
+                            border: "1px solid #ccc",
+                            backgroundColor: "#ffffff",
+                            resize: "none",
+                          }}
+                        />
+
+                        <SpeechRecorder
+                          onTranscriptChange={(transcript) =>
+                            setFeedback((prev) => ({
+                              ...prev,
+                              [`section-${sectionIndex}`]: transcript, // Update the specific section
+                            }))
+                          }
+                          size={20}
+                          color="#4F46E5"
+                        />
+                      </div>
                     )}
 
                     {/* Feedback Submission Button */}
@@ -765,8 +785,7 @@ const ExamForm: React.FC = () => {
                                 animation: "spin 1s linear infinite",
                               }}
                             ></span>
-                            <span style={{ fontSize: "10px" }}>
-                            </span>
+                            <span style={{ fontSize: "10px" }}></span>
                           </>
                         ) : (
                           <span style={{ fontSize: "12px" }}>
@@ -1133,31 +1152,52 @@ const ExamForm: React.FC = () => {
 
                           {/* Feedback Text Area for Subsection */}
                           {isEditing && (
-                            <textarea
-                              placeholder={`Provide feedback for Subsection ${subsection.subsection}: ${subsection.title}`}
-                              value={
-                                feedback[
-                                  `section-${sectionIndex}-subsection-${subIndex}`
-                                ] || ""
-                              }
-                              onChange={(e) =>
-                                setFeedback((prev) => ({
-                                  ...prev,
-                                  [`section-${sectionIndex}-subsection-${subIndex}`]:
-                                    e.target.value,
-                                }))
-                              }
+                            <div
                               style={{
-                                width: "100%",
-                                minHeight: "60px",
-                                marginTop: "10px",
-                                padding: "10px",
-                                borderRadius: "4px",
-                                border: "1px solid #ccc",
-                                backgroundColor: "#ffffff",
-                                resize: "none",
+                                display: "flex",
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                gap: "8px",
                               }}
-                            />
+                            >
+                              <textarea
+                                placeholder={`Provide feedback for Subsection ${subsection.subsection}: ${subsection.title}`}
+                                value={
+                                  feedback[
+                                    `section-${sectionIndex}-subsection-${subIndex}`
+                                  ] || ""
+                                }
+                                onChange={(e) =>
+                                  setFeedback((prev) => ({
+                                    ...prev,
+                                    [`section-${sectionIndex}-subsection-${subIndex}`]:
+                                      e.target.value,
+                                  }))
+                                }
+                                style={{
+                                  width: "100%",
+                                  minHeight: "60px",
+                                  marginTop: "10px",
+                                  padding: "10px",
+                                  borderRadius: "4px",
+                                  border: "1px solid #ccc",
+                                  backgroundColor: "#ffffff",
+                                  resize: "none",
+                                }}
+                              />
+
+                              <SpeechRecorder
+                                onTranscriptChange={(transcript) =>
+                                  setFeedback((prev) => ({
+                                    ...prev,
+                                    [`section-${sectionIndex}`]: transcript, // Update the specific section
+                                  }))
+                                }
+                                size={20}
+                                color="#4F46E5"
+                              />
+                            </div>
                           )}
 
                           {/* Feedback Submission Button  */}

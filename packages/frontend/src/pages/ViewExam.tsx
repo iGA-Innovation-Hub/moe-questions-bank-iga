@@ -10,6 +10,7 @@ import invokeLambda from "../lib/invokeLambda.ts";
 import { generateExamPDFQ } from "../lib/Generators/generateArabicPDFQ.tsx";
 import { generateExamPDFA } from "../lib/Generators/generateArabicPDFQA.tsx";
 import ExamCreationLoader from "../components/ExamCreationLoader.tsx";
+import SpeechRecorder from "../components/SpeechRecorder.tsx";
 
 interface Part {
   part: string; // Part number or identifier
@@ -650,6 +651,7 @@ const ViewExam: React.FC = () => {
                         }
                         //@ts-ignore
                         onMouseUp={(e) =>
+                          //@ts-ignore
                           (e.target.style.transform = "scale(1)")
                         }
                       >
@@ -671,7 +673,6 @@ const ViewExam: React.FC = () => {
                                 animation: "spin 1s linear infinite",
                               }}
                             />
-                            
                           </span>
                         ) : (
                           "Apply Approver Changes"
@@ -1041,24 +1042,42 @@ const ViewExam: React.FC = () => {
                     </h3>
 
                     {userRole === "Admin" && examState === "pending" && (
-                      <textarea
+                      <div
                         style={{
-                          width: "100%", // Adjust this width as needed
-                          height: "80px", // Fixed height
-                          padding: "0.5rem",
-                          borderRadius: "4px",
-                          border: "1px solid #ccc",
-                          boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
-                          marginTop: "0.5rem",
-                          resize: "none", // Disable resizing
+                          display: "flex",
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: "8px",
                         }}
-                        maxLength={350}
-                        placeholder="Enter your feedback"
-                        value={feedback[section.title] || ""}
-                        onChange={(e) =>
-                          handleFeedbackChange(section.title, e.target.value)
-                        }
-                      ></textarea>
+                      >
+                        <textarea
+                          style={{
+                            width: "100%", // Adjust this width as needed
+                            height: "80px", // Fixed height
+                            padding: "0.5rem",
+                            borderRadius: "4px",
+                            border: "1px solid #ccc",
+                            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+                            marginTop: "0.5rem",
+                            resize: "none", // Disable resizing
+                          }}
+                          maxLength={350}
+                          placeholder="Enter your feedback"
+                          value={feedback[section.title] || ""}
+                          onChange={(e) =>
+                            handleFeedbackChange(section.title, e.target.value)
+                          }
+                        ></textarea>
+
+                        <SpeechRecorder
+                          onTranscriptChange={(transcript) =>
+                            handleFeedbackChange(section.title, transcript)
+                          }
+                          size={20}
+                          color="#4F46E5"
+                        />
+                      </div>
                     )}
 
                     {examState === "approved" && approverMsg[section.title] && (
@@ -1783,7 +1802,6 @@ const ViewExam: React.FC = () => {
                             animation: "spin 1s linear infinite",
                           }}
                         ></span>
-                        
                       </span>
                     ) : (
                       "Download Audio"
