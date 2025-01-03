@@ -3,8 +3,6 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom"; // Na
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/LoginPage";
 import ExamForm from "./pages/ExamForm";
-import FeedbackForm from "./pages/FeedbackForm";
-import HistoryPage from "./pages/HistoryPage";
 import { AppContext, AppContextType } from "./lib/contextLib";
 import "@aws-amplify/ui-react/styles.css";
 import AuthRoute from "./components/AuthRoute";
@@ -104,8 +102,6 @@ const App: React.FC = () => {
               />
               <Route path="examForm/:id" element={<ExamForm />} />
               <Route path="viewExam/:id" element={<ViewExam />} />
-              <Route path="history" element={<HistoryPage />} />
-              <Route path="feedback-form" element={<FeedbackForm />} />
               <Route
                 path="audiopPage"
                 element={

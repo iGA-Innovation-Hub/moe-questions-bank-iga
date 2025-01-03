@@ -76,7 +76,7 @@ const StyledWrapper = styled.div`
     box-sizing: border-box;
     box-shadow: 0 0 0px 1px rgba(0, 0, 0, 0.06);
     padding: 0.25rem;
-    width: 700px;
+    width: 70%;
     font-size: 16px;
   }
 
