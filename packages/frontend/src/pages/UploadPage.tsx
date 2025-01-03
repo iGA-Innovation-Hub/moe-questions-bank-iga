@@ -61,7 +61,9 @@ const UploadPage: React.FC = () => {
   }
 
   return (
-    <div className="upload-container">
+    <div className="upload-container"
+    style={{marginTop:"2rem"}}
+    >
       <h1 className="title">Upload Course Material</h1>
       <p className="subtitle">Select files or folder to upload</p>
       <form onSubmit={handleSubmit} className="upload-form">

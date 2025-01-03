@@ -105,13 +105,13 @@ export function InitialForm() {
     <div
       style={{
         flex: 1,
-        backgroundColor: "#f9f9f9",
+        backgroundColor: "#ffffff",
         padding: "2rem",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         overflowY: "auto", // Enables vertical scrolling if needed
-        height: "100vh", // Ensures the form fits the viewport
+        height: "auto", // Ensures the form fits the viewport
       }}
     >
       <div>
@@ -124,7 +124,18 @@ export function InitialForm() {
               borderRadius: "12px",
             }}
           >
-            <ExamCreationLoader />
+            <h3
+              style={{
+                textAlign: "center",
+                color: "rgb(12, 84, 125)",
+                fontWeight: "700",
+                fontSize: "24px",
+                fontFamily: "Arial, sans-serif",
+              }}
+            >
+              Generating
+            </h3>
+            <ExamCreationLoader /> <br />
           </div>
         )}
       </div>
@@ -150,10 +161,10 @@ export function InitialForm() {
               fontFamily: "Arial, sans-serif",
               color: "rgb(12, 84, 125)",
               marginBottom: "2rem",
-              marginTop:"0rem",
+              marginTop: "0rem",
               fontSize: "24px",
               fontWeight: "700",
-              textAlign:"center"
+              textAlign: "center",
             }}
           >
             Generate Exam
