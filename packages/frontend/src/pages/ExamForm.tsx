@@ -527,7 +527,7 @@ const ExamForm: React.FC = () => {
               marginBottom: "1rem",
               padding: "1rem",
               backgroundColor: "#fff",
-              borderRadius: "8px",
+              borderRadius: "20px",
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               color: "#333",
             }}
@@ -561,7 +561,9 @@ const ExamForm: React.FC = () => {
             </div>
           </div>
 
-          <div>
+          <div
+          style={{borderRadius:"20px"}}
+          >
             {examContent?.parts?.map((part: any, partIndex: number) => (
               <div key={`part-${partIndex}`} style={{ marginTop: "1rem" }}>
                 <h3 style={{ fontWeight: "bold" }}>
@@ -665,7 +667,7 @@ const ExamForm: React.FC = () => {
                 width: "900px",
                 padding: "20px",
                 backgroundColor: "#fff",
-                borderRadius: "8px",
+                borderRadius: "20px",
                 boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
               }}
             >

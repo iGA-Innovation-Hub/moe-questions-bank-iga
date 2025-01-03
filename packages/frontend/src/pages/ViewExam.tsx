@@ -9,6 +9,7 @@ import { generateModelPDF } from "../lib/Generators/generateModelAnswerPDF.tsx";
 import invokeLambda from "../lib/invokeLambda.ts";
 import { generateExamPDFQ } from "../lib/Generators/generateArabicPDFQ.tsx";
 import { generateExamPDFA } from "../lib/Generators/generateArabicPDFQA.tsx";
+import ExamCreationLoader from "../components/ExamCreationLoader.tsx";
 
 interface Part {
   part: string; // Part number or identifier
@@ -53,7 +54,6 @@ const ViewExam: React.FC = () => {
   }>({});
   const [_responseResult, _setResponseResult] = useState<string>("");
   const [loadingPage, setLoadingPage] = useState(true);
-  const [errorMsg, setErrorMsg] = useState("");
   const [loadingChangeState, setLoadingChangeState] = useState(false);
   const [loadingApprove, setLoadingApprove] = useState(false);
   const [LoadingDisapprove, setLoadingDisapprove] = useState(false);
@@ -115,12 +115,15 @@ const ViewExam: React.FC = () => {
       } else {
         showAlert({
           type: "failure",
-          message: "Data received. No changes made.",
+          message: "No changes made",
         });
       }
     } catch (error) {
       console.error("Error sending feedback:", error);
-      setErrorMsg("Failed to apply changes. Please try again later.");
+      showAlert({
+        type: "failure",
+        message: "Failed to load",
+      });
     } finally {
       setLoadingChangeState(false);
     }
@@ -138,7 +141,10 @@ const ViewExam: React.FC = () => {
 
       if (!response || Object.keys(response).length === 0) {
         console.error("Response is empty or undefined:", response);
-        setErrorMsg("Error fetching exam data. Please try again.");
+        showAlert({
+          type: "failure",
+          message: "Failed to load",
+        });
         return;
       }
 
@@ -158,7 +164,10 @@ const ViewExam: React.FC = () => {
           setExamContent(parsedContent);
         } catch (parseError) {
           console.error("Failed to parse exam content as JSON:", content);
-          setErrorMsg("Invalid exam data format.");
+          showAlert({
+            type: "failure",
+            message: "Invalid exam format",
+          });
           return;
         }
       } else if (typeof content === "object") {
@@ -166,7 +175,10 @@ const ViewExam: React.FC = () => {
         setExamContent(content); // Set directly if already an object
       } else {
         console.error("Unexpected examContent format:", typeof content);
-        setErrorMsg("Exam data format is invalid!");
+        showAlert({
+          type: "failure",
+          message: "Invalid exam format",
+        });
         return;
       }
 
@@ -187,7 +199,10 @@ const ViewExam: React.FC = () => {
       }
     } catch (err: any) {
       console.error("Error fetching initial data:", err);
-      setErrorMsg("Failed to load exam data. Please try again later.");
+      showAlert({
+        type: "failure",
+        message: "Failed to load",
+      });
     } finally {
       setLoadingPage(false); // Mark loading as complete
     }
@@ -218,7 +233,10 @@ const ViewExam: React.FC = () => {
       console.log("Raw Exam Content from Backend:", response.examContent);
 
       if (!response.examContent) {
-        setErrorMsg("Exam content is missing from the response.");
+        showAlert({
+          type: "failure",
+          message: "Failed to load",
+        });
         return;
       }
 
@@ -241,7 +259,10 @@ const ViewExam: React.FC = () => {
           "Failed to parse exam content as JSON:",
           response.examContent
         );
-        setErrorMsg("Invalid exam content format!");
+        showAlert({
+          type: "failure",
+          message: "Failed to load",
+        });
         return;
       }
 
@@ -252,7 +273,10 @@ const ViewExam: React.FC = () => {
       );
     } catch (error) {
       console.error("Error fetching exam content:", error);
-      setErrorMsg("Failed to load exam content. Please try again later.");
+      showAlert({
+        type: "failure",
+        message: "Failed to load",
+      });
     }
   };
 
@@ -262,7 +286,10 @@ const ViewExam: React.FC = () => {
         await fetchExamContent(); // Fetch and parse content
       } catch (err) {
         console.error("Error loading exam content:", err);
-        setErrorMsg("Failed to load exam content. Please try again later.");
+        showAlert({
+          type: "failure",
+          message: "Failed to load",
+        });
       }
     };
     loadExamContent();
@@ -279,7 +306,10 @@ const ViewExam: React.FC = () => {
       } catch (error) {
         console.error("Error fetching initial data:", error);
         if (!isCancelled) {
-          setErrorMsg("Failed to fetch initial data. Please try again later.");
+          showAlert({
+            type: "failure",
+            message: "Failed to load",
+          });
         }
       }
     }, 2000); // 2-second delay
@@ -309,6 +339,10 @@ const ViewExam: React.FC = () => {
       navigate("/dashboard/examForm/" + id);
     } catch (error) {
       console.error("Error sending exam:", error);
+      showAlert({
+        type: "failure",
+        message: "Failed to send",
+      });
     } finally {
       setLoadingChangeState(false);
     }
@@ -336,6 +370,10 @@ const ViewExam: React.FC = () => {
       window.location.reload();
     } catch (error) {
       console.error("Error sending exam:", error);
+       showAlert({
+         type: "failure",
+         message: "Failed to send",
+       });
     } finally {
       setLoadingChangeState(false);
       setLoadingApprove(false);
@@ -374,6 +412,10 @@ const ViewExam: React.FC = () => {
       window.location.reload();
     } catch (error) {
       console.error("Error sending exam:", error);
+       showAlert({
+         type: "failure",
+         message: "Failed to send",
+       });
     } finally {
       setLoadingChangeState(false);
       setLoadingDisapprove(false);
@@ -442,1238 +484,1319 @@ const ViewExam: React.FC = () => {
       console.log("Audio downloaded successfully");
     } catch (error) {
       console.error("Error downloading audio:", error);
-      alert("Could not download the audio. Please try again later.");
+       showAlert({
+         type: "failure",
+         message: "Failed to download",
+       });
     } finally {
       setLoading(false);
     }
   };
 
-  // Show loading state
-  if (loadingPage) {
-    return <div>Loading...</div>;
-  }
-
-  if (errorMsg) {
-    return <div>{errorMsg}</div>;
-  }
 
   return (
     <div
       style={{
         flex: 1,
-        backgroundColor: "#f9f9f9",
+        backgroundColor: "#ffffff",
         padding: "2rem",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         overflowY: "auto",
-        height: "100vh",
+        height: "auto",
       }}
     >
-      <h2
-        style={{
-          fontFamily: "Georgia, serif",
-          color: "#333",
-          marginBottom: "1rem",
-          fontSize: "28px",
-          marginTop: "0",
-        }}
-      >
-        View Exam
-      </h2>
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between", // Align buttons to opposite sides
-          gap: "1rem", // Adds space between buttons
-          width: "100%",
-          maxWidth: "900px",
-          padding: "1rem 0",
-        }}
-      >
-        {examState === "pending" && (
+      <div>
+        {loadingPage && (
           <div
             style={{
-              backgroundColor: "rgba(255, 140, 0, 0.8)", // Orange with transparency
-              color: "#4f4f4f", // White text for contrast
-              padding: "0.5rem 1rem", // Small padding for compact size
-              borderRadius: "8px", // Rounded corners
-              border: "1px solid rgba(255, 140, 0, 0.8)", // Slightly darker border
-              display: "inline-block", // Prevent full width
-              fontSize: "14px", // Smaller text
-              fontWeight: "bold", // Bold text for emphasis
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
-              textAlign: "center", // Center text
+              width: "100%",
+              maxWidth: "700px",
+              padding: "2rem",
+              borderRadius: "12px",
             }}
           >
-            {examState.toUpperCase()}
+            <h3
+              style={{
+                textAlign: "center",
+                color: "rgb(12, 84, 125)",
+                fontWeight: "700",
+                fontSize: "24px",
+                fontFamily: "Arial, sans-serif",
+              }}
+            >
+              Loading
+            </h3>
+            <ExamCreationLoader /> <br />
           </div>
         )}
-
-        {examState === "approved" && (
-          <>
-            <div
-              style={{
-                backgroundColor: "rgba(34, 139, 34, 0.5)", // Dark green with transparency
-                color: "#4f4f4f", // Grey text color
-                padding: "0.25rem 0.75rem", // Reduced padding to make it more compact
-                borderRadius: "8px", // Rounded corners
-                border: "1px solid rgba(34, 139, 34, 0.5)", // Slightly darker border
-                display: "block", // Block-level to align properly
-                fontSize: "12px", // Smaller font size to reduce height
-                fontWeight: "bold", // Bold text for emphasis
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
-                textAlign: "left", // Align text to the left
-                marginBottom: "0.5rem",
-              }}
-            >
-              ✅ {examState.toUpperCase()}
-              <div
-                style={{
-                  textAlign: "left",
-                }}
-              ></div>
-            </div>
-
-            {/* Button outside the red box */}
-            {userRole === "User" && Object.keys(approverMsg).length !== 0 && (
-              <div
-                style={{
-                  marginTop: "0.5rem", // Space above the button
-                }}
-              >
-                <button
-                  onClick={handleFeedbackSubmission}
-                  style={{
-                    padding: "0.3rem 0.75rem", // Smaller padding for a smaller button
-                    backgroundColor: "#2196F3", // Blue color for 'Send For Approval'
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "4px",
-                    fontSize: "12px", // Smaller font size
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    transition:
-                      "background-color 0.3s ease, transform 0.3s ease",
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
-                    width: "auto", // Auto width to fit text
-                  }}
-                  onMouseOver={(e) =>
-                    //@ts-ignore
-                    (e.target.style.backgroundColor = "#1976D2")
-                  }
-                  onMouseOut={(e) =>
-                    //@ts-ignore
-                    (e.target.style.backgroundColor = "#2196F3")
-                  }
-                  onMouseDown={(e) =>
-                    //@ts-ignore
-                    (e.target.style.transform = "scale(0.98)")
-                  }
-                  //@ts-ignore
-                  onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
-                >
-                  {loadingChangeState ? (
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: "1rem",
-                          height: "1rem",
-                          border: "2px solid #fff",
-                          borderRadius: "50%",
-                          borderTop: "2px solid transparent",
-                          animation: "spin 1s linear infinite",
-                        }}
-                      />
-                      Applying Changes...
-                    </span>
-                  ) : (
-                    "Apply Approver Changes"
-                  )}
-                </button>
-              </div>
-            )}
-          </>
-        )}
-
-        {examState === "disapproved" && (
-          <>
-            {/* Red box for the exam state */}
-            <div
-              style={{
-                backgroundColor: "rgba(220, 20, 60, 0.5)", // Dark red with transparency
-                color: "#4f4f4f", // Grey text color
-                padding: "0.25rem 0.75rem", // Reduced padding to make it more compact
-                borderRadius: "8px", // Rounded corners
-                border: "1px solid rgba(220, 20, 60, 0.7)", // Slightly darker border
-                display: "block", // Block-level to align properly
-                fontSize: "12px", // Smaller font size to reduce height
-                fontWeight: "bold", // Bold text for emphasis
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
-                textAlign: "left", // Align text to the left
-                marginBottom: "0.5rem", // Reduced space below
-              }}
-            >
-              ❌ {examState.toUpperCase()}
-              <div
-                style={{
-                  textAlign: "left",
-                }}
-              ></div>
-            </div>
-
-            {/* Button outside the red box */}
-            {userRole === "User" && (
-              <div
-                style={{
-                  marginTop: "0.5rem", // Space above the button
-                }}
-              >
-                <button
-                  onClick={changeExamStateToBuild}
-                  style={{
-                    padding: "0.3rem 0.75rem", // Smaller padding for a smaller button
-                    backgroundColor: "#2196F3", // Blue color for 'Send For Approval'
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "4px",
-                    fontSize: "12px", // Smaller font size
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    transition:
-                      "background-color 0.3s ease, transform 0.3s ease",
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
-                    width: "auto", // Auto width to fit text
-                  }}
-                  onMouseOver={(e) =>
-                    //@ts-ignore
-                    (e.target.style.backgroundColor = "#1976D2")
-                  }
-                  onMouseOut={(e) =>
-                    //@ts-ignore
-                    (e.target.style.backgroundColor = "#2196F3")
-                  }
-                  onMouseDown={(e) =>
-                    //@ts-ignore
-                    (e.target.style.transform = "scale(0.98)")
-                  }
-                  //@ts-ignore
-                  onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
-                >
-                  {loadingChangeState ? (
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: "1rem",
-                          height: "1rem",
-                          border: "2px solid #fff",
-                          borderRadius: "50%",
-                          borderTop: "2px solid transparent",
-                          animation: "spin 1s linear infinite",
-                        }}
-                      />
-                      Changing exam State...
-                    </span>
-                  ) : (
-                    "Modify Exam"
-                  )}
-                </button>
-              </div>
-            )}
-          </>
-        )}
       </div>
-
-      <div
-        style={{
-          width: "900px",
-          fontSize: "14px",
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: "1rem",
-          padding: "1rem",
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-          color: "#333",
-        }}
-      >
-        <div style={{ flex: 1, textAlign: "left", paddingRight: "1rem" }}>
-          <strong>Creation Date:</strong> {creationDate}
-        </div>
-        <div style={{ flex: 1, textAlign: "center", paddingRight: "1rem" }}>
-          <strong>Created By:</strong> {createdBy}
-        </div>
+      {!loadingPage && (
         <div
           style={{
             flex: 1,
-            textAlign: "right",
-            overflowX: "auto", // Enables horizontal scrolling
-            whiteSpace: "nowrap", // Prevents text wrapping
-            paddingRight: "1rem",
-          }}
-        >
-          <strong>Contributors: </strong>
-          <div
-            style={{
-              display: "inline-block",
-              maxWidth: "100%",
-              whiteSpace: "nowrap",
-              textOverflow: "ellipsis", // Adds ellipsis when content overflows
-            }}
-          >
-            {contributers}
-          </div>
-        </div>
-      </div>
-
-      {/* Top Horizontal Form */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "900px",
-          marginBottom: "1rem",
-          padding: "1rem",
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-          margin: "0 auto",
-        }}
-      >
-        {/* Displaying the data horizontally with labels */}
-        <div
-          style={{
+            backgroundColor: "#ffffff",
+            padding: "2rem",
             display: "flex",
-            justifyContent: "space-between",
-            width: "100%",
+            flexDirection: "column",
+            alignItems: "center",
+            overflowY: "auto",
+            height: "auto",
           }}
         >
-          {/* Grade */}
+          <h2
+            style={{
+              fontFamily: "Arial, sans-serif",
+              color: "rgb(12, 84, 125)",
+              marginBottom: "1rem",
+              fontSize: "24px",
+              marginTop: "0",
+              fontWeight: "700",
+            }}
+          >
+            View Exam
+          </h2>
+
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
+              justifyContent: "space-between", // Align buttons to opposite sides
+              gap: "1rem", // Adds space between buttons
+              width: "100%",
+              maxWidth: "900px",
+              padding: "1rem 0",
             }}
           >
-            <label
-              style={{
-                fontWeight: "bold",
-                fontSize: "14px",
-                marginBottom: "0.3rem",
-              }}
-            >
-              Grade:
-            </label>
-            <div
-              style={{
-                padding: "0.5rem 1rem",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                fontSize: "14px",
-                backgroundColor: "#f3f3f3",
-                textAlign: "center",
-              }}
-            >
-              {grade}
-            </div>
-          </div>
+            {examState === "pending" && (
+              <div
+                style={{
+                  backgroundColor: "rgba(255, 140, 0, 0.8)", // Orange with transparency
+                  color: "#4f4f4f", // White text for contrast
+                  padding: "0.5rem 1rem", // Small padding for compact size
+                  borderRadius: "20px", // Rounded corners
+                  border: "1px solid rgba(255, 140, 0, 0.8)", // Slightly darker border
+                  display: "inline-block", // Prevent full width
+                  fontSize: "14px", // Smaller text
+                  fontWeight: "bold", // Bold text for emphasis
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
+                  textAlign: "center", // Center text
+                }}
+              >
+                {examState.toUpperCase()}
+              </div>
+            )}
 
-          {/* Subject */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <label
-              style={{
-                fontWeight: "bold",
-                fontSize: "14px",
-                marginBottom: "0.3rem",
-              }}
-            >
-              Subject:
-            </label>
-            <div
-              style={{
-                padding: "0.5rem 1rem",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                fontSize: "14px",
-                backgroundColor: "#f3f3f3",
-                textAlign: "center",
-              }}
-            >
-              {subject}
-            </div>
-          </div>
-
-          {/* Semester */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <label
-              style={{
-                fontWeight: "bold",
-                fontSize: "14px",
-                marginBottom: "0.3rem",
-              }}
-            >
-              Semester:
-            </label>
-            <div
-              style={{
-                padding: "0.5rem 1rem",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                fontSize: "14px",
-                backgroundColor: "#f3f3f3",
-                textAlign: "center",
-              }}
-            >
-              {semester}
-            </div>
-          </div>
-
-          {/* Duration */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <label
-              style={{
-                fontWeight: "bold",
-                fontSize: "14px",
-                marginBottom: "0.3rem",
-              }}
-            >
-              Duration (hours):
-            </label>
-            <div
-              style={{
-                padding: "0.5rem 1rem",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                fontSize: "14px",
-                backgroundColor: "#f3f3f3",
-                textAlign: "center",
-              }}
-            >
-              {duration}
-            </div>
-          </div>
-
-          {/* Total Marks */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <label
-              style={{
-                fontWeight: "bold",
-                fontSize: "14px",
-                marginBottom: "0.3rem",
-              }}
-            >
-              Total Marks:
-            </label>
-            <div
-              style={{
-                padding: "0.5rem 1rem",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                fontSize: "14px",
-                backgroundColor: "#f3f3f3",
-                textAlign: "center",
-              }}
-            >
-              {totalMark}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Render Exam Sections */}
-      <div
-        style={{
-          width: "900px",
-          padding: "20px",
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-          marginTop: "1rem",
-        }}
-      >
-        {/* Title and Overview */}
-        <div>
-          <p>
-            <strong>{examContent?.title}</strong>
-          </p>
-          <p>
-            <strong>Total Marks:</strong> {examContent?.total_marks}
-          </p>
-          <p>
-            <strong>Time:</strong> {examContent?.time}
-          </p>
-
-          {/* Render Sections */}
-          {examContent?.sections?.map((section: any, sectionIndex: number) => (
-            <div
-              key={`section-${sectionIndex}`}
-              style={{
-                marginTop: "1rem",
-                padding: "1rem",
-                backgroundColor: "#f9f9f9",
-                borderRadius: "8px",
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-              }}
-            >
-              {/* Section Title */}
-              <h3 style={{ fontWeight: "bold", marginBottom: "1rem" }}>
-                Part {section.part}: {section.title} (Total Marks:{" "}
-                {section.total_marks})
-              </h3>
-
-              {userRole === "Admin" && examState === "pending" && (
-                <textarea
-                  style={{
-                    width: "100%", // Adjust this width as needed
-                    height: "80px", // Fixed height
-                    padding: "0.5rem",
-                    borderRadius: "4px",
-                    border: "1px solid #ccc",
-                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
-                    marginTop: "0.5rem",
-                    resize: "none", // Disable resizing
-                  }}
-                  maxLength={350}
-                  placeholder="Enter your feedback"
-                  value={feedback[section.title] || ""}
-                  onChange={(e) =>
-                    handleFeedbackChange(section.title, e.target.value)
-                  }
-                ></textarea>
-              )}
-
-              {examState === "approved" && approverMsg[section.title] && (
-                <div>
-                  <div
-                    style={{
-                      padding: "10px",
-                      borderRadius: "8px",
-                      border: "1px solid #ccc",
-                      backgroundColor: "rgba(34, 139, 34, 0.5)",
-                      color: "#4f4f4f",
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {approverMsg[section.title]}
-                  </div>
-                </div>
-              )}
-
-              {examState === "disapproved" && approverMsg[section.title] && (
-                <div>
-                  <div
-                    style={{
-                      padding: "10px",
-                      borderRadius: "8px",
-                      border: "1px solid #ccc",
-                      backgroundColor: "rgba(220, 20, 60, 0.5)",
-                      color: "#4f4f4f",
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {approverMsg[section.title]}
-                  </div>
-                </div>
-              )}
-
-              {/* Feedback Text Area for Section */}
-              {isEditing && (
-                <textarea
-                  placeholder={`Provide feedback for Part ${section.part}: ${section.title}`}
-                  value={feedback[`section-${sectionIndex}`] || ""}
-                  onChange={(e) =>
-                    setFeedback((prev) => ({
-                      ...prev,
-                      [`section-${sectionIndex}`]: e.target.value,
-                    }))
-                  }
-                  style={{
-                    width: "100%",
-                    minHeight: "60px",
-                    marginTop: "10px",
-                    padding: "10px",
-                    borderRadius: "4px",
-                    border: "1px solid #ccc",
-                    backgroundColor: "#ffffff",
-                  }}
-                />
-              )}
-
-              {/* Render Subsections */}
-
-              {/* Subsections (Optional) */}
-              {section.subsections?.map((subsection: any, subIndex: number) => (
+            {examState === "approved" && (
+              <>
                 <div
-                  key={`subsection-${sectionIndex}-${subIndex}`}
                   style={{
-                    marginTop: "1rem",
-                    padding: "1rem",
-                    backgroundColor: "#ffffff",
-                    borderRadius: "8px",
-                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                    backgroundColor: "rgba(34, 139, 34, 0.6)", // Dark green with transparency
+                    color: "#4f4f4f", // Grey text color
+                    padding: "0.5rem 1rem", // Reduced padding to make it more compact
+                    borderRadius: "20px", // Rounded corners
+                    border: "1px solid rgba(34, 139, 34, 0.5)", // Slightly darker border
+                    display: "block", // Block-level to align properly
+                    fontSize: "14px", // Smaller font size to reduce height
+                    fontWeight: "bold", // Bold text for emphasis
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
+                    textAlign: "left", // Align text to the left
+                    marginBottom: "0.5rem",
                   }}
                 >
-                  <h4 style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>
-                    {subsection.subsection}: {subsection.title} (
-                    {subsection.marks} Marks)
-                  </h4>
+                  ✅ {examState.toUpperCase()}
+                  <div
+                    style={{
+                      textAlign: "left",
+                    }}
+                  ></div>
+                </div>
 
-                  {/* Content */}
-                  {/* Content: Passage or Dialogue "listening"*/}
-                  {subsection.content?.passage && (
-                    <p
+                {/* Button outside the red box */}
+                {userRole === "User" &&
+                  Object.keys(approverMsg).length !== 0 && (
+                    <div
                       style={{
-                        fontStyle: "italic",
-                        marginBottom: "1rem",
-                        whiteSpace: "pre-wrap",
+                        marginTop: "0.5rem", // Space above the button
                       }}
                     >
-                      {subsection.content.passage}
-                    </p>
+                      <button
+                        onClick={handleFeedbackSubmission}
+                        style={{
+                          padding: "0.5rem 1rem", // Smaller padding for a smaller button
+                          backgroundColor: "#2196F3", // Blue color for 'Send For Approval'
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "20px",
+                          fontSize: "16px", // Smaller font size
+                          fontWeight: "bold",
+                          cursor: "pointer",
+                          transition:
+                            "background-color 0.3s ease, transform 0.3s ease",
+                          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
+                          width: "auto", // Auto width to fit text
+                        }}
+                        onMouseOver={(e) =>
+                          //@ts-ignore
+                          (e.target.style.backgroundColor = "#1976D2")
+                        }
+                        onMouseOut={(e) =>
+                          //@ts-ignore
+                          (e.target.style.backgroundColor = "#2196F3")
+                        }
+                        onMouseDown={(e) =>
+                          //@ts-ignore
+                          (e.target.style.transform = "scale(0.98)")
+                        }
+                        //@ts-ignore
+                        onMouseUp={(e) =>
+                          (e.target.style.transform = "scale(1)")
+                        }
+                      >
+                        {loadingChangeState ? (
+                          <span
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <span
+                              style={{
+                                width: "1rem",
+                                height: "1rem",
+                                border: "2px solid #fff",
+                                borderRadius: "50%",
+                                borderTop: "2px solid transparent",
+                                animation: "spin 1s linear infinite",
+                              }}
+                            />
+                            
+                          </span>
+                        ) : (
+                          "Apply Approver Changes"
+                        )}
+                      </button>
+                    </div>
                   )}
-                  {subsection.content?.dialogue && (
-                    <pre
+              </>
+            )}
+
+            {examState === "disapproved" && (
+              <>
+                {/* Red box for the exam state */}
+                <div
+                  style={{
+                    backgroundColor: "rgba(220, 20, 60, 0.5)", // Dark red with transparency
+                    color: "#4f4f4f", // Grey text color
+                    padding: "0.5rem 1rem", // Reduced padding to make it more compact
+                    borderRadius: "20px", // Rounded corners
+                    border: "1px solid rgba(220, 20, 60, 0.7)", // Slightly darker border
+                    display: "block", // Block-level to align properly
+                    fontSize: "12px", // Smaller font size to reduce height
+                    fontWeight: "bold", // Bold text for emphasis
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
+                    textAlign: "left", // Align text to the left
+                    marginBottom: "0.5rem", // Reduced space below
+                  }}
+                >
+                  ❌ {examState.toUpperCase()}
+                  <div
+                    style={{
+                      textAlign: "left",
+                    }}
+                  ></div>
+                </div>
+
+                {/* Button outside the red box */}
+                {userRole === "User" && (
+                  <div
+                    style={{
+                      marginTop: "0.5rem", // Space above the button
+                    }}
+                  >
+                    <button
+                      onClick={changeExamStateToBuild}
                       style={{
-                        fontStyle: "italic",
-                        marginBottom: "1rem",
-                        whiteSpace: "pre-wrap",
-                        backgroundColor: "#f8f8f8",
-                        padding: "10px",
-                        borderRadius: "4px",
+                        padding: "0.5rem 1rem", // Smaller padding for a smaller button
+                        backgroundColor: "#2196F3", // Blue color for 'Send For Approval'
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "20px",
+                        fontSize: "16px", // Smaller font size
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        transition:
+                          "background-color 0.3s ease, transform 0.3s ease",
+                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
+                        width: "auto", // Auto width to fit text
                       }}
+                      onMouseOver={(e) =>
+                        //@ts-ignore
+                        (e.target.style.backgroundColor = "#1976D2")
+                      }
+                      onMouseOut={(e) =>
+                        //@ts-ignore
+                        (e.target.style.backgroundColor = "#2196F3")
+                      }
+                      onMouseDown={(e) =>
+                        //@ts-ignore
+                        (e.target.style.transform = "scale(0.98)")
+                      }
+                      //@ts-ignore
+                      onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
                     >
-                      {subsection.content.dialogue}
-                    </pre>
-                  )}
+                      {loadingChangeState ? (
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: "1rem",
+                              height: "1rem",
+                              border: "2px solid #fff",
+                              borderRadius: "50%",
+                              borderTop: "2px solid transparent",
+                              animation: "spin 1s linear infinite",
+                            }}
+                          />
+                        </span>
+                      ) : (
+                        "Modify Exam"
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
 
-                  {/* Questions */}
-                  {subsection.content?.questions &&
-                    Array.isArray(subsection.content.questions) && (
-                      <div style={{ marginBottom: "20px" }}>
-                        <h4>Questions:</h4>
-                        <ul>
-                          {subsection.content.questions.map(
-                            (question: any, questionIndex: number) => (
-                              <li
-                                key={`question-${sectionIndex}-${subIndex}-${questionIndex}`}
-                              >
-                                <p>
-                                  <strong>Q{questionIndex + 1}:</strong>{" "}
-                                  {question.question ||
-                                    question.sentence ||
-                                    question.description}
-                                </p>
-                                {/* Options for Multiple-Choice Questions */}
-                                {question.options && (
-                                  <ul
-                                    style={{
-                                      listStyleType: "disc",
-                                      marginLeft: "20px",
-                                    }}
-                                  >
-                                    {question.options.map(
-                                      (option: string, optionIndex: number) => (
-                                        <li
-                                          key={`option-${questionIndex}-${optionIndex}`}
-                                        >
-                                          {String.fromCharCode(
-                                            65 + optionIndex
-                                          )}
-                                          . {option}
-                                        </li>
-                                      )
-                                    )}
-                                  </ul>
-                                )}
-                                {/* Answer */}
-                                {question.answer && (
-                                  <p>
-                                    <strong>Answer:</strong> {question.answer}
-                                  </p>
-                                )}
+          <div
+            style={{
+              width: "900px",
+              fontSize: "14px",
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: "1rem",
+              padding: "1rem",
+              backgroundColor: "#fff",
+              borderRadius: "20px",
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+              color: "#333",
+            }}
+          >
+            <div style={{ flex: 1, textAlign: "left", paddingRight: "1rem" }}>
+              <strong>Creation Date:</strong> {creationDate}
+            </div>
+            <div style={{ flex: 1, textAlign: "center", paddingRight: "1rem" }}>
+              <strong>Created By:</strong> {createdBy}
+            </div>
+            <div
+              style={{
+                flex: 1,
+                textAlign: "right",
+                overflowX: "auto", // Enables horizontal scrolling
+                whiteSpace: "nowrap", // Prevents text wrapping
+                paddingRight: "1rem",
+              }}
+            >
+              <strong>Contributors: </strong>
+              <div
+                style={{
+                  display: "inline-block",
+                  maxWidth: "100%",
+                  whiteSpace: "nowrap",
+                  textOverflow: "ellipsis", // Adds ellipsis when content overflows
+                }}
+              >
+                {contributers}
+              </div>
+            </div>
+          </div>
 
-                                {question.paragraph_matching && (
-                                  <div>
-                                    {question.paragraph_matching.map(
-                                      (q: any, i: any) => (
-                                        <p
-                                          key={`definition-${i}`}
-                                          style={{ marginTop: "10px" }}
-                                        >
-                                          {q.question}:{" "}
-                                          <span style={{ fontWeight: "bold" }}>
-                                            ________
-                                          </span>
-                                          <br />
-                                          <strong>Answer:</strong> {q.answer}
+          {/* Top Horizontal Form */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "900px",
+              marginBottom: "1rem",
+              padding: "1rem",
+              backgroundColor: "#fff",
+              borderRadius: "20px",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+              margin: "0 auto",
+            }}
+          >
+            {/* Displaying the data horizontally with labels */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                width: "100%",
+              }}
+            >
+              {/* Grade */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <label
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                    marginBottom: "0.3rem",
+                  }}
+                >
+                  Grade:
+                </label>
+                <div
+                  style={{
+                    padding: "0.5rem 1rem",
+                    borderRadius: "20px",
+                    border: "1px solid #ccc",
+                    fontSize: "14px",
+                    backgroundColor: "#f3f3f3",
+                    textAlign: "center",
+                  }}
+                >
+                  {grade}
+                </div>
+              </div>
+
+              {/* Subject */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <label
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                    marginBottom: "0.3rem",
+                  }}
+                >
+                  Subject:
+                </label>
+                <div
+                  style={{
+                    padding: "0.5rem 1rem",
+                    borderRadius: "20px",
+                    border: "1px solid #ccc",
+                    fontSize: "14px",
+                    backgroundColor: "#f3f3f3",
+                    textAlign: "center",
+                  }}
+                >
+                  {subject}
+                </div>
+              </div>
+
+              {/* Semester */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <label
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                    marginBottom: "0.3rem",
+                  }}
+                >
+                  Semester:
+                </label>
+                <div
+                  style={{
+                    padding: "0.5rem 1rem",
+                    borderRadius: "20px",
+                    border: "1px solid #ccc",
+                    fontSize: "14px",
+                    backgroundColor: "#f3f3f3",
+                    textAlign: "center",
+                  }}
+                >
+                  {semester}
+                </div>
+              </div>
+
+              {/* Duration */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <label
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                    marginBottom: "0.3rem",
+                  }}
+                >
+                  Duration (hours):
+                </label>
+                <div
+                  style={{
+                    padding: "0.5rem 1rem",
+                    borderRadius: "20px",
+                    border: "1px solid #ccc",
+                    fontSize: "14px",
+                    backgroundColor: "#f3f3f3",
+                    textAlign: "center",
+                  }}
+                >
+                  {duration}
+                </div>
+              </div>
+
+              {/* Total Marks */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <label
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                    marginBottom: "0.3rem",
+                  }}
+                >
+                  Total Marks:
+                </label>
+                <div
+                  style={{
+                    padding: "0.5rem 1rem",
+                    borderRadius: "20px",
+                    border: "1px solid #ccc",
+                    fontSize: "14px",
+                    backgroundColor: "#f3f3f3",
+                    textAlign: "center",
+                  }}
+                >
+                  {totalMark}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Render Exam Sections */}
+          <div
+            style={{
+              width: "900px",
+              padding: "20px",
+              backgroundColor: "#fff",
+              borderRadius: "20px",
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+              marginTop: "1rem",
+            }}
+          >
+            {/* Title and Overview */}
+            <div>
+              <p>
+                <strong>{examContent?.title}</strong>
+              </p>
+              <p>
+                <strong>Total Marks:</strong> {examContent?.total_marks}
+              </p>
+              <p>
+                <strong>Time:</strong> {examContent?.time}
+              </p>
+
+              {/* Render Sections */}
+              {examContent?.sections?.map(
+                (section: any, sectionIndex: number) => (
+                  <div
+                    key={`section-${sectionIndex}`}
+                    style={{
+                      marginTop: "1rem",
+                      padding: "1rem",
+                      backgroundColor: "#f9f9f9",
+                      borderRadius: "8px",
+                      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                    }}
+                  >
+                    {/* Section Title */}
+                    <h3 style={{ fontWeight: "bold", marginBottom: "1rem" }}>
+                      Part {section.part}: {section.title} (Total Marks:{" "}
+                      {section.total_marks})
+                    </h3>
+
+                    {userRole === "Admin" && examState === "pending" && (
+                      <textarea
+                        style={{
+                          width: "100%", // Adjust this width as needed
+                          height: "80px", // Fixed height
+                          padding: "0.5rem",
+                          borderRadius: "4px",
+                          border: "1px solid #ccc",
+                          boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+                          marginTop: "0.5rem",
+                          resize: "none", // Disable resizing
+                        }}
+                        maxLength={350}
+                        placeholder="Enter your feedback"
+                        value={feedback[section.title] || ""}
+                        onChange={(e) =>
+                          handleFeedbackChange(section.title, e.target.value)
+                        }
+                      ></textarea>
+                    )}
+
+                    {examState === "approved" && approverMsg[section.title] && (
+                      <div>
+                        <div
+                          style={{
+                            padding: "10px",
+                            borderRadius: "10px",
+                            border: "1px solid #ccc",
+                            backgroundColor: "rgba(34, 139, 34, 0.5)",
+                            color: "#4f4f4f",
+                            fontSize: "14px",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {approverMsg[section.title]}
+                        </div>
+                      </div>
+                    )}
+
+                    {examState === "disapproved" &&
+                      approverMsg[section.title] && (
+                        <div>
+                          <div
+                            style={{
+                              padding: "10px",
+                              borderRadius: "8px",
+                              border: "1px solid #ccc",
+                              backgroundColor: "rgba(220, 20, 60, 0.5)",
+                              color: "#4f4f4f",
+                              fontSize: "14px",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {approverMsg[section.title]}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Feedback Text Area for Section */}
+                    {isEditing && (
+                      <textarea
+                        placeholder={`Provide feedback for Part ${section.part}: ${section.title}`}
+                        value={feedback[`section-${sectionIndex}`] || ""}
+                        onChange={(e) =>
+                          setFeedback((prev) => ({
+                            ...prev,
+                            [`section-${sectionIndex}`]: e.target.value,
+                          }))
+                        }
+                        style={{
+                          width: "100%",
+                          minHeight: "60px",
+                          marginTop: "10px",
+                          padding: "10px",
+                          borderRadius: "4px",
+                          border: "1px solid #ccc",
+                          backgroundColor: "#ffffff",
+                        }}
+                      />
+                    )}
+
+                    {/* Render Subsections */}
+
+                    {/* Subsections (Optional) */}
+                    {section.subsections?.map(
+                      (subsection: any, subIndex: number) => (
+                        <div
+                          key={`subsection-${sectionIndex}-${subIndex}`}
+                          style={{
+                            marginTop: "1rem",
+                            padding: "1rem",
+                            backgroundColor: "#ffffff",
+                            borderRadius: "8px",
+                            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                          }}
+                        >
+                          <h4
+                            style={{
+                              fontWeight: "bold",
+                              marginBottom: "0.5rem",
+                            }}
+                          >
+                            {subsection.subsection}: {subsection.title} (
+                            {subsection.marks} Marks)
+                          </h4>
+
+                          {/* Content */}
+                          {/* Content: Passage or Dialogue "listening"*/}
+                          {subsection.content?.passage && (
+                            <p
+                              style={{
+                                fontStyle: "italic",
+                                marginBottom: "1rem",
+                                whiteSpace: "pre-wrap",
+                              }}
+                            >
+                              {subsection.content.passage}
+                            </p>
+                          )}
+                          {subsection.content?.dialogue && (
+                            <pre
+                              style={{
+                                fontStyle: "italic",
+                                marginBottom: "1rem",
+                                whiteSpace: "pre-wrap",
+                                backgroundColor: "#f8f8f8",
+                                padding: "10px",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              {subsection.content.dialogue}
+                            </pre>
+                          )}
+
+                          {/* Questions */}
+                          {subsection.content?.questions &&
+                            Array.isArray(subsection.content.questions) && (
+                              <div style={{ marginBottom: "20px" }}>
+                                <h4>Questions:</h4>
+                                <ul>
+                                  {subsection.content.questions.map(
+                                    (question: any, questionIndex: number) => (
+                                      <li
+                                        key={`question-${sectionIndex}-${subIndex}-${questionIndex}`}
+                                      >
+                                        <p>
+                                          <strong>Q{questionIndex + 1}:</strong>{" "}
+                                          {question.question ||
+                                            question.sentence ||
+                                            question.description}
                                         </p>
-                                      )
-                                    )}
-                                  </div>
-                                )}
+                                        {/* Options for Multiple-Choice Questions */}
+                                        {question.options && (
+                                          <ul
+                                            style={{
+                                              listStyleType: "disc",
+                                              marginLeft: "20px",
+                                            }}
+                                          >
+                                            {question.options.map(
+                                              (
+                                                option: string,
+                                                optionIndex: number
+                                              ) => (
+                                                <li
+                                                  key={`option-${questionIndex}-${optionIndex}`}
+                                                >
+                                                  {String.fromCharCode(
+                                                    65 + optionIndex
+                                                  )}
+                                                  . {option}
+                                                </li>
+                                              )
+                                            )}
+                                          </ul>
+                                        )}
+                                        {/* Answer */}
+                                        {question.answer && (
+                                          <p>
+                                            <strong>Answer:</strong>{" "}
+                                            {question.answer}
+                                          </p>
+                                        )}
 
-                                {question.short_answer && (
-                                  <div>
-                                    {question.short_answer.map(
-                                      (q: any, i: any) => (
-                                        <div
-                                          key={i}
-                                          style={{ marginBottom: "10px" }}
-                                        >
-                                          <strong>{i + 1}.</strong>
-                                          {q.question} <br />
-                                          <strong>Answer: </strong>
-                                          {q.answer}
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-                                )}
+                                        {question.paragraph_matching && (
+                                          <div>
+                                            {question.paragraph_matching.map(
+                                              (q: any, i: any) => (
+                                                <p
+                                                  key={`definition-${i}`}
+                                                  style={{ marginTop: "10px" }}
+                                                >
+                                                  {q.question}:{" "}
+                                                  <span
+                                                    style={{
+                                                      fontWeight: "bold",
+                                                    }}
+                                                  >
+                                                    ________
+                                                  </span>
+                                                  <br />
+                                                  <strong>Answer:</strong>{" "}
+                                                  {q.answer}
+                                                </p>
+                                              )
+                                            )}
+                                          </div>
+                                        )}
 
-                                {question.true_false && (
-                                  <div
+                                        {question.short_answer && (
+                                          <div>
+                                            {question.short_answer.map(
+                                              (q: any, i: any) => (
+                                                <div
+                                                  key={i}
+                                                  style={{
+                                                    marginBottom: "10px",
+                                                  }}
+                                                >
+                                                  <strong>{i + 1}.</strong>
+                                                  {q.question} <br />
+                                                  <strong>Answer: </strong>
+                                                  {q.answer}
+                                                </div>
+                                              )
+                                            )}
+                                          </div>
+                                        )}
+
+                                        {question.true_false && (
+                                          <div
+                                            style={{
+                                              marginTop: "10px",
+                                              marginBottom: "10px",
+                                            }}
+                                          >
+                                            {question.true_false.map(
+                                              (q: any, i: any) => (
+                                                <div
+                                                  key={i}
+                                                  style={{
+                                                    marginBottom: "10px",
+                                                  }}
+                                                >
+                                                  {q.question}________ <br />(
+                                                  <span
+                                                    style={{
+                                                      fontWeight: "bold",
+                                                    }}
+                                                  >
+                                                    answer: {q.answer}
+                                                  </span>
+                                                  )
+                                                </div>
+                                              )
+                                            )}
+                                          </div>
+                                        )}
+
+                                        {question.syntax_analysis && (
+                                          <div>
+                                            {question.syntax_analysis.map(
+                                              (q: any, i: any) => (
+                                                <div
+                                                  key={i}
+                                                  style={{
+                                                    marginBottom: "10px",
+                                                  }}
+                                                >
+                                                  <strong>
+                                                    {i + 1}. {q.question}{" "}
+                                                  </strong>
+                                                  <br />
+                                                  <strong>Answer: </strong>
+                                                  {q.answer}
+                                                </div>
+                                              )
+                                            )}
+                                          </div>
+                                        )}
+
+                                        {question.vocabulary_matching && (
+                                          <div>
+                                            <p
+                                              style={{
+                                                fontWeight: "bold",
+                                                marginBottom: "10px",
+                                              }}
+                                            >
+                                              Words:
+                                            </p>
+                                            <ul style={{ marginLeft: "20px" }}>
+                                              {question.vocabulary_matching.map(
+                                                (
+                                                  question: any,
+                                                  questionIndex: number
+                                                ) => (
+                                                  <li
+                                                    key={`word-${questionIndex}`}
+                                                    style={{
+                                                      listStyleType: "circle",
+                                                    }}
+                                                  >
+                                                    {question.question}
+                                                  </li>
+                                                )
+                                              )}
+                                            </ul>
+
+                                            {question.vocabulary_matching.map(
+                                              (q: any, i: any) => (
+                                                <p
+                                                  key={`definition-${i}`}
+                                                  style={{ marginTop: "10px" }}
+                                                >
+                                                  {q.answer}:{" "}
+                                                  <span
+                                                    style={{
+                                                      fontWeight: "bold",
+                                                    }}
+                                                  >
+                                                    ________
+                                                  </span>
+                                                  <br />
+                                                  <strong>Answer:</strong>{" "}
+                                                  {q.question}
+                                                </p>
+                                              )
+                                            )}
+                                          </div>
+                                        )}
+                                      </li>
+                                    )
+                                  )}
+                                </ul>
+                              </div>
+                            )}
+
+                          {/* True/False Questions */}
+                          {subsection.content?.questions?.["true-false"] && (
+                            <div style={{ marginBottom: "20px" }}>
+                              <h4>True/False Questions:</h4>
+                              {subsection.content.questions["true-false"].map(
+                                (question: any, questionIndex: number) => (
+                                  <p
+                                    key={`true-false-${questionIndex}`}
                                     style={{
                                       marginTop: "10px",
                                       marginBottom: "10px",
                                     }}
                                   >
-                                    {question.true_false.map(
-                                      (q: any, i: any) => (
-                                        <div
-                                          key={i}
-                                          style={{ marginBottom: "10px" }}
-                                        >
-                                          {q.question}________ <br />(
-                                          <span style={{ fontWeight: "bold" }}>
-                                            answer: {q.answer}
-                                          </span>
-                                          )
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-                                )}
-
-                                {question.syntax_analysis && (
-                                  <div>
-                                    {question.syntax_analysis.map(
-                                      (q: any, i: any) => (
-                                        <div
-                                          key={i}
-                                          style={{ marginBottom: "10px" }}
-                                        >
-                                          <strong>
-                                            {i + 1}. {q.question}{" "}
-                                          </strong>
-                                          <br />
-                                          <strong>Answer: </strong>
-                                          {q.answer}
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-                                )}
-
-                                {question.vocabulary_matching && (
-                                  <div>
-                                    <p
-                                      style={{
-                                        fontWeight: "bold",
-                                        marginBottom: "10px",
-                                      }}
-                                    >
-                                      Words:
-                                    </p>
-                                    <ul style={{ marginLeft: "20px" }}>
-                                      {question.vocabulary_matching.map(
-                                        (
-                                          question: any,
-                                          questionIndex: number
-                                        ) => (
-                                          <li
-                                            key={`word-${questionIndex}`}
-                                            style={{ listStyleType: "circle" }}
-                                          >
-                                            {question.question}
-                                          </li>
-                                        )
-                                      )}
-                                    </ul>
-
-                                    {question.vocabulary_matching.map(
-                                      (q: any, i: any) => (
-                                        <p
-                                          key={`definition-${i}`}
-                                          style={{ marginTop: "10px" }}
-                                        >
-                                          {q.answer}:{" "}
-                                          <span style={{ fontWeight: "bold" }}>
-                                            ________
-                                          </span>
-                                          <br />
-                                          <strong>Answer:</strong> {q.question}
-                                        </p>
-                                      )
-                                    )}
-                                  </div>
-                                )}
-                              </li>
-                            )
+                                    {question.statement}________ (
+                                    <span style={{ fontWeight: "bold" }}>
+                                      answer: {question.answer}
+                                    </span>
+                                    )
+                                  </p>
+                                )
+                              )}
+                            </div>
                           )}
-                        </ul>
-                      </div>
-                    )}
 
-                  {/* True/False Questions */}
-                  {subsection.content?.questions?.["true-false"] && (
-                    <div style={{ marginBottom: "20px" }}>
-                      <h4>True/False Questions:</h4>
-                      {subsection.content.questions["true-false"].map(
-                        (question: any, questionIndex: number) => (
-                          <p
-                            key={`true-false-${questionIndex}`}
-                            style={{
-                              marginTop: "10px",
-                              marginBottom: "10px",
-                            }}
-                          >
-                            {question.statement}________ (
-                            <span style={{ fontWeight: "bold" }}>
-                              answer: {question.answer}
-                            </span>
-                            )
-                          </p>
-                        )
-                      )}
-                    </div>
-                  )}
-
-                  {/* Vocabulary Matching */}
-                  {subsection.content?.questions?.["vocabulary-matching"] && (
-                    <div style={{ marginBottom: "20px" }}>
-                      <h4>Vocabulary Matching:</h4>
-                      <p
-                        style={{
-                          fontWeight: "bold",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        Words:
-                      </p>
-                      <ul style={{ marginLeft: "20px" }}>
-                        {subsection.content.questions[
-                          "vocabulary-matching"
-                        ].map((question: any, questionIndex: number) => (
-                          <li
-                            key={`word-${questionIndex}`}
-                            style={{ listStyleType: "circle" }}
-                          >
-                            {question.word}
-                          </li>
-                        ))}
-                      </ul>
-                      {subsection.content.questions["vocabulary-matching"].map(
-                        (question: any, questionIndex: number) => (
-                          <p
-                            key={`definition-${questionIndex}`}
-                            style={{ marginTop: "10px" }}
-                          >
-                            {question.definition}:{" "}
-                            <span style={{ fontWeight: "bold" }}>________</span>
-                            <br />
-                            <strong>Answer:</strong> {question.word}
-                          </p>
-                        )
-                      )}
-                    </div>
-                  )}
-
-                  {/* Exercises (Specific to "Use of English") */}
-                  {subsection.content?.exercises && (
-                    <div style={{ marginBottom: "20px" }}>
-                      <h4>Exercises:</h4>
-                      <ul>
-                        {subsection.content.exercises.map(
-                          (exercise: any, exerciseIndex: number) => (
-                            <li
-                              key={`exercise-${sectionIndex}-${subIndex}-${exerciseIndex}`}
-                              style={{ marginBottom: "10px" }}
-                            >
-                              <p>
-                                <strong>Type:</strong> {exercise.type}
+                          {/* Vocabulary Matching */}
+                          {subsection.content?.questions?.[
+                            "vocabulary-matching"
+                          ] && (
+                            <div style={{ marginBottom: "20px" }}>
+                              <h4>Vocabulary Matching:</h4>
+                              <p
+                                style={{
+                                  fontWeight: "bold",
+                                  marginBottom: "10px",
+                                }}
+                              >
+                                Words:
                               </p>
-                              <p>
-                                <strong>{exercise.question}</strong>
-                              </p>
-                              <p>
-                                <strong>Answer:</strong> {exercise.answer}
-                              </p>
-                            </li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-                  )}
+                              <ul style={{ marginLeft: "20px" }}>
+                                {subsection.content.questions[
+                                  "vocabulary-matching"
+                                ].map(
+                                  (question: any, questionIndex: number) => (
+                                    <li
+                                      key={`word-${questionIndex}`}
+                                      style={{ listStyleType: "circle" }}
+                                    >
+                                      {question.word}
+                                    </li>
+                                  )
+                                )}
+                              </ul>
+                              {subsection.content.questions[
+                                "vocabulary-matching"
+                              ].map((question: any, questionIndex: number) => (
+                                <p
+                                  key={`definition-${questionIndex}`}
+                                  style={{ marginTop: "10px" }}
+                                >
+                                  {question.definition}:{" "}
+                                  <span style={{ fontWeight: "bold" }}>
+                                    ________
+                                  </span>
+                                  <br />
+                                  <strong>Answer:</strong> {question.word}
+                                </p>
+                              ))}
+                            </div>
+                          )}
 
-                  {/* Feedback Text Area for Subsection */}
-                  {isEditing && (
-                    <textarea
-                      placeholder={`Provide feedback for Subsection ${subsection.subsection}: ${subsection.title}`}
-                      value={
-                        feedback[
-                          `section-${sectionIndex}-subsection-${subIndex}`
-                        ] || ""
-                      }
-                      onChange={(e) =>
-                        setFeedback((prev) => ({
-                          ...prev,
-                          [`section-${sectionIndex}-subsection-${subIndex}`]:
-                            e.target.value,
-                        }))
-                      }
-                      style={{
-                        width: "100%",
-                        minHeight: "60px",
-                        marginTop: "10px",
-                        padding: "10px",
-                        borderRadius: "4px",
-                        border: "1px solid #ccc",
-                        backgroundColor: "#ffffff",
-                      }}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
+                          {/* Exercises (Specific to "Use of English") */}
+                          {subsection.content?.exercises && (
+                            <div style={{ marginBottom: "20px" }}>
+                              <h4>Exercises:</h4>
+                              <ul>
+                                {subsection.content.exercises.map(
+                                  (exercise: any, exerciseIndex: number) => (
+                                    <li
+                                      key={`exercise-${sectionIndex}-${subIndex}-${exerciseIndex}`}
+                                      style={{ marginBottom: "10px" }}
+                                    >
+                                      <p>
+                                        <strong>Type:</strong> {exercise.type}
+                                      </p>
+                                      <p>
+                                        <strong>{exercise.question}</strong>
+                                      </p>
+                                      <p>
+                                        <strong>Answer:</strong>{" "}
+                                        {exercise.answer}
+                                      </p>
+                                    </li>
+                                  )
+                                )}
+                              </ul>
+                            </div>
+                          )}
 
-          {/* Writing Section */}
-          {examContent?.sections?.some(
-            (section: any) => section.part === "3"
-          ) ? (
-            examContent.sections.map((section: any, sectionIndex: number) => {
-              if (section.part === "3") {
-                return (
-                  <div
-                    key={`writing-${sectionIndex}`}
-                    style={{ marginTop: "20px" }}
-                  >
-                    <h2>
-                      Part {section.part}: Writing (Total Marks:{" "}
-                      {section.total_marks})
-                    </h2>
-                    {section.content?.questions?.map(
-                      (question: any, questionIndex: number) => (
-                        <div
-                          key={`writing-question-${questionIndex}`}
-                          style={{ marginLeft: "20px" }}
-                        >
-                          <p>
-                            <strong>{question.type}:</strong> {question.prompt}
-                          </p>
-                          {question.word_limit && (
-                            <p>
-                              <strong>Word Limit:</strong> {question.word_limit}
-                            </p>
+                          {/* Feedback Text Area for Subsection */}
+                          {isEditing && (
+                            <textarea
+                              placeholder={`Provide feedback for Subsection ${subsection.subsection}: ${subsection.title}`}
+                              value={
+                                feedback[
+                                  `section-${sectionIndex}-subsection-${subIndex}`
+                                ] || ""
+                              }
+                              onChange={(e) =>
+                                setFeedback((prev) => ({
+                                  ...prev,
+                                  [`section-${sectionIndex}-subsection-${subIndex}`]:
+                                    e.target.value,
+                                }))
+                              }
+                              style={{
+                                width: "100%",
+                                minHeight: "60px",
+                                marginTop: "10px",
+                                padding: "10px",
+                                borderRadius: "4px",
+                                border: "1px solid #ccc",
+                                backgroundColor: "#ffffff",
+                              }}
+                            />
                           )}
                         </div>
                       )
                     )}
                   </div>
-                );
-              }
-              return null;
-            })
-          ) : (
-            <p></p>
-          )}
-        </div>
+                )
+              )}
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between", // Align buttons to opposite sides
-            gap: "1rem", // Adds space between buttons
-            width: "100%",
-            maxWidth: "900px",
-            padding: "1rem 0",
-          }}
-        >
-          {userRole === "Admin" && examState === "pending" && (
+              {/* Writing Section */}
+              {examContent?.sections?.some(
+                (section: any) => section.part === "3"
+              ) ? (
+                examContent.sections.map(
+                  (section: any, sectionIndex: number) => {
+                    if (section.part === "3") {
+                      return (
+                        <div
+                          key={`writing-${sectionIndex}`}
+                          style={{ marginTop: "20px" }}
+                        >
+                          {section.content?.questions?.map(
+                            (question: any, questionIndex: number) => (
+                              <div
+                                key={`writing-question-${questionIndex}`}
+                                style={{ marginLeft: "20px" }}
+                              >
+                                <p>
+                                  <strong>{question.type}:</strong>{" "}
+                                  {question.prompt}
+                                </p>
+                                {question.word_limit && (
+                                  <p>
+                                    <strong>Word Limit:</strong>{" "}
+                                    {question.word_limit}
+                                  </p>
+                                )}
+                              </div>
+                            )
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  }
+                )
+              ) : (
+                <p></p>
+              )}
+            </div>
+
             <div
               style={{
-                marginTop: "2rem",
-                padding: "1rem",
-                backgroundColor: "#f9f9f9",
-                borderRadius: "8px",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                width: "900px",
-                margin: "0 auto",
+                display: "flex",
+                justifyContent: "space-between", // Align buttons to opposite sides
+                gap: "1rem", // Adds space between buttons
+                width: "100%",
+                maxWidth: "900px",
+                padding: "1rem 0",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
-                <button
-                  onClick={approveExam}
-                  disabled={loadingChangeState}
+              {userRole === "Admin" && examState === "pending" && (
+                <div
                   style={{
-                    padding: "0.6rem 1rem",
-                    backgroundColor: "#28a745",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    transition:
-                      "background-color 0.3s ease, transform 0.3s ease",
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                    marginTop: "2rem",
+                    padding: "1rem",
+                    backgroundColor: "#ffffff",
+                    borderRadius: "8px",
+                    width: "900px",
+                    margin: "0 auto",
                   }}
-                  onMouseOver={(e) =>
-                    //@ts-ignore
-                    (e.target.style.backgroundColor = "#218838")
-                  }
-                  onMouseOut={(e) =>
-                    //@ts-ignore
-                    (e.target.style.backgroundColor = "#28a745")
-                  }
-                  onMouseDown={(e) =>
-                    //@ts-ignore
-                    (e.target.style.transform = "scale(0.98)")
-                  }
-                  //@ts-ignore
-                  onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
                 >
-                  {loadingApprove ? (
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "0.5rem",
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: "1rem",
-                          height: "1rem",
-                          border: "2px solid #fff",
-                          borderRadius: "50%",
-                          borderTop: "2px solid transparent",
-                          animation: "spin 1s linear infinite",
-                        }}
-                      ></span>
-                      Loading...
-                    </span>
-                  ) : (
-                    "Approve Exam"
-                  )}
-                </button>
-                <button
-                  onClick={disapproveExam}
-                  disabled={loadingChangeState}
-                  style={{
-                    padding: "0.6rem 1rem",
-                    backgroundColor: "#dc3545",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    transition:
-                      "background-color 0.3s ease, transform 0.3s ease",
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                  }}
-                  onMouseOver={(e) =>
-                    //@ts-ignore
-                    (e.target.style.backgroundColor = "#c82333")
-                  }
-                  onMouseOut={(e) =>
-                    //@ts-ignore
-                    (e.target.style.backgroundColor = "#dc3545")
-                  }
-                  onMouseDown={(e) =>
-                    //@ts-ignore
-                    (e.target.style.transform = "scale(0.98)")
-                  }
-                  //@ts-ignore
-                  onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
-                >
-                  {LoadingDisapprove ? (
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "0.5rem",
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: "1rem",
-                          height: "1rem",
-                          border: "2px solid #fff",
-                          borderRadius: "50%",
-                          borderTop: "2px solid transparent",
-                          animation: "spin 1s linear infinite",
-                        }}
-                      ></span>
-                      Loading...
-                    </span>
-                  ) : (
-                    "Disapprove Exam"
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* download PDF start here */}
-          <div>
-            {/* Conditionally render the "Download PDF" button if the exam is approved */}
-            {examState === "approved" && (
-              <button
-                onClick={
-                  subject == "ENG102"
-                    ? handleDownloadPDF
-                    : handleArabicDownloadPDF
-                } // This triggers the PDF download function
-                style={{
-                  padding: "0.6rem 1rem",
-                  backgroundColor: "#007bff", // Blue color for the download button
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "4px",
-                  fontSize: "14px",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                  transition: "background-color 0.3s ease, transform 0.3s ease",
-                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                }}
-                onMouseOver={(
-                  e //@ts-ignore (color change on hover)
-                ) => (e.target.style.backgroundColor = "#0056b3")}
-                onMouseOut={(
-                  e //@ts-ignore (reset to original color on mouse out)
-                ) => (e.target.style.backgroundColor = "#007bff")}
-                onMouseDown={(
-                  e //@ts-ignore (scale button on mouse down)
-                ) => (e.target.style.transform = "scale(0.98)")}
-                //@ts-ignore
-                onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
-              >
-                Download as PDF
-              </button>
-            )}
-          </div>
-          {/* END OF DOWNLOAD PDF */}
-          {/* download Audio start here */}
-          <div>
-            {/* Conditionally render the "Download Audio" button if the exam is approved */}
-            {examState === "approved" && subject === "ENG102" && (
-              <button
-                onClick={handleDownloadAudio} // This triggers the Audio download function
-                style={{
-                  padding: "0.6rem 1rem",
-                  backgroundColor: "#007bff",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "4px",
-                  fontSize: "14px",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                  transition: "background-color 0.3s ease, transform 0.3s ease",
-                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                }}
-                onMouseOver={(
-                  e //@ts-ignore (color change on hover)
-                ) => (e.target.style.backgroundColor = "#0056b3")}
-                onMouseOut={(
-                  e //@ts-ignore (reset to original color on mouse out)
-                ) => (e.target.style.backgroundColor = "#007bff")}
-                onMouseDown={(
-                  e //@ts-ignore (scale button on mouse down)
-                ) => (e.target.style.transform = "scale(0.98)")}
-                //@ts-ignore
-                onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
-              >
-                {loading ? (
-                  <span
+                  <div
                     style={{
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "0.5rem",
+                      justifyContent: "space-between",
                     }}
                   >
-                    <span
+                    <button
+                      onClick={approveExam}
+                      disabled={loadingChangeState}
                       style={{
-                        width: "1rem",
-                        height: "1rem",
-                        border: "2px solid #fff",
-                        borderRadius: "50%",
-                        borderTop: "2px solid transparent",
-                        animation: "spin 1s linear infinite",
+                        padding: "0.6rem 1rem",
+                        backgroundColor: "#28a745",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "20px",
+                        fontSize: "14px",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        transition:
+                          "background-color 0.3s ease, transform 0.3s ease",
+                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
                       }}
-                    ></span>
-                    Loading...
-                  </span>
-                ) : (
-                  "Download Audio"
+                      onMouseOver={(e) =>
+                        //@ts-ignore
+                        (e.target.style.backgroundColor = "#218838")
+                      }
+                      onMouseOut={(e) =>
+                        //@ts-ignore
+                        (e.target.style.backgroundColor = "#28a745")
+                      }
+                      onMouseDown={(e) =>
+                        //@ts-ignore
+                        (e.target.style.transform = "scale(0.98)")
+                      }
+                      //@ts-ignore
+                      onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+                    >
+                      {loadingApprove ? (
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "0.5rem",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: "1rem",
+                              height: "1rem",
+                              border: "2px solid #fff",
+                              borderRadius: "50%",
+                              borderTop: "2px solid transparent",
+                              animation: "spin 1s linear infinite",
+                            }}
+                          ></span>
+                        </span>
+                      ) : (
+                        "Approve"
+                      )}
+                    </button>
+                    <button
+                      onClick={disapproveExam}
+                      disabled={loadingChangeState}
+                      style={{
+                        padding: "0.6rem 1rem",
+                        backgroundColor: "#dc3545",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "20px",
+                        fontSize: "14px",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        transition:
+                          "background-color 0.3s ease, transform 0.3s ease",
+                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                      }}
+                      onMouseOver={(e) =>
+                        //@ts-ignore
+                        (e.target.style.backgroundColor = "#c82333")
+                      }
+                      onMouseOut={(e) =>
+                        //@ts-ignore
+                        (e.target.style.backgroundColor = "#dc3545")
+                      }
+                      onMouseDown={(e) =>
+                        //@ts-ignore
+                        (e.target.style.transform = "scale(0.98)")
+                      }
+                      //@ts-ignore
+                      onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+                    >
+                      {LoadingDisapprove ? (
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "0.5rem",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: "1rem",
+                              height: "1rem",
+                              border: "2px solid #fff",
+                              borderRadius: "50%",
+                              borderTop: "2px solid transparent",
+                              animation: "spin 1s linear infinite",
+                            }}
+                          ></span>
+                        </span>
+                      ) : (
+                        "Reject"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* download PDF start here */}
+              <div>
+                {/* Conditionally render the "Download PDF" button if the exam is approved */}
+                {examState === "approved" && (
+                  <button
+                    onClick={
+                      subject == "ENG102"
+                        ? handleDownloadPDF
+                        : handleArabicDownloadPDF
+                    } // This triggers the PDF download function
+                    style={{
+                      padding: "0.6rem 1rem",
+                      backgroundColor: "#007bff", // Blue color for the download button
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "20px",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                      transition:
+                        "background-color 0.3s ease, transform 0.3s ease",
+                      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                    }}
+                    onMouseOver={(
+                      e //@ts-ignore (color change on hover)
+                    ) => (e.target.style.backgroundColor = "#0056b3")}
+                    onMouseOut={(
+                      e //@ts-ignore (reset to original color on mouse out)
+                    ) => (e.target.style.backgroundColor = "#007bff")}
+                    onMouseDown={(
+                      e //@ts-ignore (scale button on mouse down)
+                    ) => (e.target.style.transform = "scale(0.98)")}
+                    //@ts-ignore
+                    onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+                  >
+                    Download PDF
+                  </button>
                 )}
-              </button>
-            )}
+              </div>
+              {/* END OF DOWNLOAD PDF */}
+              {/* download Audio start here */}
+              <div>
+                {/* Conditionally render the "Download Audio" button if the exam is approved */}
+                {examState === "approved" && subject === "ENG102" && (
+                  <button
+                    onClick={handleDownloadAudio} // This triggers the Audio download function
+                    style={{
+                      padding: "0.6rem 1rem",
+                      backgroundColor: "#007bff",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "20px",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                      transition:
+                        "background-color 0.3s ease, transform 0.3s ease",
+                      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                    }}
+                    onMouseOver={(
+                      e //@ts-ignore (color change on hover)
+                    ) => (e.target.style.backgroundColor = "#0056b3")}
+                    onMouseOut={(
+                      e //@ts-ignore (reset to original color on mouse out)
+                    ) => (e.target.style.backgroundColor = "#007bff")}
+                    onMouseDown={(
+                      e //@ts-ignore (scale button on mouse down)
+                    ) => (e.target.style.transform = "scale(0.98)")}
+                    //@ts-ignore
+                    onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+                  >
+                    {loading ? (
+                      <span
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "0.5rem",
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: "1rem",
+                            height: "1rem",
+                            border: "2px solid #fff",
+                            borderRadius: "50%",
+                            borderTop: "2px solid transparent",
+                            animation: "spin 1s linear infinite",
+                          }}
+                        ></span>
+                        
+                      </span>
+                    ) : (
+                      "Download Audio"
+                    )}
+                  </button>
+                )}
+              </div>
+              {/* END OF DOWNLOAD Audio */}
+            </div>
           </div>
-          {/* END OF DOWNLOAD Audio */}
         </div>
-      </div>
+      )}
+
       <style>
         {`
           @keyframes spin {
