@@ -701,7 +701,7 @@ const ViewExam: React.FC = () => {
                     marginBottom: "0.5rem", // Reduced space below
                   }}
                 >
-                  ❌ {examState.toUpperCase()}
+                  ❌ REJECTED
                   <div
                     style={{
                       textAlign: "left",

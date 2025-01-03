@@ -1,7 +1,4 @@
-import React, { useState, useEffect } from "react";
-import MOELogo from "../assets/moe_LOGO.png"; // Ministry of Education logo
-import HomeIcon from "../assets/home icon (1).png"; // Home icon
-import BackgroundImage from "../assets/DALLE2024-12-2913.15.14-AvectorillustrationofanArabmansittingatadeskinamodernwell-litofficeworkingonacomputer.Thecomputerscreendisplaysaschoolexam-ezgif.com-webp-to-jpg-converter.jpg"; // Background image
+import React, { useState, useEffect } from "react";// Background image
 import { signOut } from "aws-amplify/auth";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../lib/contextLib";
@@ -11,7 +8,6 @@ import { deleteCookie } from "../lib/cookies.ts";
 import { useAlert } from "../components/AlertComponent.tsx";
 import Report from "../components/Report.tsx";
 import ExamsListLoader from "../components/ExamsListLoader.tsx";
-import { GrHomeRounded } from "react-icons/gr";
 import { MdOutlineReport } from "react-icons/md";
 import { IoMdLogOut } from "react-icons/io";
 import { RiHomeLine } from "react-icons/ri";
@@ -135,18 +131,6 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
     }
   }
 
-  // Function to determine the color based on the examState
-  function getColorForState(state: any) {
-    const stateColors = {
-      pending: "rgba(255, 140, 0, 0.9)", // Orange
-      approved: "rgba(34, 139, 34, 0.9)", // Green
-      disapproved: "rgba(255, 0, 0, 0.9)", // Red
-      default: "rgba(105, 105, 105, 0.9)", // Gray for unknown states
-    };
-
-    //@ts-ignore
-    return stateColors[state.toLowerCase()] || stateColors.default;
-  }
 
   useEffect(() => {
     // Add a timeout before fetching data

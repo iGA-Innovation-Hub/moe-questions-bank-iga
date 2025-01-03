@@ -21,7 +21,7 @@ export const generateModelPDF = (jsonString: any) => {
     addExamInfo(doc, exam, yPosition);
     yPosition += 30;
 
-    exam.sections.forEach((section) => {
+    exam.sections.forEach((section:any) => {
         yPosition = addSection(doc, section, yPosition);
     });
 
@@ -87,7 +87,7 @@ function addSection(doc: jsPDF, section: Section, yPosition: number): number {
     yPosition += 12;
 
     if (section.subsections && section.subsections.length > 0) {
-        section.subsections.forEach((subsection) => {
+        section.subsections.forEach((subsection:any) => {
             yPosition = addSubSection(doc, subsection, yPosition);
         });
     }
@@ -147,7 +147,7 @@ function addContent(doc: jsPDF, section: SubSection | Section, yPosition: number
         yPosition = addExercises(doc, content.exercises, yPosition);
     }
 
-    if (Array.isArray(content.questions) && content.questions.every(q => q.word_limit)) {
+    if (Array.isArray(content.questions) && content.questions.every((q:any) => q.word_limit)) {
         yPosition = addWritingQuestions(doc, content.questions, yPosition);
     }
 
@@ -194,7 +194,7 @@ function addGeneralQuestions(doc: jsPDF, questions: Question[], yPosition: numbe
             yPosition += 10;
         }
 
-        q.options?.forEach((option, i) => {
+        q.options?.forEach((option:any, i:any) => {
             const optionText = `   ${String.fromCharCode(65 + i)}. ${option}`;
 
             if(q.answer === option) {

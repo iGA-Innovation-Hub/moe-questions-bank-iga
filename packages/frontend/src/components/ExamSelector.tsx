@@ -1,5 +1,5 @@
 import styled from "styled-components";
-
+//@ts-ignore
 const ExamSelector = ({ filterValue, setFilterValue, getExams, userRole }) => {
   const handleChange = (value:any) => {
     setFilterValue(value);
