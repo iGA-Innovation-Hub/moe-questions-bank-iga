@@ -1,4 +1,7 @@
-import { defaultProvider } from '@aws-sdk/credential-provider-node'; // V3 SDK.
+import {
+  SecretsManagerClient,
+  GetSecretValueCommand,
+} from "@aws-sdk/client-secrets-manager";
 import { Client } from '@opensearch-project/opensearch';
 import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
  
@@ -6,36 +9,53 @@ import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
  
 const OPENSEARCH_ENDPOINT = process.env.OPENSEARCH_ENDPOINT!;
 const name = 'embeddings'; // The name of the vector index
+const secretsManagerClient = new SecretsManagerClient({
+  region: "us-east-1",
+});
+
+async function getSecret(secretName: string): Promise<{ ACCESS_KEY_ID: string; SECRET_ACCESS_KEY: string }> {
+  try {
+    const response = await secretsManagerClient.send(
+      new GetSecretValueCommand({
+        SecretId: secretName,
+        VersionStage: "AWSCURRENT", // VersionStage defaults to AWSCURRENT if unspecified
+      })
+    );
+
+    if (!response.SecretString) {
+      throw new Error("SecretString is undefined");
+    }
+
+    // Parse the secret string (assuming it's a JSON string)
+    const secret = JSON.parse(response.SecretString);
+    return {
+      ACCESS_KEY_ID: secret.ACCESS_KEY_ID,
+      SECRET_ACCESS_KEY: secret.SECRET_ACCESS_KEY,
+    };
+  } catch (error) {
+    console.error("Error retrieving secret:", error);
+    throw error;
+  }
+}
  
 // https://opensearch.org/docs/latest/clients/javascript/index/#authenticating-from-within-an-aws-lambda-function
 //https://stackoverflow.com/questions/50095766/aws-version-4-signature-snippet-code-with-example-in-javascript
+const { ACCESS_KEY_ID, SECRET_ACCESS_KEY } = await getSecret(process.env.SECRET_NAME!);
 const signer = AwsSigv4Signer({
   region:'us-east-1',
   service: 'aoss',
   getCredentials: () => {
-    const credentialsProvider = defaultProvider();
-    console.log('credentialsProvider:', credentialsProvider().then((data: any) => console.log(data)));
-    console.log(OPENSEARCH_ENDPOINT);
-    return credentialsProvider();
-  }
+    return Promise.resolve({
+      accessKeyId: ACCESS_KEY_ID,
+      secretAccessKey: SECRET_ACCESS_KEY,
+      sessionToken: "", 
+    });
+  },
 });
- 
-const ACCESS_KEY_ID = process.env.ACCESS_KEY_ID!;
-const SECRET_ACCESS_KEY = process.env.SECRET_ACCESS_KEY!;
 
 const client = new Client({
   ...signer,
   node: OPENSEARCH_ENDPOINT,
-  //AwsSigv4Auth
-  auth:  {
-    credentials : {
-      accessKeyId: ACCESS_KEY_ID,
-      secretAccessKey: SECRET_ACCESS_KEY,
-      sessionToken: ""
-    },
-    region: "us-east-1",
-    service: "aoss"
-  }
 });
  
  
