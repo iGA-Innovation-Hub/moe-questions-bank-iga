@@ -261,10 +261,10 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
     { label: "Generate Audio", link: "/dashboard/audiopPage", page: "audio" },
   ];
 
-  const pieData = [{ value: 7, color: "#007aff" },
-    { value: 12, color: "rgba(255, 140, 0, 0.9)" },
-    { value: 2, color: "#34c759" },
-    { value: 5, color: "#ff2d55" },
+  const pieData = [{ value: building, color: "#007aff" },
+    { value: pending, color: "rgba(255, 140, 0, 0.9)" },
+    { value: approved, color: "#34c759" },
+    { value: disapproved, color: "#ff2d55" },
   ];
 
   return (

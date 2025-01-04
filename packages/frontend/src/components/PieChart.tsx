@@ -14,6 +14,17 @@ const PieChart: React.FC<PieChartProps> = ({ data, size }) => {
   // Calculate the total value of the data
   const totalValue = data.reduce((sum, item) => sum + item.value, 0);
 
+  // Handle cases where some values are zero by assigning a minimum slice
+  const adjustedData = data.map((item) => ({
+    ...item,
+    adjustedValue: item.value === 0 && totalValue > 0 ? 0.001 : item.value,
+  }));
+
+  const adjustedTotal = adjustedData.reduce(
+    (sum, item) => sum + item.adjustedValue,
+    0
+  );
+
   // Function to calculate the path for each slice
   const getSlicePath = (
     cx: number,
@@ -35,9 +46,9 @@ const PieChart: React.FC<PieChartProps> = ({ data, size }) => {
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      {data.map((item, index) => {
+      {adjustedData.map((item, index) => {
         const startAngle = currentAngle;
-        const sliceAngle = (item.value / totalValue) * 360;
+        const sliceAngle = totalValue === 0 ? 360 / adjustedData.length : (item.adjustedValue / adjustedTotal) * 360;
         const endAngle = currentAngle + sliceAngle;
 
         const path = getSlicePath(
@@ -56,7 +67,7 @@ const PieChart: React.FC<PieChartProps> = ({ data, size }) => {
             d={path}
             fill={item.color}
             stroke="white"
-            strokeWidth="1"
+            strokeWidth="0.5"
           />
         );
       })}
