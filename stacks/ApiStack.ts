@@ -4,9 +4,12 @@ import { Duration } from "aws-cdk-lib/core";
 import { DBStack } from "./DBStack"
 import { StorageStack } from "./StorageStack";
 import * as iam from "aws-cdk-lib/aws-iam";
+import { MyStack } from "./OpenSearchStack"; // Import the OpenSearch stack
 
 
 export function ApiStack({ stack }: StackContext) {
+  const { collectionEndpoint } = use(MyStack); // Retrieve the OpenSearch endpoint
+
   const topic = new Topic(stack, "Report");
   const userTopic = new Topic(stack, "UserTopic");
 
@@ -194,7 +197,24 @@ export function ApiStack({ stack }: StackContext) {
             TABLE_NAME: users_table.tableName,
           },
         },
+      },    
+
+      "POST /create-index": {
+      function: {
+        handler: "packages/functions/src/create-index.handler",
+        runtime: "nodejs20.x",
+        timeout: "60 seconds",
+        environment: {
+          OPENSEARCH_ENDPOINT: collectionEndpoint, // Use the dynamic endpoint
+        },
+        permissions: [
+          "aoss:CreateIndex", 
+          "aoss:DescribeIndex", 
+          "aoss:ListIndices",  // Optional: If you want to list indices
+          ],
+        },
       },
+
       "POST /convertToAudio": {
         function: {
           handler: "packages/functions/src/generateAudio.handler",

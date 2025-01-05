@@ -250,7 +250,7 @@ const AudioScriptForm: React.FC = () => {
             <audio
               controls
               src={`data:audio/mpeg;base64,${audioData}`}
-              style={{ width: "450px", height: "35px" }}
+              style={{ width: "450px", height: "35px", display:"block" }}
             />
           </div>
         )}

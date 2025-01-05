@@ -5,6 +5,9 @@ import { ApiStack } from "./stacks/ApiStack";
 import { ImageBuilderForCodeCatalyst } from "./stacks/devops/ImageBuilderForCodeCatalyst";
 import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
 import { AuthStack } from "./stacks/AuthStack";
+import { KnowledgeBaseStack } from "./stacks/KnowledgeStack";  
+import { MyStack } from "./stacks/OpenSearchStack";       
+import { BedrockKbLambdaStack } from "./stacks/bedrockstack";
 import { StorageStack } from "./stacks/StorageStack";
 import { FunctionsStack } from "./stacks/FunctionsStack";
 
@@ -30,7 +33,10 @@ export default {
     else {
       app
         .stack(DBStack)
+        .stack(MyStack)
+        // .stack(KnowledgeBaseStack)
         .stack(StorageStack)
+        .stack(BedrockKbLambdaStack)
         .stack(FunctionsStack)
         .stack(ApiStack)
         .stack(AuthStack)
