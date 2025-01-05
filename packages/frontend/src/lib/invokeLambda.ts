@@ -27,7 +27,6 @@ export default async function invokeLambda({
   //@ts-ignore
   const { accessKeyId, secretAccessKey, sessionToken } = credentials;
 
-  console.log("Credentials:", { accessKeyId, secretAccessKey, sessionToken });
 
   if (!accessKeyId || !secretAccessKey || !sessionToken) {
     throw new Error("AWS credentials are not available.");
@@ -67,7 +66,7 @@ export default async function invokeLambda({
       throw new Error(`API call failed: ${errorText}`);
     }
 
-    console.log("Lambda Response:", response);
+    
     return response;
   } catch (error) {
     throw new Error(

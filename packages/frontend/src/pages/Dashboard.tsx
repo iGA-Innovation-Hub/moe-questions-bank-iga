@@ -1,19 +1,25 @@
-import React, { useState, useEffect } from "react";
-import MOELogo from "../assets/moe_LOGO.png"; // Ministry of Education logo
-import HomeIcon from "../assets/home icon (1).png"; // Home icon
-import BackgroundImage from "../assets/BG.jpg"; // Background image
+import React, { useState, useEffect } from "react";// Background image
 import { signOut } from "aws-amplify/auth";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../lib/contextLib";
 import { NavLink, Outlet } from "react-router-dom";
 import invokeApig from "../lib/callAPI.ts";
 import { deleteCookie } from "../lib/cookies.ts";
-import { useAlert } from "./AlertComponent";
+import { useAlert } from "../components/AlertComponent.tsx";
+import Report from "../components/Report.tsx";
+import ExamsListLoader from "../components/ExamsListLoader.tsx";
+import { MdOutlineReport } from "react-icons/md";
+import { IoMdLogOut } from "react-icons/io";
+import { RiHomeLine } from "react-icons/ri";
+import PieChart from "../components/PieChart.tsx";
+import { ImArrowUp } from "react-icons/im";
+import "../styles/dashButtons.css"
+import DashLoader from "../components/DashLoader.tsx";
+import ExamSelector from "../components/ExamSelector.tsx";
 
 interface UserDashboardProps {}
 
 const Dashboard: React.FC<UserDashboardProps> = () => {
-  
   const navigate = useNavigate();
   const { userHasAuthenticated } = useAppContext();
   const { userRole } = useAppContext();
@@ -24,8 +30,11 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
   const [disapproved, setDisapproved] = useState(0);
   const [building, setBuilding] = useState(0);
   const [pending, setPending] = useState(0);
+  const [totalExams, setTotalExams] = useState(0);
+  const [approvalRate, setApprovalRate] = useState(0);
   const [gettingExams, setGettingExams] = useState(true);
   const [gettingExamsError, setGetExamsError] = useState("");
+  const [loadingExamCount, setLoadingExamCount] = useState(true);
   const [exams, setExams] = useState([]);
   const [examsType, setExamsType] = useState(
     userRole === "User" ? "building" : "pending"
@@ -34,104 +43,114 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
     userRole === "User" ? "building" : "pending"
   );
 
-  const { showAlert } = useAlert(); 
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
+  const openReport = () => setIsReportOpen(true);
+  const closeReport = () => setIsReportOpen(false);
 
+  const { showAlert } = useAlert();
 
   // Fetch initial data
-    const fetchInitialData = async () => {
-      try {
-        //@ts-ignore
-        const response = await invokeApig({
-          path: `/getExamHistory`, 
-          method: "GET",
-          queryParams: {
-            state: filterValue,
-          },
-        });
-  
-        if (!response || Object.keys(response).length === 0) {
-          console.log(response);
-          setGetExamsError("No exams found!");
-          return;
-        }
-  
-        // Store the retrieved exams in the state
-        setExams(response);
-  
-        console.log("Initial Data Loaded:", response);
-      } catch (err: any) {
-        console.error("Error fetching initial data:", err);
-      } finally {
-        setGettingExams(false); // Mark loading as complete
-      }
-    };
+  const fetchInitialData = async () => {
+    try {
+      //@ts-ignore
+      const response = await invokeApig({
+        path: `/getExamHistory`,
+        method: "GET",
+        queryParams: {
+          state: filterValue,
+        },
+      });
 
-    async function getExams() {
+      if (!response || Object.keys(response).length === 0) {
+        console.log(response);
+        setGetExamsError("No exams found");
+        return;
+      }
+
+      // Store the retrieved exams in the state
+      setExams(response);
+
+      console.log("Initial Data Loaded:", response);
+    } catch (err: any) {
+      console.error("Error fetching initial data:", err);
+      showAlert({
+        type: "failure",
+        message: "Error Fetching Data",
+      });
+    } finally {
+      setGettingExams(false); // Mark loading as complete
+    }
+  };
+
+  async function getExams(value:string) {
+    setExams([]);
+    setGettingExams(true);
+    if (value === "disapproved") { 
+      setExamsType("Rejected");
+    } else {
+
+      setExamsType(value);
+    }
+    console.log(value);
+    try {
+      //@ts-ignore
+      const response = await invokeApig({
+        path: `/getExamHistory`, // Adjust path as needed
+        method: "GET",
+        queryParams: {
+          state: value,
+        },
+      });
+
+      if (!response || Object.keys(response).length === 0) {
+        console.log(response);
+        return;
+      }
+
+      setGetExamsError("");
+
+      // Store the retrieved exams in the state
+      if (response.length === 0) { 
+        setGetExamsError("No exams found")
         setExams([]);
-        setGettingExams(true);
-        console.log(filterValue);
-        try {
-          //@ts-ignore
-          const response = await invokeApig({
-            path: `/getExamHistory`, // Adjust path as needed
-            method: "GET",
-            queryParams: {
-              state: filterValue,
-            },
-          });
-    
-          if (!response || Object.keys(response).length === 0) {
-            console.log(response);
-            setGetExamsError("No exams found!");
-            return;
-          }
-    
-          setGetExamsError("");
-    
-          // Store the retrieved exams in the state
-          setExams(response);
-          setExamsType(filterValue)
-    
-          console.log("Initial Data Loaded:", response);
-        } catch (err: any) {
-          console.error("Error fetching initial data:", err);
-        } finally {
-          setGettingExams(false); // Mark loading as complete
-        }
+      } else {
+        setExams(response);
       }
-    
-      // Function to determine the color based on the examState
-      function getColorForState(state:any) {
-        const stateColors = {
-          pending: "rgba(255, 140, 0, 0.9)", // Orange
-          approved: "rgba(34, 139, 34, 0.9)", // Green
-          disapproved: "rgba(255, 0, 0, 0.9)", // Red
-          default: "rgba(105, 105, 105, 0.9)", // Gray for unknown states
-        };
-    
-        //@ts-ignore
-        return stateColors[state.toLowerCase()] || stateColors.default;
-      }
-  
-    useEffect(() => {
-      // Add a timeout before fetching data
-      const timer = setTimeout(() => {
-        fetchInitialData();
-      }, 2000);
-  
-      // Cleanup the timeout if the component unmounts
-      return () => clearTimeout(timer);
-    }, []);
+      
+
+      console.log("Initial Data Loaded:", response);
+    } catch (err: any) {
+      console.error("Error fetching exams:", err);
+      showAlert({
+        type: "failure",
+        message: "Error fetching exams",
+      });
+    } finally {
+      setGettingExams(false); // Mark loading as complete
+    }
+  }
+
+
+  useEffect(() => {
+    // Add a timeout before fetching data
+    const timer = setTimeout(() => {
+      fetchInitialData();
+    }, 1000);
+
+    // Cleanup the timeout if the component unmounts
+    return () => clearTimeout(timer);
+  }, []);
 
   setTimeout(() => {
     setActivePage(window.location.pathname);
   }, 500);
 
-  
   useEffect(() => {
-    
     async function fetchExamCount() {
+      if (!approved && !pending && !disapproved && !building) {
+        setLoadingExamCount(true);
+      }
       try {
         // @ts-ignore
         const response = await invokeApig({
@@ -146,19 +165,45 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
         setDisapproved(response ? response.disapproved : 0);
         setBuilding(response ? response.building : 0);
         setPending(response ? response.pending : 0);
+        setTotalExams(
+          response
+            ? response.approved +
+                response.disapproved +
+                response.building +
+                response.pending
+            : 0
+        );
 
+        setApprovalRate(
+          response
+            ? Math.round(
+                (response.approved /
+                  (response.approved +
+                    response.disapproved +
+                    response.building +
+                    response.pending)) *
+                  100
+              )
+            : 0
+        );
       } catch (err) {
-
         setApproved(0);
         setDisapproved(0);
         setBuilding(0);
         setPending(0);
+        setTotalExams(0);
 
-        console.error("Error fetching exam count:", err); 
+        console.error("Error fetching exam count:", err);
+        showAlert({
+          type: "failure",
+          message: "Error fetching data",
+        })
+      } finally {
+        setLoadingExamCount(false);
       }
     }
-   
-      fetchExamCount();
+
+    fetchExamCount();
   }, [filterValue]); // Dependency array ensures fetchExamCount is only called when `filterValue` changes
 
   async function handleSignOut() {
@@ -171,507 +216,399 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
         deleteCookie("userRole");
         userHasAuthenticated(false);
         navigate("/login");
-      }
-    })
+      },
+    });
   }
+
+  const examData = [
+    {
+      label: "Building",
+      value: building,
+      color: "#007aff",
+      details: "Currently being worked on",
+    },
+    {
+      label: "Pending",
+      value: pending,
+      color: "rgba(255, 140, 0, 0.9)",
+      details: "Pending review and approval",
+    },
+    {
+      label: "Approved",
+      value: approved,
+      color: "#34c759",
+      details: "Reviewed and approved",
+    },
+    {
+      label: "Rejected",
+      value: disapproved,
+      color: "#ff2d55",
+      details: "Reviewed and rejected",
+    },
+  ];
+
+  const dashButtons = [
+    {
+      label: "Generate Exam",
+      link: "/dashboard/examForm",
+      page: "generateExam",
+    },
+    {
+      label: "Upload Material",
+      link: "/dashboard/upload",
+      page: "uploadMaterial",
+    },
+    { label: "Generate Audio", link: "/dashboard/audiopPage", page: "audio" },
+  ];
+
+  const pieData = [{ value: building, color: "#007aff" },
+    { value: pending, color: "rgba(255, 140, 0, 0.9)" },
+    { value: approved, color: "#34c759" },
+    { value: disapproved, color: "#ff2d55" },
+  ];
 
   return (
     <div
       style={{
-        backgroundImage: `url(${BackgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-        height: "100vh",
-        width: "100vw",
-        overflowY: "auto",
+        height: "auto",
+        width: "100%",
         margin: 0,
         padding: 0,
+        fontFamily: "Arial, sans-serif",
       }}
     >
       <div
         style={{
+          position: "fixed", // Makes the header fixed
+          top: 0, // Positions the header at the top of the viewport
+          left: 0, // Aligns the header to the left of the viewport
+          width: "100%", // Spans the full width of the viewport
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "1rem 2rem",
-          backgroundColor: "white",
+          padding: "0.5rem 2rem",
+          backgroundColor: "rgb(12, 84, 125)",
         }}
       >
-        <img
-          src={MOELogo}
-          alt="MOE Logo"
-          style={{ height: "80px", marginRight: "1rem" }}
-        />
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <NavLink to="/dashboard">
-            <img
-              src={HomeIcon}
-              alt="Home Icon"
-              style={{ height: "50px", cursor: "pointer" }}
-              onClick={() => setActivePage("/dashboard")}
-            />
-          </NavLink>
-
           <NavLink
-            to="/dashboard/feedback-form"
-            onClick={() => setActivePage("feedback")}
-            style={() => ({
-              backgroundColor: "#d32f2f",
+            to="/dashboard"
+            style={{
               color: "white",
               padding: "0.5rem 1rem",
-              borderRadius: "16px",
-              fontSize: "16px",
-              fontWeight: "bold",
+              borderRadius: "20px",
+              fontSize: "20px",
               cursor: "pointer",
               textDecoration: "none",
               transition: "transform 0.3s, box-shadow 0.3s",
               border: "none",
-            })}
+            }}
+            onClick={() => setActivePage("/dashboard")}
           >
-            Report Problem
+            Home
+            <RiHomeLine
+              style={{
+                fontSize: "16px",
+                marginLeft: "0.5rem",
+                marginBottom: "-0.15rem",
+              }}
+            />
           </NavLink>
-          <button
-            onClick={handleSignOut}
+        </div>
+
+        <div>
+          <NavLink
+            to="#"
+            onClick={openReport}
             style={{
-              backgroundColor: "#d32f2f",
               color: "white",
               padding: "0.5rem 1rem",
-              borderRadius: "16px",
-              fontSize: "16px",
-              fontWeight: "bold",
+              borderRadius: "20px",
+              fontSize: "20px",
+
               cursor: "pointer",
-              border: "none",
+              textDecoration: "none",
               transition: "transform 0.3s, box-shadow 0.3s",
+              border: "none",
+            }}
+          >
+            Report
+            <MdOutlineReport
+              style={{
+                fontSize: "16px",
+                marginLeft: "0.5rem",
+                marginBottom: "-0.15rem",
+              }}
+            />
+          </NavLink>
+          {isReportOpen && <Report onClose={closeReport} />}
+
+          <NavLink
+            to="#"
+            onClick={handleSignOut}
+            style={{
+              color: "white",
+              padding: "0.5rem 1rem",
+              borderRadius: "20px",
+              fontSize: "20px",
+
+              cursor: "pointer",
+              textDecoration: "none",
+              transition: "transform 0.3s, box-shadow 0.3s",
+              border: "none",
             }}
           >
             Sign-out
-          </button>
+            <IoMdLogOut
+              style={{
+                fontSize: "16px",
+                marginLeft: "0.5rem",
+                marginBottom: "-0.15rem",
+              }}
+            />
+          </NavLink>
         </div>
       </div>
 
       <div
         style={{
           padding: "2rem",
-          backgroundColor: "rgba(255, 255, 255, 0.8)",
-          borderRadius: "16px",
-          margin: "1rem auto",
-          maxWidth: "1200px",
+          backgroundColor: "#ffffff",
+          margin: "0 auto",
           width: "100%",
           boxShadow: "none",
           outline: "none",
-          minHeight: "400px",
+          height: "100%",
+          marginTop: "2rem",
         }}
       >
         {activePage === "/dashboard" && (
           <div
             style={{
-              display: "flex",
-              gap: "2rem",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              alignItems: "center",
               padding: "2rem",
-              maxWidth: "100%",
+              maxWidth: "70%",
+              minWidth: "70%",
+              margin: "0 auto",
             }}
           >
-            <div
+            <h2
               style={{
-                width: "200px",
-                height: "200px",
-                backgroundColor: "white",
-                color: "rgba(255, 140, 0, 0.9)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: "16px",
-                fontSize: "20px",
-                fontWeight: "bold",
-                textAlign: "center",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                transition: "transform 0.3s, box-shadow 0.3s",
-                position: "relative",
+                fontFamily: "Arial, sans-serif",
+                color: "rgb(12, 84, 125)",
+                fontSize: "24px",
+                fontWeight: "700",
+                marginTop: "0rem",
               }}
             >
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Pending Exams
-              </span>
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                {pending}
-              </span>
-            </div>
+              Dashboard
+            </h2>
             <div
               style={{
-                width: "200px",
-                height: "200px",
-                backgroundColor: "white",
-                color: "rgba(34, 139, 34, 0.9)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: "16px",
-                fontSize: "20px",
-                fontWeight: "bold",
-                textAlign: "center",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                transition: "transform 0.3s, box-shadow 0.3s",
-                position: "relative",
+                marginBottom: "2rem",
+                borderWidth: "1px",
+                borderColor: "rgb(185, 184, 184)",
+                borderStyle: "solid",
+                borderRadius: "20px",
+                padding: "1rem 1rem",
               }}
             >
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Approved Exams
-              </span>
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                {approved}
-              </span>
-            </div>
-            <div
-              style={{
-                width: "200px",
-                height: "200px",
-                backgroundColor: "white",
-                color: "rgba(255, 0, 0, 0.9)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: "16px",
-                fontSize: "20px",
-                fontWeight: "bold",
-                textAlign: "center",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                transition: "transform 0.3s, box-shadow 0.3s",
-                position: "relative",
-              }}
-            >
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Disapproved Exams
-              </span>
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                {disapproved}
-              </span>
-            </div>
-            <div
-              style={{
-                width: "200px",
-                height: "200px",
-                backgroundColor: "white",
-                color: "rgba(105, 105, 105, 0.9)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: "16px",
-                fontSize: "20px",
-                fontWeight: "bold",
-                textAlign: "center",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                transition: "transform 0.3s, box-shadow 0.3s",
-                position: "relative",
-              }}
-            >
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Building Exams
-              </span>
-              <span
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "20px",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                {building}
-              </span>
-            </div>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <div style={{ width: "25%" }}>
+                  <PieChart data={pieData} size={100} />
+                </div>
+                <div
+                  style={{
+                    fontSize: "20px",
+                    color: "gray",
+                    marginTop: "0",
+                    fontWeight: "600",
+                    width: "25%",
+                  }}
+                >
+                  Total exams <br />
+                  {totalExams}
+                </div>
+                <div
+                  style={{
+                    fontSize: "20px",
+                    color: "gray",
+                    marginTop: "0",
+                    fontWeight: "600",
+                  }}
+                >
+                  Approval rate{" "}
+                  <ImArrowUp
+                    style={{
+                      fontSize: "20px",
+                      marginLeft: "0.1rem",
+                      marginBottom: "-0.15rem",
+                    }}
+                  />
+                  <br />
+                  {approvalRate}%
+                </div>
 
-            {userRole === "User" && (
-              <>
-                <NavLink
-                  to="/dashboard/examForm"
-                  onClick={() => setActivePage("generateExam")}
-                  style={{ textDecoration: "none" }}
-                >
-                  <div
-                    style={{
-                      width: "250px",
-                      height: "200px",
-                      backgroundColor: "white",
-                      color: "#d32f2f",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      borderRadius: "16px",
-                      fontSize: "18px",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                      transition: "transform 0.3s, box-shadow 0.3s",
-                    }}
-                    onMouseEnter={(e) => {
-                      const card = e.currentTarget;
-                      card.style.transform = "scale(1.05)";
-                      card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
-                    }}
-                    onMouseLeave={(e) => {
-                      const card = e.currentTarget;
-                      card.style.transform = "scale(1)";
-                      card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "28px",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      Generate Exam
-                    </span>
-                  </div>
-                </NavLink>
-                <NavLink
-                  to="/dashboard/upload"
-                  onClick={() => setActivePage("uploadMaterial")}
-                  style={{ textDecoration: "none" }}
-                >
-                  <div
-                    style={{
-                      width: "250px",
-                      height: "200px",
-                      backgroundColor: "white",
-                      color: "#d32f2f",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      borderRadius: "16px",
-                      fontSize: "18px",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                      transition: "transform 0.3s, box-shadow 0.3s",
-                    }}
-                    onMouseEnter={(e) => {
-                      const card = e.currentTarget;
-                      card.style.transform = "scale(1.05)";
-                      card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
-                    }}
-                    onMouseLeave={(e) => {
-                      const card = e.currentTarget;
-                      card.style.transform = "scale(1)";
-                      card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "28px",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      Upload Material
-                    </span>
-                  </div>
-                </NavLink>
-                <NavLink
-                  to="/dashboard/audiopPage"
-                  onClick={() => setActivePage("audio")}
-                  style={{ textDecoration: "none" }}
-                >
-                  <div
-                    style={{
-                      width: "250px",
-                      height: "200px",
-                      backgroundColor: "white",
-                      color: "#d32f2f",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      borderRadius: "16px",
-                      fontSize: "18px",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                      transition: "transform 0.3s, box-shadow 0.3s",
-                    }}
-                    onMouseEnter={(e) => {
-                      const card = e.currentTarget;
-                      card.style.transform = "scale(1.05)";
-                      card.style.boxShadow = "0 8px 15px rgba(0, 0, 0, 0.3)";
-                    }}
-                    onMouseLeave={(e) => {
-                      const card = e.currentTarget;
-                      card.style.transform = "scale(1)";
-                      card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "28px",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      Generate Audio
-                    </span>
-                  </div>
-                </NavLink>
-              </>
-            )}
+                <div style={{ marginLeft: "auto", marginRight: "1rem" }}>
+                  {loadingExamCount && <DashLoader />}
+                </div>
+              </div>
 
-            <div>
               <div
                 style={{
                   display: "flex",
-                  flexWrap: "wrap",
-                  justifyContent: "center",
+                  gap: "2rem",
+                  flexWrap: "nowrap",
+                  justifyContent: "space-between",
                   alignItems: "center",
-                  gap: "1rem",
-                  marginBottom: "2rem",
-                  backgroundColor: "#fff",
-                  padding: "1rem",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                  width: "100%",
-                  maxWidth: "800px",
                 }}
               >
-                <div>
-                  <label
+                {examData.map((item, index) => (
+                  <div
+                    key={index}
                     style={{
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                      color: "#555",
-                    }}
-                  >
-                    State:
-                  </label>
-                  <select
-                    value={filterValue}
-                    onChange={(e) => setFilterValue(e.target.value)}
-                    style={{
-                      display: "block",
-                      width: "200px",
-                      padding: "0.6rem",
-                      borderRadius: "4px",
-                      border: "1px solid #ccc",
+                      color: item.color,
+                      display: "flex",
+                      flexDirection: "column",
+                      fontSize: "12px",
+                      fontWeight: "500",
                       marginTop: "0.5rem",
-                      fontSize: "14px",
+                      marginBottom: "0.5rem",
+                      width: "25%",
+                      borderRight:
+                        index === examData.length - 1
+                          ? "none"
+                          : "1px solid #ccc",
                     }}
                   >
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="disapproved">Disapproved</option>
-                    {userRole === "User" && (
-                      <option value="building">Building</option>
-                    )}
-                  </select>
-                </div>
-                <button
-                  onClick={getExams}
-                  style={{
-                    backgroundColor: "#4b4b4b",
-                    color: "white",
-                    padding: "0.4rem 1rem",
-                    borderRadius: "4px",
-                    fontSize: "16px",
-                    border: "none",
-                    cursor: "pointer",
-                    marginTop: "1.5rem",
-                  }}
-                >
-                  {gettingExams ? (
                     <span
+                      style={{
+                        fontWeight: "600",
+                        fontSize: "14px",
+                        color: "rgba(3, 40, 61, 1)",
+                        fontFamily: "Arial, sans-serif",
+                        letterSpacing: "0.8px",
+                      }}
+                    >
+                      {item.label} <br />
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "gray",
+                          marginTop: "0",
+                        }}
+                      >
+                        {item.details}
+                      </p>
+                    </span>
+                    <span
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "38px",
+                        paddingBottom: "1px",
+                        borderBottomColor: item.color,
+                        borderBottomStyle: "solid",
+                        borderBottomWidth: "2px",
+                        width: "50px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {userRole === "User" && (
+              <div
+                style={{
+                  display: "flex",
+                  width: "100%",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "2rem",
+                }}
+              >
+                {dashButtons.map((item, index) => (
+                  <NavLink
+                    className={"dashButton"}
+                    to={item.link}
+                    onClick={() => setActivePage(item.page)}
+                    style={{
+                      textDecoration: "none",
+                      width: "30%",
+                      borderRadius: "20px",
+                    }}
+                    key={index}
+                  >
+                    <div
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        gap: "0.5rem",
+                        width: "100%",
+                        height: "80px",
+                        backgroundColor: "#ffffff",
+                        color: "rgb(12, 84, 125)",
+                        borderRadius: "20px",
+                        fontSize: "20px",
+                        fontWeight: "600",
+                        textAlign: "center",
+                        cursor: "pointer",
+                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                        borderWidth: "1px",
+                        borderColor: "rgb(185, 184, 184)",
+                        borderStyle: "solid",
                       }}
                     >
-                      <span
-                        style={{
-                          width: "1rem",
-                          height: "1rem",
-                          border: "2px solid #fff",
-                          borderRadius: "50%",
-                          borderTop: "2px solid transparent",
-                          animation: "spin 1s linear infinite",
-                        }}
-                      ></span>
-                      Fetching..
-                    </span>
-                  ) : (
-                    "Apply Filter"
-                  )}
-                </button>
+                      <span style={{ textAlign: "center", width: "100%" }}>
+                        {item.label}
+                      </span>
+                    </div>
+                  </NavLink>
+                ))}
               </div>
+            )}
 
-              {gettingExams && <div>Loading exams...</div>}
+            <div
+              style={{
+                marginTop: "2rem",
+                width: "100%",
+                padding: "1rem",
+                backgroundColor: "#ffffff",
+                borderRadius: "20px",
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                borderWidth: "1px",
+                borderColor: "rgb(185, 184, 184)",
+                borderStyle: "solid",
+              }}
+            >
+              <ExamSelector
+                filterValue={filterValue}
+                setFilterValue={setFilterValue}
+                getExams={getExams}
+                userRole={userRole}
+              />
 
-              {!gettingExams && !gettingExamsError && exams.length > 0 && (
+              <h3 style={{ marginBottom: "1.5rem", color: "rgb(12, 84, 125)" }}>
+                {examsType.toUpperCase()} EXAMS
+              </h3>
+
+              {gettingExams && <ExamsListLoader />}
+
+              {!gettingExams && !gettingExamsError && (
                 <div
                   style={{
-                    marginTop: "2rem",
+                    marginTop: "0.2rem",
                     width: "100%",
                     padding: "1rem",
                     backgroundColor: "#fafafa",
-                    borderRadius: "8px",
+                    borderRadius: "20px",
                     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                    maxHeight: "500px",
+                    overflowY: "auto",
                   }}
                 >
-                  <h3 style={{ marginBottom: "1.5rem", color: "#333" }}>
-                    {examsType.toUpperCase()} EXAMS:
-                  </h3>
                   {exams.map((exam) => (
                     <div
                       //@ts-ignore
@@ -685,7 +622,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                         marginBottom: "1rem",
                         padding: "1rem",
                         backgroundColor: "#fff",
-                        borderRadius: "8px",
+                        borderRadius: "20px",
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "flex-start",
@@ -701,6 +638,8 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                         (e.currentTarget.style.backgroundColor = "#fff")
                       }
                     >
+                     
+
                       {/* Creator */}
                       <div style={{ flex: 1, marginRight: "1rem" }}>
                         <p
@@ -820,29 +759,6 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                           {exam.examSemester}
                         </p>
                       </div>
-
-                      {/* State */}
-                      <div
-                        style={{
-                          flex: 1,
-                          textAlign: "right",
-                        }}
-                      >
-                        <p
-                          style={{
-                            marginTop: "14px",
-                            textAlign: "center",
-                            margin: 0,
-                            fontSize: "14px",
-                            fontWeight: "bold",
-                            //@ts-ignore
-                            color: getColorForState(exam.examState), // Dynamic color based on exam state
-                          }}
-                        >
-                          {/*@ts-ignore*/}
-                          {exam.examState.toUpperCase()}
-                        </p>
-                      </div>
                     </div>
                   ))}
                 </div>
@@ -854,7 +770,7 @@ const Dashboard: React.FC<UserDashboardProps> = () => {
                     marginTop: "2rem",
                     padding: "1rem",
                     backgroundColor: "#fff",
-                    borderRadius: "8px",
+                    borderRadius: "20px",
                     boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
                     color: "red",
                   }}

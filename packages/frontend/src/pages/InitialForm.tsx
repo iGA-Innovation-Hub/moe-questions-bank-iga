@@ -3,6 +3,8 @@ import { getCurrentUserEmail } from "../lib/getToken.js";
 import { getFormattedDateTime } from "../lib/getDateTime.js";
 import { useNavigate } from "react-router-dom";
 import invokeLambda from "../lib/invokeLambda.ts";
+import { useAlert } from "../components/AlertComponent.tsx";
+import ExamCreationLoader from "../components/ExamCreationLoader.tsx";
 
 export function InitialForm() {
   const [grade, setGrade] = useState("Grade 10");
@@ -18,9 +20,9 @@ export function InitialForm() {
     ShortAnswer: 0,
   };
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
   const newExam = true;
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
 
 
   const handleInitialFormSubmition = async (e: React.FormEvent) => {
@@ -35,15 +37,14 @@ export function InitialForm() {
 
       if (!grade || !subject || !semester) {
         console.log(grade, subject, semester, duration, totalMark);
-        setErrorMsg("Please fill the form!");
+        showAlert({
+          type: "failure",
+          message: "Please fill out all fields",
+        });
         setLoading(false);
         return;
       }
-      // if (customize) {
-      //   setDuration(duration);
-      //   setMark(totalMark);
-      // }
-      setErrorMsg("");
+      
       const payload = {
         class: grade,
         subject: subject,
@@ -69,16 +70,12 @@ export function InitialForm() {
         url: functionURL,
       });
 
-      // const response = await fetch(functionURL, {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(payload),
-      // });
 
       if (!response.ok) {
-        setErrorMsg("An error occurred. Please try again.");
+        showAlert({
+          type: "failure",
+          message: "Failed to generate exam",
+        })
         setLoading(false);
         return;
       }
@@ -96,7 +93,10 @@ export function InitialForm() {
       navigate("/dashboard/examForm/" + examID);
     } catch (error) {
       console.error("Error submitting form:", error);
-      setErrorMsg("An error occurred. Please try again.");
+      showAlert({
+        type: "failure",
+        message: "Failed to generate exam",
+      });
       setLoading(false);
     }
   };
@@ -105,35 +105,47 @@ export function InitialForm() {
     <div
       style={{
         flex: 1,
-        backgroundColor: "#f9f9f9",
+        backgroundColor: "#ffffff",
         padding: "2rem",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         overflowY: "auto", // Enables vertical scrolling if needed
-        height: "100vh", // Ensures the form fits the viewport
+        height: "auto", // Ensures the form fits the viewport
       }}
     >
-      <h2
-        style={{
-          fontFamily: "Georgia, serif",
-          color: "#333",
-          marginBottom: "1rem",
-          fontSize: "28px",
-        }}
-      >
-        Generate Exam
-      </h2>
+      <div>
+        {loading && (
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "700px",
+              padding: "2rem",
+              borderRadius: "12px",
+            }}
+          >
+            <h3
+              style={{
+                textAlign: "center",
+                color: "rgb(12, 84, 125)",
+                fontWeight: "700",
+                fontSize: "24px",
+                fontFamily: "Arial, sans-serif",
+              }}
+            >
+              Generating
+            </h3>
+            <ExamCreationLoader /> <br />
+          </div>
+        )}
+      </div>
 
-      <span>
-        <p style={{ color: "red" }}>{errorMsg}</p>
-      </span>
-      {newExam && (
+      {newExam && !loading && (
         <form
           onSubmit={handleInitialFormSubmition}
           style={{
             width: "100%",
-            maxWidth: "800px",
+            maxWidth: "700px",
             backgroundColor: "#fff",
             padding: "2rem",
             borderRadius: "12px",
@@ -144,6 +156,19 @@ export function InitialForm() {
             gap: "1.5rem", // Consistent spacing between elements
           }}
         >
+          <h2
+            style={{
+              fontFamily: "Arial, sans-serif",
+              color: "rgb(12, 84, 125)",
+              marginBottom: "2rem",
+              marginTop: "0rem",
+              fontSize: "24px",
+              fontWeight: "700",
+              textAlign: "center",
+            }}
+          >
+            Generate Exam
+          </h2>
           <div
             style={{
               width: "100%",
@@ -155,13 +180,13 @@ export function InitialForm() {
             <label
               style={{
                 flex: "1",
-                minWidth: "200px",
+                minWidth: "30%",
                 fontSize: "16px",
-                color: "#4b4b4b",
+                color: "rgb(12, 84, 125)",
                 fontWeight: "bold",
               }}
             >
-              Grade:
+              Grade
               <select
                 value={grade}
                 onChange={(e) => setGrade(e.target.value)}
@@ -169,8 +194,8 @@ export function InitialForm() {
                   display: "block",
                   width: "100%",
                   marginTop: "0.5rem",
-                  padding: "0.75rem",
-                  borderRadius: "8px",
+                  padding: "0.5rem",
+                  borderRadius: "12px",
                   border: "1px solid #ccc",
                   fontSize: "14px",
                 }}
@@ -181,13 +206,13 @@ export function InitialForm() {
             <label
               style={{
                 flex: "1",
-                minWidth: "200px",
+                minWidth: "30%",
                 fontSize: "16px",
-                color: "#4b4b4b",
+                color: "rgb(12, 84, 125)",
                 fontWeight: "bold",
               }}
             >
-              Semester:
+              Semester
               <select
                 value={semester}
                 onChange={(e) => setSemester(e.target.value)}
@@ -195,8 +220,8 @@ export function InitialForm() {
                   display: "block",
                   width: "100%",
                   marginTop: "0.5rem",
-                  padding: "0.75rem",
-                  borderRadius: "8px",
+                  padding: "0.5rem",
+                  borderRadius: "12px",
                   border: "1px solid #ccc",
                   fontSize: "14px",
                 }}
@@ -209,13 +234,13 @@ export function InitialForm() {
             <label
               style={{
                 flex: "1",
-                minWidth: "200px",
+                minWidth: "30%",
                 fontSize: "16px",
-                color: "#4b4b4b",
+                color: "rgb(12, 84, 125)",
                 fontWeight: "bold",
               }}
             >
-              Subject:
+              Subject
               <select
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
@@ -223,8 +248,8 @@ export function InitialForm() {
                   display: "block",
                   width: "100%",
                   marginTop: "0.5rem",
-                  padding: "0.75rem",
-                  borderRadius: "8px",
+                  padding: "0.5rem",
+                  borderRadius: "12px",
                   border: "1px solid #ccc",
                   fontSize: "14px",
                 }}
@@ -234,51 +259,33 @@ export function InitialForm() {
               </select>
             </label>
           </div>
-
           <button
             type="submit"
             disabled={loading}
             style={{
               alignSelf: "flex-end",
-              backgroundColor: "#007BFF",
+              backgroundColor: "rgb(12, 84, 125)",
               color: "#fff",
-              padding: "0.75rem 1.5rem",
-              borderRadius: "8px",
+              padding: "5px 35px",
+              borderRadius: "20px",
               border: "none",
               fontSize: "16px",
               cursor: loading ? "not-allowed" : "pointer",
-              fontWeight: "bold",
+              fontWeight: "600",
               transition: "background-color 0.3s ease",
             }}
             //@ts-ignore
-            onMouseEnter={(e) => (e.target.style.backgroundColor = "#0056b3")}
+            onMouseEnter={(e) =>
+              //@ts-ignore
+              (e.target.style.backgroundColor = "rgba(3, 40, 61, 1)")
+            }
             //@ts-ignore
-            onMouseLeave={(e) => (e.target.style.backgroundColor = "#007BFF")}
+            onMouseLeave={(e) =>
+              //@ts-ignore
+              (e.target.style.backgroundColor = "rgb(12, 84, 125)")
+            }
           >
-            {loading ? (
-              <span
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.5rem",
-                }}
-              >
-                <span
-                  style={{
-                    width: "1rem",
-                    height: "1rem",
-                    border: "2px solid #fff",
-                    borderRadius: "50%",
-                    borderTop: "2px solid transparent",
-                    animation: "spin 1s linear infinite",
-                  }}
-                ></span>
-                Loading...
-              </span>
-            ) : (
-              "Create"
-            )}
+            Generate
           </button>
         </form>
       )}

@@ -1,0 +1,100 @@
+/* Overlay background for the alerts */
+.alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Darker overlay for focus */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* General styles for alert popups */
+.alert-popup {
+    background: rgba(3, 40, 61, 0.85);
+    padding: 20px;
+    border-radius: 16px; /* Slightly more rounded corners */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* Softer shadow */
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    font-family: 'Arial', sans-serif;
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* Title style for alert messages */
+.alert-popup h3 {
+    font-size: 1.25rem; /* Slightly smaller, modern size */
+    margin-bottom: 15px;
+    color: #222; /* Darker gray for better contrast */
+    font-weight: 500; /* Medium weight for a cleaner look */
+}
+
+/* Message body style */
+.alert-popup p {
+    font-size: 1rem;
+    color: #fff; /* Subtle gray for message */
+    margin-bottom: 20px;
+    line-height: 1.5; /* Improve readability */
+}
+
+/* Buttons within alerts */
+.alert-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.alert-buttons button {
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background: rgb(200, 199, 197); 
+    color: #333; /* Neutral text color */
+    transition: all 0.2s ease-in-out;
+    margin-bottom: 10px;
+    width: 35%;
+}
+
+
+
+.close-btn:hover,
+.alert-buttons .alert-failure-btn:hover,
+.alert-buttons .alert-confirm-btn:hover {
+    background: #fff;
+}
+
+
+/* Close button for notifications */
+.alert-popup button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background: rgb(200, 199, 197); 
+    color: rgb(0, 0, 0);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+
+
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95); /* Slight scale-in effect */
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

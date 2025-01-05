@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Form from "react-bootstrap/Form";
-import Stack from "react-bootstrap/Stack";
-import Button from "react-bootstrap/Button";
 import "../styles/Login.css";
 import { signIn } from "aws-amplify/auth";
 import { useAppContext } from "../lib/contextLib";
@@ -10,6 +7,9 @@ import { getCurrentUser } from "../lib/getToken";
 import { signOut } from "aws-amplify/auth";
 import { getUserAttributes } from "../lib/getUserAttributes";
 import { setCookie, deleteCookie, getCookie } from "../lib/cookies";
+import { IoMdLogIn } from "react-icons/io";
+import { RiWindowsFill } from "react-icons/ri";
+import LoginLoader from "../components/loginPageLoader";
 
 export default function Login() {
   const [username, setEmail] = useState("");
@@ -83,46 +83,89 @@ export default function Login() {
   }
 
   return (
-    <div className="Login">
-      <h1>Login</h1>
-      <Form onSubmit={handleSubmit}>
-        <Stack gap={3}>
-          <Form.Group controlId="email">
-            <Form.Label>Email: </Form.Label>
-            <Form.Control
-              autoFocus
-              size="lg"
-              type="email"
-              value={username}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </Form.Group>
-          <Form.Group controlId="password">
-            <Form.Label>Password: </Form.Label>
-            <Form.Control
-              size="lg"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </Form.Group>
-          <Button
-            size="lg"
-            type="submit"
-            disabled={!validateForm() || isLoading}
-            className="login-button"
-          >
-            {isLoading ? (
-              <>
-                <span className="spinner"></span>
-                Authenticating...
-              </>
-            ) : (
-              "Login"
-            )}
-          </Button>
-        </Stack>
-      </Form>
+    <div className="login-container">
+      <div className="login-left">
+        <div className="login-form">
+          <div
+          className="logo"
+          ></div>
+          <h2>Login</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="input-group">
+              <input
+                type="email"
+                placeholder="Email"
+                value={username}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="input-group">
+              <div className="password-field">
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="links">
+              <a href="#">Forgot Password</a>
+              <a href="#">Help Desk</a>
+            </div>
+            <button
+              type="submit"
+              className="login-button"
+              style={{
+                cursor:
+                  !validateForm() || isLoading ? "not-allowed" : "pointer",
+              }}
+              disabled={!validateForm() || isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <span className="spinner"></span>
+                </>
+              ) : (
+                "LOGIN"
+              )}
+              {!isLoading && (
+                <IoMdLogIn
+                  style={{
+                    fontSize: "1rem",
+                    marginLeft: "0.5rem",
+                    marginBottom: "-0.15rem",
+                  }}
+                />
+              )}
+            </button>
+          </form>
+          <div className="student-teacher-login">
+            <hr />
+
+            <button className="school-login">
+              {" "}
+              <RiWindowsFill
+                style={{
+                  fontSize: "1rem",
+                  marginRight: "0.5rem",
+                  marginBottom: "-0.1rem",
+                }}
+              />{" "}
+              School Account
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="login-right">
+        <div className="login-right-content">
+          <div className="welcome-text">
+            <h1>Welcome to Quest AI</h1>
+            <p>Modernizing Education Through Innovation And Technology</p>
+            <LoginLoader />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

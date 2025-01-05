@@ -14,9 +14,6 @@ const DefaultRouting: React.FC = () => {
       case "User":
         navigate("/dashboard");
         break;
-      case "Uploader":
-        navigate("/upload");
-        break;
       default:
         navigate("/login");
         break;
