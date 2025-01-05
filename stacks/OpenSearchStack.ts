@@ -1,7 +1,7 @@
 import { StackContext, Function } from "sst/constructs"; // Import necessary constructs from SST
 import { CfnAccessPolicy, CfnCollection, CfnSecurityPolicy } from "aws-cdk-lib/aws-opensearchserverless";
 import { ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
-import { Aws, Token } from "aws-cdk-lib"; // Import AWS class to access account and region info
+import { Aws } from "aws-cdk-lib"; // Import AWS class to access account and region info
 import { Construct } from "constructs"; // Import Construct to define resources
 import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from "aws-cdk-lib/custom-resources";
 
@@ -25,7 +25,7 @@ export function OpenSearchConstruct(scope: Construct, executorRole: Role, stage:
   const dataAccessPolicyName = getResourceName("my-data-access-policy", stage);
   const collectionResourceName = `collection/${collectionName}`;
   const indexResourceName = `index/${collectionName}/*`;
-
+  
   
 
   // Create the OpenSearch Serverless Collection
@@ -138,12 +138,31 @@ export function MyStack({ stack }: StackContext) {
     new PolicyStatement({
       actions: [
         "aoss:APIAccessAll",
-        "es:ESHttpPut"
+        // "es:ESHttpPut"
+        "aoss:CreateCollectionItems",
+        "aoss:DeleteCollectionItems",
+        "aoss:UpdateCollectionItems",
+        "aoss:DescribeCollectionItems",
+        "aoss:CreateIndex",
+        "aoss:DeleteIndex",
+        "aoss:UpdateIndex",
+        "aoss:DescribeIndex",
+        "aoss:ReadDocument",
+        "aoss:WriteDocument",
+        "secretsmanager:GetSecretValue"
       ],
       resources: [
         `arn:aws:aoss:${stack.region}:${stack.account}:${collectionResourceName}`, // Reference the collection
         `arn:aws:aoss:${stack.region}:${stack.account}:${indexResourceName}`, // Reference any index inside the collection
       ],
+    })
+  );
+
+  // Add permissions for Secrets Manager
+  executorRole.addToPolicy(
+    new PolicyStatement({
+      actions: ["secretsmanager:GetSecretValue"],
+      resources: ["arn:aws:secretsmanager:us-east-1:248189920021:secret:prod/access-keys-APbcDt"],
     })
   );
 
@@ -157,8 +176,7 @@ export function MyStack({ stack }: StackContext) {
       COLLECTION_NAME: collectionName, // Pass the collection name as an environment variable
       OPENSEARCH_ENDPOINT: collectionEndpoint, // Dynamically pass the OpenSearch endpoint
       REGION: stack.region, // Pass the AWS region as an environment variable
-      ACCESS_KEY_ID: "QUtJQVRUU0tGVU1LNVNRVFdTRkM=", 
-      SECRET_ACCESS_KEY: "aTBudk5WaEFyOVNyRXVVOUJIeVI5b0NNK2lGNFFQT2NPTjdCTnRSaw==", 
+      SECRET_NAME: "prod/access-keys"
     },
     role: executorRole as any, // Use the executorRole for the Lambda function
   });
