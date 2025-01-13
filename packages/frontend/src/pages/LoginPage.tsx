@@ -160,7 +160,7 @@ export default function Login() {
       <div className="login-right">
         <div className="login-right-content">
           <div className="welcome-text">
-            <h1>Welcome to Quest AI</h1>
+            <h1>Welcome to ExGen</h1>
             <p>Modernizing Education Through Innovation And Technology</p>
             <LoginLoader />
           </div>
