@@ -10,13 +10,13 @@ export function FunctionsStack({ stack }: StackContext) {
     handler: "packages/functions/src/createNewExam.createExam",
     timeout: 180,
     memorySize: 512,
-    url: {
-      cors: {
-        allowMethods: ["POST"],
-        allowOrigins: ["*"],
-      },
+    // url: {
+    //   cors: {
+    //     allowMethods: ["POST"],
+    //     allowOrigins: ["*"],
+    //   },
       
-    },
+    // },
     permissions: ["dynamodb", "bedrock", exams_table],
     environment: {
       TABLE_NAME: exams_table.tableName,
