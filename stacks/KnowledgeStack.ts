@@ -12,6 +12,8 @@ export function KnowledgeBaseStack({ stack }: StackContext) {
         allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.PUT, s3.HttpMethods.POST, s3.HttpMethods.DELETE],
       },
     ],
+    encryption: s3.BucketEncryption.S3_MANAGED,
+    publicReadAccess: false,
   });
 
   // Step 2: Output the bucket name for reference after deployment

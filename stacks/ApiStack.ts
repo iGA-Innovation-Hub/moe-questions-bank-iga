@@ -3,7 +3,7 @@ import { CacheHeaderBehavior, CachePolicy } from "aws-cdk-lib/aws-cloudfront";
 import { Duration } from "aws-cdk-lib/core";
 import { DBStack } from "./DBStack"
 import { StorageStack } from "./StorageStack";
-import * as iam from "aws-cdk-lib/aws-iam";
+import s3 from "aws-cdk-lib/aws-s3";
 import { MyStack } from "./OpenSearchStack"; // Import the OpenSearch stack
 
 
@@ -16,7 +16,15 @@ export function ApiStack({ stack }: StackContext) {
   const { users_table, exams_table, exams_dataset } = use(DBStack);
   const { materialsBucket } = use(StorageStack);
 
-  const bucket = new Bucket(stack, "Audio");
+  //const bucket = new Bucket(stack, "Audio");
+  const bucket = new Bucket(stack, "Audio", {
+    cdk: {
+      bucket: new s3.Bucket(stack, "AudioBucket", {
+        encryption: s3.BucketEncryption.S3_MANAGED,
+        publicReadAccess: false,
+    })
+    }
+  })
 
   // Create the HTTP API
   const api = new Api(stack, "Api", {
