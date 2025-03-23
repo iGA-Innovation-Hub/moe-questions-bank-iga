@@ -5,4 +5,5 @@ source ~/.bashrc
 nohup dockerd &
 docker version
 npm install
-npx sst deploy --stage prod
+npm install supports-color
+npx sst deploy --stage bank
