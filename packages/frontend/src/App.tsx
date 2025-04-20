@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom"; // Navigation between pages.
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/LoginPage";
 import ExamForm from "./pages/ExamForm";
@@ -7,7 +7,6 @@ import { AppContext, AppContextType } from "./lib/contextLib";
 import "@aws-amplify/ui-react/styles.css";
 import AuthRoute from "./components/AuthRoute";
 import { InitialForm } from "./pages/InitialForm";
-import { getCurrentUser } from "./lib/getToken";
 import AlreadyAuthRoute from "./components/AlreadyAuthRoute";
 import GeneratorRoute from "./components/generatorRoutes";
 import ApproverRoute from "./components/ApproverRoute";
@@ -18,32 +17,58 @@ import {
   AlertProvider,
   Notification,
   ConfirmAction,
-} from "./components/AlertComponent"; // Import Alert components
+} from "./components/AlertComponent";
 import UploadPage from "./pages/UploadPage";
 import DefaultRouting from "./components/UserDefaultComponent";
 import AudioScriptForm from "./pages/AudioPage";
 import { getCookie, setCookie } from "./lib/cookies";
 
+// ✅ Amplify setup
+import { Amplify, Auth } from "aws-amplify";
+
+Amplify.configure({
+  Auth: {
+    region: import.meta.env.VITE_REGION,
+    userPoolId: import.meta.env.VITE_USER_POOL_ID,
+    userPoolWebClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID,
+    identityPoolId: import.meta.env.VITE_IDENTITY_POOL_ID,
+  },
+});
+
 const App: React.FC = () => {
-  // Authentication state
   const [isAuthenticated, setAuthenticated] = useState<boolean>(
     getCookie("isAuthenticated") === "true"
   );
   const [userRole, setUserRole] = useState<string>(getCookie("userRole") || "");
 
-  // Restore authentication state on app load
+  // 🔁 Check session & detect group
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      const storedIsAuthenticated = getCookie("isAuthenticated");
-      const storedUserRole = getCookie("userRole");
+    async function detectUserGroup() {
+      try {
+        const session = await Auth.currentSession();
+        const idToken = session.getIdToken();
+        const groups = idToken.payload["cognito:groups"] || [];
 
-      setAuthenticated(storedIsAuthenticated === "true");
-      setUserRole(storedUserRole || "");
+        if (groups.includes("Admins")) {
+          setUserRole("admin");
+        } else if (groups.includes("Users")) {
+          setUserRole("user");
+        } else {
+          setUserRole("unknown");
+        }
+
+        setAuthenticated(true);
+      } catch (e) {
+        console.log("User not authenticated:", e);
+        setAuthenticated(false);
+        setUserRole("");
+      }
     }
+
+    detectUserGroup();
   }, []);
 
-  // Persist authentication state when it changes
+  // Persist auth state in cookies
   useEffect(() => {
     setCookie("isAuthenticated", String(isAuthenticated), 1);
     setCookie("userRole", userRole, 1);
@@ -59,8 +84,6 @@ const App: React.FC = () => {
   return (
     <AppContext.Provider value={appContextValue}>
       <AlertProvider>
-        {" "}
-        {/* Wrap everything with AlertProvider */}
         <Router>
           <Routes>
             {/* Public Routes */}
@@ -82,8 +105,8 @@ const App: React.FC = () => {
                 </AuthRoute>
               }
             >
-              {/* Nested Routes for Dashboard */}
-              <Route index element={<div></div>} /> {/* Default Content */}
+              {/* Nested Routes */}
+              <Route index element={<div></div>} />
               <Route
                 path="examForm"
                 element={
@@ -120,15 +143,13 @@ const App: React.FC = () => {
               />
             </Route>
 
-            {/* Redirect '/' to '/dashboard' */}
+            {/* Default redirect */}
             <Route path="/" element={<DefaultRouting />} />
-
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>
-        {/* Include the alert components to display alerts */}
-        <Notification /> {/* Displays success/failure alerts */}
-        <ConfirmAction /> {/* Displays confirmation dialogs */}
+        <Notification />
+        <ConfirmAction />
       </AlertProvider>
     </AppContext.Provider>
   );
