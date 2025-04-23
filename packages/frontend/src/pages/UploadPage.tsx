@@ -177,7 +177,10 @@ async function uploadToS3(file: File) {
     method: "PUT",
     body: file,
   });
-
+      //Added by MohamedAli
+    console.log("Upload status:", response.status);
+    console.log("Upload result:", await response.text());   
+  
   if (!response.ok) {
     throw new Error(`Failed to upload file: ${file.name}`);
   }
