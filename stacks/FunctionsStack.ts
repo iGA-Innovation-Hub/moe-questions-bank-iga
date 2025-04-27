@@ -23,9 +23,9 @@ export function FunctionsStack({ stack }: StackContext) {
       KNOWLEDGE_BASE_ID: bedrockKb.knowledgeBaseId,
     },
   });
-    
-    stack.addOutputs({
-        CreateExamFunctionURL: createExamFunction.url,
+    //BY MohamedAli no permission on FunctionURL
+    //stack.addOutputs({
+       // CreateExamFunctionURL: createExamFunction.url,
     })
     
     return { createExamFunction };
