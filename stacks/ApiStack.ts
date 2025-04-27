@@ -29,7 +29,7 @@ export function ApiStack({ stack }: StackContext) {
   // Create the HTTP API
   const api = new Api(stack, "Api", {
     defaults: {
-      authorizer: "iam",
+      authorizer: "none",
     },
     routes: {
       "GET /examForm/{id}": {
